@@ -1,3 +1,6 @@
 .recommenders
 .metadata/
 RemoteSystemsTempFiles/
+
+#Ignore MAC OS files
+.DS_Store
