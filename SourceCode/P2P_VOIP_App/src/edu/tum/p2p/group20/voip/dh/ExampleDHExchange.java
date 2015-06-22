@@ -2,6 +2,8 @@ package edu.tum.p2p.group20.voip.dh;
 
 import java.security.MessageDigest;
 
+import org.apache.commons.codec.binary.Base64;
+
 /**
  * Example class to show the usage of the SessionKeyManager to generate 
  * common secrete session key. 
