@@ -5,9 +5,14 @@ import java.nio.charset.StandardCharsets;
 import java.io.*;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.security.spec.InvalidParameterSpecException;
 import java.util.*;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -48,8 +53,7 @@ public class Sender {
         	SessionKeyManager receiverKeyManager = SessionKeyManager.makeInitiator();
         	
         	JSONObject message = new JSONObject();
-        	JSONObject dhJSON = new JSONObject();
-        	
+        	JSONObject dhJSON = new JSONObject();        	
         	dhJSON.put("DHPublicKey", receiverKeyManager.base64PublicDHKeyString());
         	message.put("message", dhJSON);
         	
@@ -63,8 +67,38 @@ public class Sender {
         	message2 = (JSONObject) message2.get("message");
         	String publicKeyString = (String) message2.get("DHPublicKey");
 
-        	System.out.println(Base64.encodeBase64String(receiverKeyManager.makeSessionKey(publicKeyString)));
+        	byte[] sessionKey = receiverKeyManager.makeSessionKey(publicKeyString);        
+        	System.out.println(Base64.encodeBase64String(sessionKey));
         	
+        	
+        	
+        	
+        	// RSA encrypt a string and send it.
+        	// SHA-256 hash of sessionKey
+        	MessageDigest md = MessageDigest.getInstance("SHA-256");
+        	md.update(sessionKey);
+        	sessionKey = md.digest();
+        	
+        	Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+            
+        	SecretKeySpec key = new SecretKeySpec(sessionKey, "AES");
+
+            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS7Padding", "BC");
+            
+            String toEncrypt = "this is encrypted";
+            byte[] toEncryptBytes = toEncrypt.getBytes();
+            System.out.println(sessionKey.length);
+            
+            // encryption pass
+            cipher.init(Cipher.ENCRYPT_MODE, key);
+
+            byte[] cipherText = new byte[cipher.getOutputSize(toEncryptBytes.length)];
+            int ctLength = cipher.update(toEncryptBytes, 0, toEncryptBytes.length, cipherText, 0);
+            ctLength += cipher.doFinal(cipherText, ctLength);
+            System.out.println(new String(cipherText));
+            out.println(Base64.encodeBase64String(cipherText));
+            System.out.println(ctLength);
+            System.out.println(cipherText.length);
 
         } catch (IOException e) {
             System.out.println("Exception caught when trying to connect on port " + portNumber);

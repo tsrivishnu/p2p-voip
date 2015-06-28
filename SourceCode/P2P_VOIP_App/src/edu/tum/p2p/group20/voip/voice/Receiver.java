@@ -2,9 +2,14 @@ package edu.tum.p2p.group20.voip.voice;
 import java.net.*;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
 import java.io.*;
+
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Base64;
 import org.json.simple.JSONArray;
@@ -45,8 +50,8 @@ public class Receiver {
             	String publicKeyString = (String) message.get("DHPublicKey");
 
             	SessionKeyManager receiverKeyManager = SessionKeyManager.makeSecondParty(publicKeyString);
-
-            	System.out.println(Base64.encodeBase64String(receiverKeyManager.makeSessionKey(publicKeyString)));            	
+            	byte [] sessionKey = receiverKeyManager.makeSessionKey(publicKeyString);
+            	System.out.println(Base64.encodeBase64String(sessionKey));
 
             	// send public key to other party
             	JSONObject message2 = new JSONObject();
@@ -56,7 +61,27 @@ public class Receiver {
             	message.put("message", dhJSON);
             	
             	out.println(message.toJSONString());
-
+            	
+            	inputLine = in.readLine();
+            	// decryption pass
+            	// SHA-256 hash of sessionKey
+            	MessageDigest md = MessageDigest.getInstance("SHA-256");
+            	md.update(sessionKey);
+            	sessionKey = md.digest();
+            	
+            	Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+            	
+            	SecretKeySpec key = new SecretKeySpec(sessionKey, "AES");
+                Cipher cipher = Cipher.getInstance("AES/ECB/PKCS7Padding", "BC");
+                
+                cipher.init(Cipher.DECRYPT_MODE, key);
+                byte[] cipherText = Base64.decodeBase64(inputLine);
+                byte[] plainText = new byte[cipher.getOutputSize(cipherText.length)];
+                int ptLength = cipher.update(cipherText, 0, cipherText.length, plainText, 0);
+                ptLength += cipher.doFinal(plainText, ptLength);
+                System.out.println(new String(plainText));
+                System.out.println(ptLength);
+            	
             }
         } catch (IOException e) {
             System.out.println("Exception caught when trying to listen on port "
