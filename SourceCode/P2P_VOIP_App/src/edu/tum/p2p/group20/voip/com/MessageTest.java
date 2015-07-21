@@ -1,32 +1,49 @@
 package edu.tum.p2p.group20.voip.com;
 
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
+import java.security.Security;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.Cipher;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.NoSuchPaddingException;
+import javax.crypto.ShortBufferException;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.apache.commons.codec.binary.Base64;
 import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
-class Message {
-	
-	private static JSONParser jsonParser = new JSONParser();
-	
-	public JSONObject jsonObject;
-	
-	Message(String json) {
-		
-	}
-}
 
 public class MessageTest {
 
-	public static void main(String[] args) throws ParseException {
-		String json = "{\"content\": \"message\",\"something\": \"more\"}";
-		JSONParser parser = new JSONParser();
-		JSONObject message = (JSONObject) parser.parse(json);
-		System.out.println(message.get("content"));
+	public static void main(String[] args) throws ParseException, NoSuchAlgorithmException,
+				NoSuchProviderException, NoSuchPaddingException, InvalidKeyException,
+				ShortBufferException, IllegalBlockSizeException, BadPaddingException {
 		
+		MessageCrypto messageCrypto = new MessageCrypto("[B@46f5f77912343".getBytes());
 		
-		String json2 = "{\"content\": \"message2\",\"something\": \"more2\"}";
-		JSONObject message1 = (JSONObject) parser.parse(json2);
-		System.out.println(message1.get("content"));
+		Message message11 = new Message();
+		message11.put("key1", "Value1");
+		message11.put("key2", "Value2");
+		System.out.println(message11.asJSON());	
+		
+		message11.messageCrypto = messageCrypto;
+	
+		message11.encrypt();
+		message11.sign();
+		
+		System.out.println(message11.asJSON());
+		
+		Message message2 = new Message(message11.asJSON());
+		message2.messageCrypto = messageCrypto;
+		message2.decrypt();
+		
+		System.out.println(message2.get("key1"));
+		System.out.println(message2.asJSON());
 	}
 
 }

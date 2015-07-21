@@ -78,6 +78,8 @@ public class Sender {
         	MessageDigest md = MessageDigest.getInstance("SHA-256");
         	md.update(sessionKey);
         	sessionKey = md.digest();
+        	System.out.println("Hereree");
+        	System.out.println(sessionKey);
         	
         	Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
             
