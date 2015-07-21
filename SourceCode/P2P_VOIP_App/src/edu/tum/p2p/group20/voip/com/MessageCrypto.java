@@ -33,7 +33,7 @@ public class MessageCrypto {
 	 * @throws NoSuchProviderException
 	 * @throws NoSuchPaddingException
 	 */
-	MessageCrypto(byte[] sessionKey) throws NoSuchAlgorithmException,
+	public MessageCrypto(byte[] sessionKey) throws NoSuchAlgorithmException,
 				NoSuchProviderException, NoSuchPaddingException {
 		
 		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());

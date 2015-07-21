@@ -38,7 +38,7 @@ public class MessageTest {
 		
 		System.out.println(message11.asJSON());
 		
-		Message message2 = new Message(message11.asJSON());
+		Message message2 = new Message(message11.asJSON(), true);
 		message2.messageCrypto = messageCrypto;
 		message2.decrypt();
 		

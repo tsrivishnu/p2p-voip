@@ -31,11 +31,18 @@ public class Message {
 	 * Create an instance of Message from a JSON string.
 	 *  
 	 * @param json
+	 * @param encrypted: Boolean which says if the data in the message is encrypted or not.
 	 * @throws ParseException
-	 */
-	Message(String json) throws ParseException {
-		fullMessage = (JSONObject) jsonParser.parse(json); 
-		encryptedData = (String) fullMessage.get("message");
+	 */	
+	public Message(String json, Boolean encrypted) throws ParseException {
+		fullMessage = (JSONObject) jsonParser.parse(json);
+		
+		if (encrypted){
+			encryptedData = (String) fullMessage.get("message");
+		} else {
+			data = (JSONObject) fullMessage.get("message");
+		}
+		
 		signature = fullMessage.get("signature");
 	}
 	
@@ -43,7 +50,7 @@ public class Message {
 	 * Initializes an empty instance of Message to which data can be added. 
 	 * 
 	 */
-	Message() {
+	public Message() {
 		data = new JSONObject();
 		fullMessage = new JSONObject();
 		fullMessage.put("message", data);

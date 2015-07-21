@@ -20,6 +20,8 @@ import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 import org.apache.commons.codec.binary.Base64;
 
+import edu.tum.p2p.group20.voip.com.Message;
+import edu.tum.p2p.group20.voip.com.MessageCrypto;
 import edu.tum.p2p.group20.voip.dh.SessionKeyManager;
 
 // Sender is basically a client in the TCP Client-Server paradigm.
@@ -52,55 +54,33 @@ public class Sender {
         	// Generate and initiate DH
         	SessionKeyManager receiverKeyManager = SessionKeyManager.makeInitiator();
         	
-        	JSONObject message = new JSONObject();
-        	JSONObject dhJSON = new JSONObject();        	
-        	dhJSON.put("DHPublicKey", receiverKeyManager.base64PublicDHKeyString());
-        	message.put("message", dhJSON);
-        	
-        	out.println(message.toJSONString());
+        	Message dhInitMessage = new Message();
+        	dhInitMessage.put("DHPublicKey", receiverKeyManager.base64PublicDHKeyString());        	
+        	out.println(dhInitMessage.asJSON());
         	
         	// Receive other parties DHpublickey 
         	inputLine = in.readLine();
         	
-        	JSONParser parser = new JSONParser();        	
-        	JSONObject message2 = (JSONObject) parser.parse(inputLine);
-        	message2 = (JSONObject) message2.get("message");
-        	String publicKeyString = (String) message2.get("DHPublicKey");
+        	Message receivedDhMessage = new Message(inputLine, false);
+        	String publicKeyString = (String) receivedDhMessage.get("DHPublicKey");
 
         	byte[] sessionKey = receiverKeyManager.makeSessionKey(publicKeyString);        
         	System.out.println(Base64.encodeBase64String(sessionKey));
         	
-        	
-        	
-        	
-        	// RSA encrypt a string and send it.
         	// SHA-256 hash of sessionKey
         	MessageDigest md = MessageDigest.getInstance("SHA-256");
-        	md.update(sessionKey);
+        	md.update(sessionKey);        	
         	sessionKey = md.digest();
-        	System.out.println("Hereree");
-        	System.out.println(sessionKey);
         	
-        	Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
-            
-        	SecretKeySpec key = new SecretKeySpec(sessionKey, "AES");
-
-            Cipher cipher = Cipher.getInstance("AES/ECB/PKCS7Padding", "BC");
-            
-            String toEncrypt = "this is encrypted";
-            byte[] toEncryptBytes = toEncrypt.getBytes();
-            System.out.println(sessionKey.length);
-            
-            // encryption pass
-            cipher.init(Cipher.ENCRYPT_MODE, key);
-
-            byte[] cipherText = new byte[cipher.getOutputSize(toEncryptBytes.length)];
-            int ctLength = cipher.update(toEncryptBytes, 0, toEncryptBytes.length, cipherText, 0);
-            ctLength += cipher.doFinal(cipherText, ctLength);
-            System.out.println(new String(cipherText));
-            out.println(Base64.encodeBase64String(cipherText));
-            System.out.println(ctLength);
-            System.out.println(cipherText.length);
+        	MessageCrypto messageCrypto = new MessageCrypto(sessionKey);
+        	
+        	// Send CALL_INIT message.
+        	Message callInitMessage = new Message();
+        	callInitMessage.put("type", "CALL_INIT");
+        	callInitMessage.messageCrypto = messageCrypto;
+        	callInitMessage.encrypt();
+        	callInitMessage.sign();
+        	out.println(callInitMessage.asJSON());
 
         } catch (IOException e) {
             System.out.println("Exception caught when trying to connect on port " + portNumber);

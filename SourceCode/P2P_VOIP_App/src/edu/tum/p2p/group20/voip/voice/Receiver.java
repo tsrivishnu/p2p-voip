@@ -17,6 +17,8 @@ import org.json.simple.JSONObject;
 import org.json.simple.parser.JSONParser;
 import org.json.simple.parser.ParseException;
 
+import edu.tum.p2p.group20.voip.com.Message;
+import edu.tum.p2p.group20.voip.com.MessageCrypto;
 import edu.tum.p2p.group20.voip.dh.SessionKeyManager;
 
 // Receiver is basically a Server in the TCP Client-Server paradigm.
@@ -44,44 +46,30 @@ public class Receiver {
             while ((inputLine = in.readLine()) != null) {
 
             	// Receive other parties DHPublicKey data
-            	JSONParser parser = new JSONParser();            	
-            	JSONObject message = (JSONObject) parser.parse(inputLine);
-            	message = (JSONObject) message.get("message");
-            	String publicKeyString = (String) message.get("DHPublicKey");
+            	Message receivedDhMessage = new Message(inputLine, false);
+            	String publicKeyString = (String) receivedDhMessage.get("DHPublicKey");
 
             	SessionKeyManager receiverKeyManager = SessionKeyManager.makeSecondParty(publicKeyString);
             	byte [] sessionKey = receiverKeyManager.makeSessionKey(publicKeyString);
             	System.out.println(Base64.encodeBase64String(sessionKey));
-
-            	// send public key to other party
-            	JSONObject message2 = new JSONObject();
-            	JSONObject dhJSON = new JSONObject();
             	
-            	dhJSON.put("DHPublicKey", receiverKeyManager.base64PublicDHKeyString());
-            	message.put("message", dhJSON);
-            	
-            	out.println(message.toJSONString());
-            	
+            	Message dhPublicMessage = new Message();
+            	dhPublicMessage.put("DHPublicKey", receiverKeyManager.base64PublicDHKeyString());        	
+            	out.println(dhPublicMessage.asJSON());
+               	
             	inputLine = in.readLine();
-            	// decryption pass
+
             	// SHA-256 hash of sessionKey
             	MessageDigest md = MessageDigest.getInstance("SHA-256");
             	md.update(sessionKey);
             	sessionKey = md.digest();
             	
-            	Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
+            	MessageCrypto messageCrypto = new MessageCrypto(sessionKey);
             	
-            	SecretKeySpec key = new SecretKeySpec(sessionKey, "AES");
-                Cipher cipher = Cipher.getInstance("AES/ECB/PKCS7Padding", "BC");
-                
-                cipher.init(Cipher.DECRYPT_MODE, key);
-                byte[] cipherText = Base64.decodeBase64(inputLine);
-                byte[] plainText = new byte[cipher.getOutputSize(cipherText.length)];
-                int ptLength = cipher.update(cipherText, 0, cipherText.length, plainText, 0);
-                ptLength += cipher.doFinal(plainText, ptLength);
-                System.out.println(new String(plainText));
-                System.out.println(ptLength);
-            	
+            	Message receivedMessage = new Message(inputLine, true);
+            	receivedMessage.messageCrypto = messageCrypto;
+            	receivedMessage.decrypt();
+            	System.out.println(receivedMessage.get("type"));
             }
         } catch (IOException e) {
             System.out.println("Exception caught when trying to listen on port "
