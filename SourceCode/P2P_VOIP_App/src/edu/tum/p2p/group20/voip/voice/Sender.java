@@ -50,7 +50,6 @@ public class Sender {
         	String inputLine;
         	String inputFromUser;
         	
-        	
         	// Generate and initiate DH
         	SessionKeyManager receiverKeyManager = SessionKeyManager.makeInitiator();
         	
@@ -66,11 +65,6 @@ public class Sender {
 
         	byte[] sessionKey = receiverKeyManager.makeSessionKey(publicKeyString);        
         	System.out.println(Base64.encodeBase64String(sessionKey));
-        	
-        	// SHA-256 hash of sessionKey
-        	MessageDigest md = MessageDigest.getInstance("SHA-256");
-        	md.update(sessionKey);        	
-        	sessionKey = md.digest();
         	
         	MessageCrypto messageCrypto = new MessageCrypto(sessionKey);
         	

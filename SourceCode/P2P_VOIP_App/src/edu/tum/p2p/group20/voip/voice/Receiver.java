@@ -52,19 +52,13 @@ public class Receiver {
             	SessionKeyManager receiverKeyManager = SessionKeyManager.makeSecondParty(publicKeyString);
             	byte [] sessionKey = receiverKeyManager.makeSessionKey(publicKeyString);
             	System.out.println(Base64.encodeBase64String(sessionKey));
+            	MessageCrypto messageCrypto = new MessageCrypto(sessionKey);
             	
             	Message dhPublicMessage = new Message();
             	dhPublicMessage.put("DHPublicKey", receiverKeyManager.base64PublicDHKeyString());        	
             	out.println(dhPublicMessage.asJSON());
                	
             	inputLine = in.readLine();
-
-            	// SHA-256 hash of sessionKey
-            	MessageDigest md = MessageDigest.getInstance("SHA-256");
-            	md.update(sessionKey);
-            	sessionKey = md.digest();
-            	
-            	MessageCrypto messageCrypto = new MessageCrypto(sessionKey);
             	
             	Message receivedMessage = new Message(inputLine, true);
             	receivedMessage.messageCrypto = messageCrypto;
