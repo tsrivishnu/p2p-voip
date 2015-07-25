@@ -5,8 +5,10 @@ import java.nio.charset.StandardCharsets;
 import java.io.*;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.Security;
 import java.security.spec.InvalidParameterSpecException;
 import java.util.*;
@@ -22,6 +24,7 @@ import org.apache.commons.codec.binary.Base64;
 
 import edu.tum.p2p.group20.voip.com.Message;
 import edu.tum.p2p.group20.voip.com.MessageCrypto;
+import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.dh.SessionKeyManager;
 
 // Sender is basically a client in the TCP Client-Server paradigm.
@@ -50,31 +53,36 @@ public class Sender {
         	String inputLine;
         	String inputFromUser;
         	
+        	// get hostkey
+        	KeyPair hostKeyPair = RSA.getKeyPairFromFile("/Users/Munna/Desktop/sender_private.pem");        	
+        	PublicKey otherPartyPublicKey = RSA.getPublicKey("/Users/Munna/Desktop/receiver.pub");
+        	
+        	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey);
+        	
         	// Generate and initiate DH
         	SessionKeyManager receiverKeyManager = SessionKeyManager.makeInitiator();
-        	
+        	        	
         	Message dhInitMessage = new Message();
-        	dhInitMessage.put("DHPublicKey", receiverKeyManager.base64PublicDHKeyString());        	
-        	out.println(dhInitMessage.asJSON());
+        	dhInitMessage.messageCrypto = messageCrypto;
+        	dhInitMessage.put("DHPublicKey", receiverKeyManager.base64PublicDHKeyString());
+        	out.println(dhInitMessage.asJSONStringForExchange());
         	
         	// Receive other parties DHpublickey 
         	inputLine = in.readLine();
         	
         	Message receivedDhMessage = new Message(inputLine, false);
-        	String publicKeyString = (String) receivedDhMessage.get("DHPublicKey");
+        	String dhPublicKeyString = (String) receivedDhMessage.get("DHPublicKey");
 
-        	byte[] sessionKey = receiverKeyManager.makeSessionKey(publicKeyString);        
-        	System.out.println(Base64.encodeBase64String(sessionKey));
-        	
-        	MessageCrypto messageCrypto = new MessageCrypto(sessionKey);
+        	byte[] sessionKey = receiverKeyManager.makeSessionKey(dhPublicKeyString);       
+        	System.out.println(Base64.encodeBase64String(sessionKey));        	
+        	messageCrypto.setSessionKey(sessionKey);
         	
         	// Send CALL_INIT message.
         	Message callInitMessage = new Message();
         	callInitMessage.put("type", "CALL_INIT");
         	callInitMessage.messageCrypto = messageCrypto;
         	callInitMessage.encrypt();
-        	callInitMessage.sign();
-        	out.println(callInitMessage.asJSON());
+        	out.println(callInitMessage.asJSONStringForExchange());
 
         } catch (IOException e) {
             System.out.println("Exception caught when trying to connect on port " + portNumber);

@@ -1,6 +1,10 @@
 package edu.tum.p2p.group20.voip.com;
 
+import java.io.UnsupportedEncodingException;
 import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
+import java.text.SimpleDateFormat;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -26,6 +30,7 @@ public class Message {
 	private JSONObject fullMessage;
 	public Object signature;
 	public MessageCrypto messageCrypto;
+	private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 	
 	/**
 	 * Create an instance of Message from a JSON string.
@@ -77,19 +82,58 @@ public class Message {
 	}
 	
 	/**
-	 * Get the whole message encapsulated into the format as a JSON string
+	 * Returns the timestamp of the message
 	 * 
-	 * @return JSON String of the whole formatted message.
+	 * @return Timestamp of the message as java.util.Date
+	 * @throws java.text.ParseException
 	 */
-	public String asJSON() {
-		return fullMessage.toJSONString();
+	public java.util.Date timestamp() throws java.text.ParseException {
+		return Config.DATE_FORMATTER.parse((String) fullMessage.get("timestamp"));
 	}
 	
 	/**
 	 * Performs signing on the message's data and encapsulates it into the required format.
+	 * @throws UnsupportedEncodingException 
+	 * @throws SignatureException 
+	 * @throws NoSuchAlgorithmException 
+	 * @throws InvalidKeyException 
 	 */
-	public void sign() {
-		fullMessage.put("signature", "Some signature goes here");
+	public void sign() throws InvalidKeyException, NoSuchAlgorithmException,
+				SignatureException, UnsupportedEncodingException {
+		
+		signature = messageCrypto.getSignature(toBeSignedJSONObject().toJSONString());		
+		fullMessage.put("signature", signature);
+	}
+	
+	/**
+	 * Validate the signature and the timestamp over the timestamp passed as argument.
+	 * 
+	 * 
+	 * If the timestamp is before the timestamp passed, it is considered invalid.
+	 * 
+	 * @param timestamp
+	 * @return true or false
+	 * @throws InvalidKeyException
+	 * @throws SignatureException
+	 * @throws NoSuchAlgorithmException
+	 * @throws UnsupportedEncodingException
+	 * @throws java.text.ParseException 
+	 */
+	public Boolean isValid(java.util.Date prevTimestamp) throws InvalidKeyException,
+					SignatureException, NoSuchAlgorithmException, UnsupportedEncodingException,
+					java.text.ParseException {
+		
+		String signature = (String) fullMessage.get("signature");
+		System.out.println(prevTimestamp);
+		System.out.println(timestamp());
+		
+		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+		
+		if(messageCrypto.isValidSignature(signature, toBeSignedJSONObject().toJSONString())){
+			return prevTimestamp.before(timestamp());
+		} else {
+			return false;
+		}
 	}
 	
 	/**
@@ -106,7 +150,7 @@ public class Message {
 	public void encrypt() throws InvalidKeyException, ShortBufferException,
 					IllegalBlockSizeException, BadPaddingException {
 		
-		byte[] encryptedBytes = messageCrypto.encrypt(data.toJSONString());
+		byte[] encryptedBytes = messageCrypto.encryptWithSessionKey(data.toJSONString());
 		encryptedData = Base64.encodeBase64String(encryptedBytes);
 		fullMessage.put("message", encryptedData);
 	}
@@ -123,7 +167,57 @@ public class Message {
 	public void decrypt() throws InvalidKeyException, ShortBufferException,
 					IllegalBlockSizeException, BadPaddingException, ParseException {
 		byte[] encryptedBytes = Base64.decodeBase64(encryptedData);
-		data = (JSONObject) jsonParser.parse(messageCrypto.decrypt(encryptedBytes));
+		data = (JSONObject) jsonParser.parse(messageCrypto.decryptWithSessionKey(encryptedBytes));
 		fullMessage.put("message", data);
+	}
+	
+	/**
+	 * Adds a timestamp to the message in its root and performs signing and returns it 
+	 * as a string to be used to send in the network
+	 * 
+	 * @return Message with a timestamp and signing as a string.
+	 * @throws InvalidKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws SignatureException
+	 * @throws UnsupportedEncodingException
+	 */
+	public String asJSONStringForExchange() throws InvalidKeyException,
+					NoSuchAlgorithmException, SignatureException, UnsupportedEncodingException {
+
+		addTimestamp();
+		sign();
+		return asJSONString();
+	}
+	
+	/**
+	 * Get the whole message encapsulated into the format as a JSON string
+	 * 
+	 * This will not add timestamp and signature
+	 * 
+	 * @return JSON String of the whole formatted message.
+	 */
+	public String asJSONString() {
+		return fullMessage.toJSONString();
+	}
+	
+	/**
+	 * Adds timestamp to the mesasge, not in the data json but to the root of the message json
+	 * because the receiver will validate the signature before decrypting.
+	 * 
+	 */
+	private void addTimestamp() {
+		fullMessage.put("timestamp", dateFormatter.format(new java.util.Date()));
+	}
+	
+	/**
+	 * Returns the part of the full message which has to be signed.
+	 * 
+	 * @return JSONObject which has to be signed.
+	 */
+	private JSONObject toBeSignedJSONObject() {
+		JSONObject toBeSigned = new JSONObject();
+		toBeSigned.put("message", fullMessage.get("message"));
+		toBeSigned.put("timestamp", fullMessage.get("timestamp"));
+		return toBeSigned;
 	}
 }

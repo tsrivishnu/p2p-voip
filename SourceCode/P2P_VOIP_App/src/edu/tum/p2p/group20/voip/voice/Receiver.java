@@ -2,8 +2,10 @@ package edu.tum.p2p.group20.voip.voice;
 import java.net.*;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.Security;
 import java.security.spec.InvalidKeySpecException;
 import java.io.*;
@@ -19,6 +21,7 @@ import org.json.simple.parser.ParseException;
 
 import edu.tum.p2p.group20.voip.com.Message;
 import edu.tum.p2p.group20.voip.com.MessageCrypto;
+import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.dh.SessionKeyManager;
 
 // Receiver is basically a Server in the TCP Client-Server paradigm.
@@ -43,6 +46,11 @@ public class Receiver {
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
         ) {
             String inputLine;
+            
+            KeyPair hostKeyPair = RSA.getKeyPairFromFile("/Users/Munna/Desktop/receiver_private.pem");        	
+        	PublicKey otherPartyPublicKey = RSA.getPublicKey("/Users/Munna/Desktop/sender.pub");
+        	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey);
+        	
             while ((inputLine = in.readLine()) != null) {
 
             	// Receive other parties DHPublicKey data
@@ -52,16 +60,19 @@ public class Receiver {
             	SessionKeyManager receiverKeyManager = SessionKeyManager.makeSecondParty(publicKeyString);
             	byte [] sessionKey = receiverKeyManager.makeSessionKey(publicKeyString);
             	System.out.println(Base64.encodeBase64String(sessionKey));
-            	MessageCrypto messageCrypto = new MessageCrypto(sessionKey);
+            	            	
+            	messageCrypto.setSessionKey(sessionKey);
             	
             	Message dhPublicMessage = new Message();
+            	dhPublicMessage.messageCrypto = messageCrypto;
             	dhPublicMessage.put("DHPublicKey", receiverKeyManager.base64PublicDHKeyString());        	
-            	out.println(dhPublicMessage.asJSON());
+            	out.println(dhPublicMessage.asJSONStringForExchange());
                	
             	inputLine = in.readLine();
             	
             	Message receivedMessage = new Message(inputLine, true);
             	receivedMessage.messageCrypto = messageCrypto;
+//            	System.out.print(receivedMessage.isValid(receivedMessage.timestamp()));
             	receivedMessage.decrypt();
             	System.out.println(receivedMessage.get("type"));
             }
