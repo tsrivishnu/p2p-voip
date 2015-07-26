@@ -32,7 +32,7 @@ public class Message {
 	public Boolean isDecrypted = false;
 	public Boolean isEncrypted = false;
 	public MessageCrypto messageCrypto;
-	private SimpleDateFormat dateFormatter = Config.DATE_FORMATTER;
+	private SimpleDateFormat dateFormatter = new SimpleDateFormat(Config.DATE_FORMAT);
 	
 	/**
 	 * Create an instance of Message from a JSON string.
@@ -94,7 +94,7 @@ public class Message {
 	 * @throws java.text.ParseException
 	 */
 	public java.util.Date timestamp() throws java.text.ParseException {
-		return Config.DATE_FORMATTER.parse((String) fullMessage.get("timestamp"));
+		return dateFormatter.parse((String) fullMessage.get("timestamp"));
 	}
 	
 	/**
@@ -138,22 +138,26 @@ public class Message {
 		String signature = (String) fullMessage.get("signature");
 		
 		if (!messageCrypto.isValidSignature(signature, toBeSignedJSONObject().toJSONString())){			
+			System.out.println("Signature fail");
 			return false;
 		}
 		
 		if (!prevTimestamp.before(timestamp())) {
+			System.out.println("Timestamp fail");
 			// Message is valid only if the prevTimestamp is before this message's timestamp.
 			return false;
 		}
 		
 		// At this stage, we could decrypt and		
 		// Match if sender and receiver of the message are as expected 
-		decrypt();
+		if (isEncrypted) {
+			decrypt();
+		}		
 		
 		if ( !((data.get("sender").equals(messageCrypto.otherPartyPseudoIdentity))
 				&&
 			   (data.get("receiver").equals(messageCrypto.hostPseudoIdentity)))) {
-			
+			System.out.println("Entities fail");
 			return false;
 		}
 		
@@ -211,9 +215,30 @@ public class Message {
 	 */
 	public String asJSONStringForExchange() throws InvalidKeyException,
 					NoSuchAlgorithmException, SignatureException, UnsupportedEncodingException {
-
-		addTimestamp();
-		sign();		
+		
+		return asJSONStringForExchange(true, true);
+	}
+	
+	/**
+	 * Returns message as a string to be used to send in the network
+	 * 
+	 * @param addTimestamp: To append timestamp to the message root
+	 * @param addSignature: To sign the message and append signature to the message root.
+	 * @return Message as a string
+	 * @throws InvalidKeyException
+	 * @throws NoSuchAlgorithmException
+	 * @throws SignatureException
+	 * @throws UnsupportedEncodingException
+	 */
+	public String asJSONStringForExchange(Boolean addTimestamp, Boolean addSignature) throws InvalidKeyException, NoSuchAlgorithmException, SignatureException, UnsupportedEncodingException {
+		if (addTimestamp) {
+			addTimestamp();
+		}
+		
+		if (addSignature) {
+			sign();
+		}
+		
 		return asJSONString();
 	}
 	

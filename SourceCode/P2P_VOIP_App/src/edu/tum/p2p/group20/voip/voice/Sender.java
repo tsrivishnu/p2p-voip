@@ -24,6 +24,7 @@ import org.apache.commons.codec.binary.Base64;
 
 import edu.tum.p2p.group20.voip.com.Message;
 import edu.tum.p2p.group20.voip.com.MessageCrypto;
+import edu.tum.p2p.group20.voip.com.ModuleValidator;
 import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.dh.SessionKeyManager;
 
@@ -63,22 +64,49 @@ public class Sender {
         	
         	java.util.Date lastTimestamp = new java.util.Date();
         	
+        	// Send initial ping to check module.
+        	ModuleValidator moduleValidator = new ModuleValidator();
+        	Message initialModuleCheck = new Message(messageCrypto);
+        	initialModuleCheck.put("type", "PING");
+        	initialModuleCheck.put("verificationHash", moduleValidator.digest);
+        	initialModuleCheck.put("verificationTimestamp", moduleValidator.timestampString);
+        	// Do not sign this message, cause the receiver won't have your public key yet.
+        	out.println(initialModuleCheck.asJSONStringForExchange(true, false));
+        	
+        	//Receive ping reply
+        	inputLine = in.readLine();            	
+        	Message pingReplyMessage = new Message(inputLine, false, messageCrypto);
+        	if (!pingReplyMessage.isValid(lastTimestamp)) {
+        		throw new Exception("Message validation failed");
+        	}
+        	lastTimestamp = pingReplyMessage.timestamp();
+        	System.out.println(pingReplyMessage.get("type"));
+        	
+        	// Send DH with sender receiver.
+        	
+        	
+        	
         	// Generate and initiate DH
         	SessionKeyManager receiverKeyManager = SessionKeyManager.makeInitiator();
         	        	
         	Message dhInitMessage = new Message(messageCrypto);
+        	dhInitMessage.put("type", "DH_INIT");
         	dhInitMessage.put("DHPublicKey", receiverKeyManager.base64PublicDHKeyString());
         	out.println(dhInitMessage.asJSONStringForExchange());
         	
         	// Receive other parties DHpublickey 
         	inputLine = in.readLine();        	
         	Message receivedDhMessage = new Message(inputLine, false, messageCrypto);
+        	if (!receivedDhMessage.isValid(lastTimestamp)) {
+        		throw new Exception("Message validation failed");
+        	}        	
         	String dhPublicKeyString = (String) receivedDhMessage.get("DHPublicKey");
         	lastTimestamp = receivedDhMessage.timestamp();
+        	System.out.println(receivedDhMessage.get("type"));
 
-        	byte[] sessionKey = receiverKeyManager.makeSessionKey(dhPublicKeyString);       
-        	System.out.println(Base64.encodeBase64String(sessionKey));        	
+        	byte[] sessionKey = receiverKeyManager.makeSessionKey(dhPublicKeyString);
         	messageCrypto.setSessionKey(sessionKey);
+        	System.out.println("SessionKey: "+Base64.encodeBase64String(sessionKey));        	
         	
         	// Send CALL_INIT.
         	Message callInitMessage = new Message(messageCrypto);
@@ -89,9 +117,24 @@ public class Sender {
         	// Read CALL_INIT_ACK
         	inputLine = in.readLine();
         	Message receivedMessage = new Message(inputLine, true, messageCrypto);
-        	System.out.print(receivedMessage.isValid(lastTimestamp));
+        	if (!receivedMessage.isValid(lastTimestamp)) {
+        		throw new Exception("Message validation failed");
+        	}
         	receivedMessage.decrypt();
         	System.out.println(receivedMessage.get("type"));
+        	
+        	// Show waiting to the user here!
+        	System.out.println("Waiting for receiver to accept the call...");
+        	
+        	// Read CALL_ACCEPT/ CALL_DECLINE
+        	inputLine = in.readLine();            	
+        	Message callAcceptMessage = new Message(inputLine, true, messageCrypto);
+        	if (!callAcceptMessage.isValid(lastTimestamp)) {
+        		throw new Exception("Message validation failed");
+        	}
+        	callAcceptMessage.decrypt();
+        	lastTimestamp = callAcceptMessage.timestamp();
+        	System.out.println(callAcceptMessage.get("type"));
         	
 
         } catch (IOException e) {

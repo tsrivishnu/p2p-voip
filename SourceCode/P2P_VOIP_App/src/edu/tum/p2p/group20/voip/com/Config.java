@@ -7,5 +7,6 @@ import java.text.SimpleDateFormat;
  *
  */
 public class Config {
-	public static SimpleDateFormat DATE_FORMATTER = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+	public static String DATE_FORMAT = "yyyy-MM-dd HH:mm:ss.SSS";
+	public static String MODULE_VERIFICATION_SALT = "VOIP_P2P";
 }

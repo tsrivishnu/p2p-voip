@@ -36,7 +36,7 @@ public class MessageUnitTest {
 	MessageCrypto messageCryptoForSender;
 	MessageCrypto messageCryptoForReceiver;
 	
-	SimpleDateFormat sdf = Config.DATE_FORMATTER;	
+	SimpleDateFormat sdf = new SimpleDateFormat(Config.DATE_FORMAT);	
 	
 	Message sentMessage;
 	Message receivedMessage; 
