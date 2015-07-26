@@ -63,16 +63,16 @@ public class Receiver {
             	            	
             	messageCrypto.setSessionKey(sessionKey);
             	
-            	Message dhPublicMessage = new Message();
-            	dhPublicMessage.messageCrypto = messageCrypto;
+            	Message dhPublicMessage = new Message(messageCrypto);
             	dhPublicMessage.put("DHPublicKey", receiverKeyManager.base64PublicDHKeyString());        	
             	out.println(dhPublicMessage.asJSONStringForExchange());
                	
+            	// Read CALL_INIT
             	inputLine = in.readLine();
             	
             	Message receivedMessage = new Message(inputLine, true);
             	receivedMessage.messageCrypto = messageCrypto;
-//            	System.out.print(receivedMessage.isValid(receivedMessage.timestamp()));
+            	System.out.print(receivedMessage.isValid(receivedMessage.timestamp()));
             	receivedMessage.decrypt();
             	System.out.println(receivedMessage.get("type"));
             }

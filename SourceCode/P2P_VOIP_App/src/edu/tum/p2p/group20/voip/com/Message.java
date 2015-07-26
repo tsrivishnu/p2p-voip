@@ -55,10 +55,11 @@ public class Message {
 	 * Initializes an empty instance of Message to which data can be added. 
 	 * 
 	 */
-	public Message() {
+	public Message(MessageCrypto messageCrypto) {
 		data = new JSONObject();
 		fullMessage = new JSONObject();
 		fullMessage.put("message", data);
+		this.messageCrypto = messageCrypto;
 	}
 	
 	/**
@@ -130,6 +131,7 @@ public class Message {
 		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
 		
 		if(messageCrypto.isValidSignature(signature, toBeSignedJSONObject().toJSONString())){
+			// Message is valid only if the prevTimestamp is before this message's timestamp.
 			return prevTimestamp.before(timestamp());
 		} else {
 			return false;

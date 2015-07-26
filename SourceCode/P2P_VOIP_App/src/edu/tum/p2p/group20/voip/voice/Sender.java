@@ -77,12 +77,14 @@ public class Sender {
         	System.out.println(Base64.encodeBase64String(sessionKey));        	
         	messageCrypto.setSessionKey(sessionKey);
         	
-        	// Send CALL_INIT message.
-        	Message callInitMessage = new Message();
+        	// Send CALL_INIT.
+        	Message callInitMessage = new Message(messageCrypto);
         	callInitMessage.put("type", "CALL_INIT");
-        	callInitMessage.messageCrypto = messageCrypto;
         	callInitMessage.encrypt();
         	out.println(callInitMessage.asJSONStringForExchange());
+        	
+        	
+        	// 
 
         } catch (IOException e) {
             System.out.println("Exception caught when trying to connect on port " + portNumber);
