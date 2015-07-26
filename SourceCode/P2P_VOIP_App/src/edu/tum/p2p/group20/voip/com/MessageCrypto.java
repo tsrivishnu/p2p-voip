@@ -18,6 +18,8 @@ import javax.crypto.spec.SecretKeySpec;
 
 import edu.tum.p2p.group20.voip.crypto.RSA;
 
+// TODO Rename the class? It takes pseudo-identities and does nothing with em.
+
 /**
  * MessageCryto: Handles encryption, decryption, signing and signature verification of given strings 
  * from messages.
@@ -32,20 +34,26 @@ public class MessageCrypto {
     private byte[] sessionKey;
     private KeyPair hostKeyPair;
     private PublicKey otherPartyPublicKey;
+    public String hostPseudoIdentity, otherPartyPseudoIdentity;
     
     
 	/**
 	 * Creates a new instance of MessageCrypto with given RSA host key pair and otherparty's
-	 * RSA public key
+	 * RSA public key and pseudo-identities
 	 * 
 	 * @param hostKeyPair
-	 */	
-	public MessageCrypto(KeyPair hostKeyPair, PublicKey otherPartyPublicKey) {
+	 * @param otherPartyPublicKey
+	 * @param hostPseudoIdentity
+	 * @param otherPartyPseudoIdentity
+	 */
+	public MessageCrypto(KeyPair hostKeyPair, PublicKey otherPartyPublicKey, String hostPseudoIdentity, String otherPartyPseudoIdentity) {
 		
 		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 		
 		this.hostKeyPair = hostKeyPair;
-		this.otherPartyPublicKey = otherPartyPublicKey;		
+		this.otherPartyPublicKey = otherPartyPublicKey;
+		this.hostPseudoIdentity = hostPseudoIdentity;
+		this.otherPartyPseudoIdentity = otherPartyPseudoIdentity;
 	}
 	
 	/**
@@ -123,7 +131,7 @@ public class MessageCrypto {
 	public String getSignature(String toBeSignedString) throws InvalidKeyException,
 					NoSuchAlgorithmException, SignatureException,
 					UnsupportedEncodingException {
-		
+
 		return RSA.sign(hostKeyPair.getPrivate(), toBeSignedString);
 	}
 	

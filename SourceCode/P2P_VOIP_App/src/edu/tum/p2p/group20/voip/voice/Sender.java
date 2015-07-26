@@ -56,21 +56,22 @@ public class Sender {
         	// get hostkey
         	KeyPair hostKeyPair = RSA.getKeyPairFromFile("/Users/Munna/Desktop/sender_private.pem");        	
         	PublicKey otherPartyPublicKey = RSA.getPublicKey("/Users/Munna/Desktop/receiver.pub");
+        	String hostPseudoIdentity = "dc429ac06ffec501db88cbed0c5c685d82542c927f0fb3e28b4845be16156dea";
+        	String otherPartyPseudoIdentity = "9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
         	
-        	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey);
+        	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
         	
         	// Generate and initiate DH
         	SessionKeyManager receiverKeyManager = SessionKeyManager.makeInitiator();
         	        	
-        	Message dhInitMessage = new Message();
-        	dhInitMessage.messageCrypto = messageCrypto;
+        	Message dhInitMessage = new Message(messageCrypto);
         	dhInitMessage.put("DHPublicKey", receiverKeyManager.base64PublicDHKeyString());
         	out.println(dhInitMessage.asJSONStringForExchange());
         	
         	// Receive other parties DHpublickey 
         	inputLine = in.readLine();
         	
-        	Message receivedDhMessage = new Message(inputLine, false);
+        	Message receivedDhMessage = new Message(inputLine, false, messageCrypto);
         	String dhPublicKeyString = (String) receivedDhMessage.get("DHPublicKey");
 
         	byte[] sessionKey = receiverKeyManager.makeSessionKey(dhPublicKeyString);       

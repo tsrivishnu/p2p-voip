@@ -27,7 +27,7 @@ public class Message {
 	private static JSONParser jsonParser = new JSONParser();
 	public JSONObject data;
 	public String encryptedData;
-	private JSONObject fullMessage;
+	public JSONObject fullMessage;
 	public Object signature;
 	public MessageCrypto messageCrypto;
 	private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
@@ -37,9 +37,10 @@ public class Message {
 	 *  
 	 * @param json
 	 * @param encrypted: Boolean which says if the data in the message is encrypted or not.
+	 * @param messageCrypto
 	 * @throws ParseException
 	 */	
-	public Message(String json, Boolean encrypted) throws ParseException {
+	public Message(String json, Boolean encrypted, MessageCrypto messageCrypto) throws ParseException {
 		fullMessage = (JSONObject) jsonParser.parse(json);
 		
 		if (encrypted){
@@ -48,6 +49,7 @@ public class Message {
 			data = (JSONObject) fullMessage.get("message");
 		}
 		
+		this.messageCrypto = messageCrypto;
 		signature = fullMessage.get("signature");
 	}
 	
@@ -102,7 +104,7 @@ public class Message {
 	public void sign() throws InvalidKeyException, NoSuchAlgorithmException,
 				SignatureException, UnsupportedEncodingException {
 		
-		signature = messageCrypto.getSignature(toBeSignedJSONObject().toJSONString());		
+		signature = messageCrypto.getSignature(toBeSignedJSONObject().toJSONString());	
 		fullMessage.put("signature", signature);
 	}
 	
@@ -125,17 +127,20 @@ public class Message {
 					java.text.ParseException {
 		
 		String signature = (String) fullMessage.get("signature");
-		System.out.println(prevTimestamp);
-		System.out.println(timestamp());
 		
-		SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+		SimpleDateFormat sdf = Config.DATE_FORMATTER;
 		
-		if(messageCrypto.isValidSignature(signature, toBeSignedJSONObject().toJSONString())){
-			// Message is valid only if the prevTimestamp is before this message's timestamp.
-			return prevTimestamp.before(timestamp());
-		} else {
+		if (!messageCrypto.isValidSignature(signature, toBeSignedJSONObject().toJSONString())){
 			return false;
 		}
+		
+		if (!prevTimestamp.before(timestamp())) {
+			// Message is valid only if the prevTimestamp is before this message's timestamp.
+			return false;
+		}
+		
+		// message is invalid if its not from the right sender
+		return true;
 	}
 	
 	/**
@@ -216,7 +221,7 @@ public class Message {
 	 * 
 	 * @return JSONObject which has to be signed.
 	 */
-	private JSONObject toBeSignedJSONObject() {
+	public JSONObject toBeSignedJSONObject() {
 		JSONObject toBeSigned = new JSONObject();
 		toBeSigned.put("message", fullMessage.get("message"));
 		toBeSigned.put("timestamp", fullMessage.get("timestamp"));

@@ -49,12 +49,15 @@ public class Receiver {
             
             KeyPair hostKeyPair = RSA.getKeyPairFromFile("/Users/Munna/Desktop/receiver_private.pem");        	
         	PublicKey otherPartyPublicKey = RSA.getPublicKey("/Users/Munna/Desktop/sender.pub");
-        	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey);
+        	String otherPartyPseudoIdentity = "dc429ac06ffec501db88cbed0c5c685d82542c927f0fb3e28b4845be16156dea";
+        	String hostPseudoIdentity = "9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
+        	
+        	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
         	
             while ((inputLine = in.readLine()) != null) {
 
             	// Receive other parties DHPublicKey data
-            	Message receivedDhMessage = new Message(inputLine, false);
+            	Message receivedDhMessage = new Message(inputLine, false, messageCrypto);
             	String publicKeyString = (String) receivedDhMessage.get("DHPublicKey");
 
             	SessionKeyManager receiverKeyManager = SessionKeyManager.makeSecondParty(publicKeyString);
@@ -70,8 +73,7 @@ public class Receiver {
             	// Read CALL_INIT
             	inputLine = in.readLine();
             	
-            	Message receivedMessage = new Message(inputLine, true);
-            	receivedMessage.messageCrypto = messageCrypto;
+            	Message receivedMessage = new Message(inputLine, true, messageCrypto);
             	System.out.print(receivedMessage.isValid(receivedMessage.timestamp()));
             	receivedMessage.decrypt();
             	System.out.println(receivedMessage.get("type"));
