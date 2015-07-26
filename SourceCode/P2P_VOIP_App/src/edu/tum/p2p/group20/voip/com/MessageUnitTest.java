@@ -12,6 +12,10 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SignatureException;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.ShortBufferException;
+
 import org.json.simple.JSONObject;
 import org.json.simple.parser.ParseException;
 import org.junit.Test;
@@ -64,24 +68,26 @@ public class MessageUnitTest {
 		
 		receivedMessage = new Message(sentMessage.asJSONStringForExchange(), true, messageCryptoForReceiver);
 		
-		testSignatureRelated();		
+		testSignatureRelated();
 		testTimestampRelated();
+		testPseudoIdentitiesRelated();
 	}
 	
-	private void testSignatureRelated() throws InvalidKeyException, SignatureException, NoSuchAlgorithmException, UnsupportedEncodingException, java.text.ParseException {
+	private void testSignatureRelated() throws InvalidKeyException, SignatureException, NoSuchAlgorithmException, UnsupportedEncodingException, java.text.ParseException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, ParseException {
 
-		Object originalMessage = receivedMessage.fullMessage.get("message");		
-		// When signature is tampered
-		receivedMessage.fullMessage.put("message"," sadfsdaf");		
+		String originalMessage = receivedMessage.encryptedData;		
+		// When data is tampered with
+		receivedMessage.encryptedData = new StringBuilder(originalMessage).reverse().toString();
 		// should return false
 		assertFalse(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705")));		
 		
 		// Put back the original message;
-		receivedMessage.fullMessage.put("message", originalMessage);		
+		receivedMessage.encryptedData = (String) originalMessage;
+		
 		assertTrue(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705")));
 	}
 	
-	private void testTimestampRelated() throws InvalidKeyException, SignatureException, NoSuchAlgorithmException, UnsupportedEncodingException, java.text.ParseException {
+	private void testTimestampRelated() throws InvalidKeyException, SignatureException, NoSuchAlgorithmException, UnsupportedEncodingException, java.text.ParseException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, ParseException {
 		// Passing a past timestamp should return true
 		assertTrue(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705")));
 		
@@ -90,6 +96,27 @@ public class MessageUnitTest {
 		
 		// Passing a later timestamp should return false
 		assertFalse(receivedMessage.isValid(new java.util.Date()));
+	}
+	
+	public void testPseudoIdentitiesRelated() throws InvalidKeyException, SignatureException, NoSuchAlgorithmException, UnsupportedEncodingException, java.text.ParseException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, ParseException {		
+		Object senderOriginal = receivedMessage.data.get("sender");
+		Object receiverOriginal = receivedMessage.data.get("receiver");
+		
+		assertTrue(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705")));
+		
+//		change the pseudoIdentity of sender in the message.
+		receivedMessage.data.put("sender", "sdafasdfasd");
+		assertFalse(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705")));
+		receivedMessage.data.put("sender", senderOriginal);		
+		
+//		change the pseudoIdentity of receiver in the message.
+		receivedMessage.data.put("receiver", "sdafasdfasd");
+		assertFalse(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705")));
+		receivedMessage.data.put("receiver", receiverOriginal);		
+		
+		
+		
+		
 	}
 
 }

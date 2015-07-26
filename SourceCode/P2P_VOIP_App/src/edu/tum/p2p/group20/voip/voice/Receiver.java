@@ -54,6 +54,8 @@ public class Receiver {
         	
         	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
         	
+        	java.util.Date lastTimestamp = new java.util.Date();
+        	
             while ((inputLine = in.readLine()) != null) {
 
             	// Receive other parties DHPublicKey data
@@ -62,21 +64,28 @@ public class Receiver {
 
             	SessionKeyManager receiverKeyManager = SessionKeyManager.makeSecondParty(publicKeyString);
             	byte [] sessionKey = receiverKeyManager.makeSessionKey(publicKeyString);
+            	
             	System.out.println(Base64.encodeBase64String(sessionKey));
             	            	
             	messageCrypto.setSessionKey(sessionKey);
             	
+            	// Send your dh params to the other party.
             	Message dhPublicMessage = new Message(messageCrypto);
             	dhPublicMessage.put("DHPublicKey", receiverKeyManager.base64PublicDHKeyString());        	
             	out.println(dhPublicMessage.asJSONStringForExchange());
                	
             	// Read CALL_INIT
-            	inputLine = in.readLine();
-            	
+            	inputLine = in.readLine();            	
             	Message receivedMessage = new Message(inputLine, true, messageCrypto);
             	System.out.print(receivedMessage.isValid(receivedMessage.timestamp()));
             	receivedMessage.decrypt();
             	System.out.println(receivedMessage.get("type"));
+            	
+            	 // Send CALL_INIT_ACK.
+            	Message callInitMessage = new Message(messageCrypto);
+            	callInitMessage.put("type", "CALL_INIT_ACK");
+            	callInitMessage.encrypt();
+            	out.println(callInitMessage.asJSONStringForExchange());
             }
         } catch (IOException e) {
             System.out.println("Exception caught when trying to listen on port "

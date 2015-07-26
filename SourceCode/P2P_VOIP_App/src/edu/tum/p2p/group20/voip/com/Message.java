@@ -29,8 +29,10 @@ public class Message {
 	public String encryptedData;
 	public JSONObject fullMessage;
 	public Object signature;
+	public Boolean isDecrypted = false;
+	public Boolean isEncrypted = false;
 	public MessageCrypto messageCrypto;
-	private SimpleDateFormat dateFormatter = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
+	private SimpleDateFormat dateFormatter = Config.DATE_FORMATTER;
 	
 	/**
 	 * Create an instance of Message from a JSON string.
@@ -42,8 +44,8 @@ public class Message {
 	 */	
 	public Message(String json, Boolean encrypted, MessageCrypto messageCrypto) throws ParseException {
 		fullMessage = (JSONObject) jsonParser.parse(json);
-		
-		if (encrypted){
+		isEncrypted = encrypted;
+		if (isEncrypted){
 			encryptedData = (String) fullMessage.get("message");
 		} else {
 			data = (JSONObject) fullMessage.get("message");
@@ -62,6 +64,7 @@ public class Message {
 		fullMessage = new JSONObject();
 		fullMessage.put("message", data);
 		this.messageCrypto = messageCrypto;
+		addPseudoIdentities();
 	}
 	
 	/**
@@ -95,7 +98,8 @@ public class Message {
 	}
 	
 	/**
-	 * Performs signing on the message's data and encapsulates it into the required format.
+	 * Performs signing on the message's data and appends signature to the message root.
+	 * 
 	 * @throws UnsupportedEncodingException 
 	 * @throws SignatureException 
 	 * @throws NoSuchAlgorithmException 
@@ -109,10 +113,12 @@ public class Message {
 	}
 	
 	/**
-	 * Validate the signature and the timestamp over the timestamp passed as argument.
+	 * Validate the signature and the timestamp over the timestamp passed as argument. Also,
+	 * validates the sender and receiver of the message.
 	 * 
 	 * 
 	 * If the timestamp is before the timestamp passed, it is considered invalid.
+	 * If the sender and receiver are not as expected, it is considered invalid.
 	 * 
 	 * @param timestamp
 	 * @return true or false
@@ -121,16 +127,17 @@ public class Message {
 	 * @throws NoSuchAlgorithmException
 	 * @throws UnsupportedEncodingException
 	 * @throws java.text.ParseException 
+	 * @throws BadPaddingException 
+	 * @throws IllegalBlockSizeException 
+	 * @throws ShortBufferException 
 	 */
 	public Boolean isValid(java.util.Date prevTimestamp) throws InvalidKeyException,
 					SignatureException, NoSuchAlgorithmException, UnsupportedEncodingException,
-					java.text.ParseException {
+					java.text.ParseException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, ParseException {
 		
 		String signature = (String) fullMessage.get("signature");
 		
-		SimpleDateFormat sdf = Config.DATE_FORMATTER;
-		
-		if (!messageCrypto.isValidSignature(signature, toBeSignedJSONObject().toJSONString())){
+		if (!messageCrypto.isValidSignature(signature, toBeSignedJSONObject().toJSONString())){			
 			return false;
 		}
 		
@@ -139,7 +146,17 @@ public class Message {
 			return false;
 		}
 		
-		// message is invalid if its not from the right sender
+		// At this stage, we could decrypt and		
+		// Match if sender and receiver of the message are as expected 
+		decrypt();
+		
+		if ( !((data.get("sender").equals(messageCrypto.otherPartyPseudoIdentity))
+				&&
+			   (data.get("receiver").equals(messageCrypto.hostPseudoIdentity)))) {
+			
+			return false;
+		}
+		
 		return true;
 	}
 	
@@ -160,6 +177,7 @@ public class Message {
 		byte[] encryptedBytes = messageCrypto.encryptWithSessionKey(data.toJSONString());
 		encryptedData = Base64.encodeBase64String(encryptedBytes);
 		fullMessage.put("message", encryptedData);
+		isEncrypted = true;
 	}
 	
 	/**
@@ -173,9 +191,12 @@ public class Message {
 	 */
 	public void decrypt() throws InvalidKeyException, ShortBufferException,
 					IllegalBlockSizeException, BadPaddingException, ParseException {
-		byte[] encryptedBytes = Base64.decodeBase64(encryptedData);
-		data = (JSONObject) jsonParser.parse(messageCrypto.decryptWithSessionKey(encryptedBytes));
-		fullMessage.put("message", data);
+		if (!isDecrypted) {
+			byte[] encryptedBytes = Base64.decodeBase64(encryptedData);
+			data = (JSONObject) jsonParser.parse(messageCrypto.decryptWithSessionKey(encryptedBytes));
+			fullMessage.put("message", data);
+			isDecrypted = true;
+		} 
 	}
 	
 	/**
@@ -192,7 +213,7 @@ public class Message {
 					NoSuchAlgorithmException, SignatureException, UnsupportedEncodingException {
 
 		addTimestamp();
-		sign();
+		sign();		
 		return asJSONString();
 	}
 	
@@ -216,14 +237,24 @@ public class Message {
 		fullMessage.put("timestamp", dateFormatter.format(new java.util.Date()));
 	}
 	
+	private void addPseudoIdentities() {
+		put("sender", messageCrypto.hostPseudoIdentity);
+		put("receiver", messageCrypto.otherPartyPseudoIdentity);
+	}
+	
 	/**
 	 * Returns the part of the full message which has to be signed.
 	 * 
 	 * @return JSONObject which has to be signed.
 	 */
-	public JSONObject toBeSignedJSONObject() {
+	private JSONObject toBeSignedJSONObject() {
 		JSONObject toBeSigned = new JSONObject();
-		toBeSigned.put("message", fullMessage.get("message"));
+		if (isEncrypted) {
+			toBeSigned.put("message", encryptedData);
+		} else {
+			toBeSigned.put("message", data);
+		}
+		
 		toBeSigned.put("timestamp", fullMessage.get("timestamp"));
 		return toBeSigned;
 	}

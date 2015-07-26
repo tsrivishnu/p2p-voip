@@ -61,6 +61,8 @@ public class Sender {
         	
         	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
         	
+        	java.util.Date lastTimestamp = new java.util.Date();
+        	
         	// Generate and initiate DH
         	SessionKeyManager receiverKeyManager = SessionKeyManager.makeInitiator();
         	        	
@@ -69,10 +71,10 @@ public class Sender {
         	out.println(dhInitMessage.asJSONStringForExchange());
         	
         	// Receive other parties DHpublickey 
-        	inputLine = in.readLine();
-        	
+        	inputLine = in.readLine();        	
         	Message receivedDhMessage = new Message(inputLine, false, messageCrypto);
         	String dhPublicKeyString = (String) receivedDhMessage.get("DHPublicKey");
+        	lastTimestamp = receivedDhMessage.timestamp();
 
         	byte[] sessionKey = receiverKeyManager.makeSessionKey(dhPublicKeyString);       
         	System.out.println(Base64.encodeBase64String(sessionKey));        	
@@ -84,8 +86,13 @@ public class Sender {
         	callInitMessage.encrypt();
         	out.println(callInitMessage.asJSONStringForExchange());
         	
+        	// Read CALL_INIT_ACK
+        	inputLine = in.readLine();
+        	Message receivedMessage = new Message(inputLine, true, messageCrypto);
+        	System.out.print(receivedMessage.isValid(lastTimestamp));
+        	receivedMessage.decrypt();
+        	System.out.println(receivedMessage.get("type"));
         	
-        	// 
 
         } catch (IOException e) {
             System.out.println("Exception caught when trying to connect on port " + portNumber);
