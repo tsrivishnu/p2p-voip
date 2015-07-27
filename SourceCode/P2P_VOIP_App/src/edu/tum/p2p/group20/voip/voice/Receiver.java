@@ -42,7 +42,7 @@ public class Receiver {
          
         try (
             ServerSocket serverSocket = new ServerSocket(Integer.parseInt(args[0]));
-            Socket clientSocket = serverSocket.accept();
+            Socket clientSocket = serverSocket.accept();        	
         	
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);                   
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
@@ -51,9 +51,9 @@ public class Receiver {
             String inputLine;
             String inputFromUser;
             
-            KeyPair hostKeyPair = RSA.getKeyPairFromFile("/Users/Munna/Desktop/receiver_private.pem");        	
-        	PublicKey otherPartyPublicKey = RSA.getPublicKey("/Users/Munna/Desktop/sender.pub");
-        	String otherPartyPseudoIdentity = ""; // We get to know this from PING message.
+            KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
+            PublicKey otherPartyPublicKey = null; // We get to know this from PING message.
+        	String otherPartyPseudoIdentity = null; // We get to know this from PING message.
         	String hostPseudoIdentity = "9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
         	
         	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
@@ -73,9 +73,13 @@ public class Receiver {
             	}
             	System.out.println(receivedPingMessage.get("type"));
             	
-            	// Learn caller's public key
+            	// Learn caller's public key and pseudoIdentity
+            	// TODO These details need to be verified somehow! We now don't know if the
+            	// 		caller is who he says he is. Probably, make pseudo-identity some 
+            	//      kind of hash of public key? 
             	otherPartyPseudoIdentity = (String) receivedPingMessage.get("sender");
             	messageCrypto.otherPartyPseudoIdentity = otherPartyPseudoIdentity; 
+            	messageCrypto.otherPartyPublicKey = RSA.getPublicKeyFromString((String) receivedPingMessage.get("senderPublicKey"));
             	lastTimestamp = receivedPingMessage.timestamp();
             	
             	// Send PING_REPLY with module verification            	

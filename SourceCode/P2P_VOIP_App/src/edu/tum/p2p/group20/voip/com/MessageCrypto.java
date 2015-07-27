@@ -33,7 +33,7 @@ public class MessageCrypto {
     private Cipher cipher;
     private byte[] sessionKey;
     private KeyPair hostKeyPair;
-    private PublicKey otherPartyPublicKey;
+    public PublicKey otherPartyPublicKey;
     public String hostPseudoIdentity, otherPartyPseudoIdentity;
     
     

@@ -55,8 +55,9 @@ public class Sender {
         	String inputFromUser;
         	
         	// get hostkey
-        	KeyPair hostKeyPair = RSA.getKeyPairFromFile("/Users/Munna/Desktop/sender_private.pem");        	
-        	PublicKey otherPartyPublicKey = RSA.getPublicKey("/Users/Munna/Desktop/receiver.pub");
+        	KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/sender_private.pem");
+        	String hostPublicKeyEncoded = Base64.encodeBase64String(hostKeyPair.getPublic().getEncoded());
+        	PublicKey otherPartyPublicKey = RSA.getPublicKey("lib/receiver.pub");
         	String hostPseudoIdentity = "dc429ac06ffec501db88cbed0c5c685d82542c927f0fb3e28b4845be16156dea";
         	String otherPartyPseudoIdentity = "9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
         	
@@ -70,6 +71,7 @@ public class Sender {
         	initialModuleCheck.put("type", "PING");
         	initialModuleCheck.put("verificationHash", moduleValidator.digest);
         	initialModuleCheck.put("verificationTimestamp", moduleValidator.timestampString);
+        	initialModuleCheck.put("senderPublicKey", hostPublicKeyEncoded);
         	// Do not sign this message, cause the receiver won't have your public key yet.
         	out.println(initialModuleCheck.asJSONStringForExchange(true, false));
         	
@@ -82,10 +84,7 @@ public class Sender {
         	lastTimestamp = pingReplyMessage.timestamp();
         	System.out.println(pingReplyMessage.get("type"));
         	
-        	// Send DH with sender receiver.
-        	
-        	
-        	
+        	// Send DH with sender receiver.        	
         	// Generate and initiate DH
         	SessionKeyManager receiverKeyManager = SessionKeyManager.makeInitiator();
         	        	
