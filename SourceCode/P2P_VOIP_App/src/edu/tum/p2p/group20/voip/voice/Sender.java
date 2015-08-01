@@ -45,7 +45,7 @@ public class Sender {
         int portNumber = Integer.parseInt(args[0]);
          
         try (
-            Socket socket = new Socket("127.0.0.1", Integer.parseInt(args[0]));
+            Socket socket = new Socket("127.0.0.1", portNumber);
         	
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);                   
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
