@@ -2,6 +2,9 @@ package edu.tum.p2p.group20.voip.intraPeerCom.messages.dht;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.util.Arrays;
+
+import org.apache.commons.codec.binary.Base64;
 
 import edu.tum.p2p.group20.voip.intraPeerCom.Helper;
 
@@ -19,6 +22,24 @@ public class Put {
 		this.ttl = Helper.networkOrderedBytesFromShort(ttl);
 		this.replication = (byte) replication;
 		this.content = content;
+	}
+	
+	public Put (byte[] messageBytes) {
+		short size = Helper.shortFromNetworkOrderedBytes(
+				Arrays.copyOfRange(messageBytes, 0, 2)
+			);
+		short messageCode1 = Helper.shortFromNetworkOrderedBytes(
+					Arrays.copyOfRange(messageBytes, 2, 4)
+				);
+		byte[] key = Arrays.copyOfRange(messageBytes, 4, 36);
+		content = Arrays.copyOfRange(messageBytes, 42, 592);
+		System.out.println("*******************");
+//        System.out.println(Arrays.toString(Arrays.copyOfRange(messageBytes, 2, 4)));
+//        System.out.println(Arrays.toString(messageCode));        
+        System.out.println(messageCode1);
+//        System.out.println(Arrays.toString(key));
+        System.out.println(Base64.encodeBase64String(key));
+        System.out.println(Arrays.toString(content));
 	}
 	
 	public short sizeAsShort() {

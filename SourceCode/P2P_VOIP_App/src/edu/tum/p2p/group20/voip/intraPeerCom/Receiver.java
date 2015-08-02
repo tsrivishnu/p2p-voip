@@ -7,19 +7,24 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteOrder;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
+import java.util.Arrays;
 
 import org.apache.commons.codec.binary.Base64;
+import org.bouncycastle.crypto.tls.NewSessionTicket;
 
 import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Put;
 
 public class Receiver {
 
-	public static void main(String[] args) throws NumberFormatException, UnknownHostException, IOException, NoSuchAlgorithmException {
+	public static void main(String[] args) throws NumberFormatException, UnknownHostException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
 
 		if (args.length != 1) {
             System.err.println("Usage: java Sender <port number>");
@@ -33,36 +38,23 @@ public class Receiver {
         	Socket clientSocket = serverSocket.accept();
 	        OutputStream out = clientSocket.getOutputStream();
         	InputStream in = clientSocket.getInputStream();
-        ) {
-        	byte[] sizeBytes = new byte[2];
-            
-            short size = 12;
-            
-//            sizeBytes = Helper.networkOrderedBytesFromShort(size);
-            
-//            in.read(buff, 0, buff.length);
-            System.out.println(sizeBytes);
-            
-            
+        ) {            
             KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
-            PublicKey otherPartyPublicKey = null; // We get to know this from PING message.
-        	String otherPartyPseudoIdentity = null; // We get to know this from PING message.
         	String hostPseudoIdentity = "9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
             
         	MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
         	messageDigest.update(hostPseudoIdentity.getBytes());        	
         	byte[] key = messageDigest.digest();
+
+        	System.out.println(Base64.encodeBase64String(key));
         	        	
         	Put put_message = new Put(key, (short) 12, 255, hostKeyPair.getPublic().getEncoded());
         	
-        	byte[] message = put_message.fullMessage();
-        	System.out.println(message.length);
-        	System.out.println(hostKeyPair.getPublic().getEncoded().length);
-        	System.out.println(key.length);
+        	byte[] message = put_message.fullMessage();        	
+        	System.out.println(Arrays.toString(message));
+        	out.write(message, 0, message.length);        	
         	
-        	out.write(message, 0, message.length);
-        	
-            ByteOrder byteOrder = ByteOrder.nativeOrder();
+        	ByteOrder byteOrder = ByteOrder.nativeOrder();
 
             if( byteOrder == ByteOrder.BIG_ENDIAN ) {
               System.out.println( "Its Big!!!" );

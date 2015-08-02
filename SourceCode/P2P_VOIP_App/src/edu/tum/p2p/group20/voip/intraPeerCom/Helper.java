@@ -12,4 +12,8 @@ public class Helper {
         
         return buff;
 	}
+	
+	public static short shortFromNetworkOrderedBytes(byte[] byteValues) {
+		return (short)(((byteValues[0] & 0xFF) << 8) | (byteValues[1] & 0xFF));
+	}
 }
