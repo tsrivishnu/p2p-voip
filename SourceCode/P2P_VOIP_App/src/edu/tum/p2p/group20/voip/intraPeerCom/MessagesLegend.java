@@ -2,7 +2,17 @@ package edu.tum.p2p.group20.voip.intraPeerCom;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Objects;
 
+/**
+ * Class to maintain a record and provide API for various message type names
+ * and their correspoding codes used during communication with other modules
+ * of the peer.
+ * 
+ * @author Sri Vishnu Totakura <srivishnu@totakura.in>
+ *
+ */
 public class MessagesLegend {
 	public static final Map<String, Integer> legend;
 	static
@@ -22,4 +32,28 @@ public class MessagesLegend {
 		legend.put("MSG_KX_ERROR", 604);		
     }	
 	
+	/**
+	 * Returns name of the message from its code
+	 * 
+	 * @param messageCode
+	 * @return null or message name
+	 */
+	public static String nameForCode(Integer messageCode) {
+	    for (Entry<String, Integer> entry : legend.entrySet()) {
+	        if (Objects.equals(messageCode, entry.getValue())) {
+	            return entry.getKey();
+	        }
+	    }
+	    return null;
+	}
+	
+	/**
+	 * Returns code for the given message name
+	 * 
+	 * @param messageName
+	 * @return null or code for the message name
+	 */
+	public static Integer codeForName(String messageName) {
+		return legend.get(messageName);
+	}
 }

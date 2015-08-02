@@ -35,9 +35,9 @@ public class Receiver {
         
         try (
         	ServerSocket serverSocket = new ServerSocket(portNumber);
-        	Socket clientSocket = serverSocket.accept();
-	        OutputStream out = clientSocket.getOutputStream();
-        	InputStream in = clientSocket.getInputStream();
+//        	Socket clientSocket = serverSocket.accept();
+//	        OutputStream out = clientSocket.getOutputStream();
+//        	InputStream in = clientSocket.getInputStream();
         ) {            
             KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
         	String hostPseudoIdentity = "9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
@@ -46,23 +46,14 @@ public class Receiver {
         	messageDigest.update(hostPseudoIdentity.getBytes());        	
         	byte[] key = messageDigest.digest();
 
-        	System.out.println(Base64.encodeBase64String(key));
-        	        	
         	Put put_message = new Put(key, (short) 12, 255, hostKeyPair.getPublic().getEncoded());
         	
         	byte[] message = put_message.fullMessage();        	
         	System.out.println(Arrays.toString(message));
-        	out.write(message, 0, message.length);        	
+//        	out.write(message, 0, message.length);
         	
-        	ByteOrder byteOrder = ByteOrder.nativeOrder();
-
-            if( byteOrder == ByteOrder.BIG_ENDIAN ) {
-              System.out.println( "Its Big!!!" );
-            } else if( byteOrder == ByteOrder.LITTLE_ENDIAN ) {
-              System.out.println( "Its Little!!!" );
-            } else {
-              System.out.println( "Houston, we have a problem!" );
-            }
+        	System.out.println(MessagesLegend.nameForCode(500));
+        	System.out.println(MessagesLegend.codeForName("MSG_DHT_GET_REPLY"));
         } catch (IOException e) {
             System.out.println("Exception caught when trying to connect on port " + portNumber);
             System.out.println(e.getMessage());
