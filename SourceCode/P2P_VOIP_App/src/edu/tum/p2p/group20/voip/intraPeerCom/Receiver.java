@@ -53,20 +53,8 @@ public class Receiver {
         	byte[] key = messageDigest.digest();
 
         	//Send DHT trace
-//        	Trace traceMessage = new Trace(key);
-//        	byte[] traceMessageBytes = traceMessage.fullMessageAsBytes();
-//        	System.out.println(traceMessageBytes.length);
-//        	System.out.println(
-//        			Helper.shortFromNetworkOrderedBytes(Arrays.copyOfRange(traceMessageBytes, 0, 2))
-//        	);
-//        	System.out.println(
-//        			Helper.shortFromNetworkOrderedBytes(Arrays.copyOfRange(traceMessageBytes, 2, 4))
-//        	);
-//        	
-//        	System.out.println(
-//        		Arrays.toString(Arrays.copyOfRange(traceMessageBytes, 4, 36))
-//        	);
-//        	System.out.println(Arrays.toString(key));
+        	Trace traceMessage = new Trace(key);
+        	byte[] traceMessageBytes = traceMessage.fullMessageAsBytes();
         	
         	sendDhtPutMessage(key, hostKeyPair.getPublic().getEncoded());
 
@@ -80,39 +68,11 @@ public class Receiver {
 		//TODO the content for this message shouldn't be jsut publickey, it should 
 		//		also include, I guess, exchange point info.
 		Put put_message = new Put(key, (short) 12, 255, publicKey);
-		byte[] message = put_message.fullMessageAsBytes();
-		
-//		System.out.println(message.length);
-    	System.out.println(
-    			Helper.shortFromNetworkOrderedBytes(Arrays.copyOfRange(message, 0, 2))
-    	);
-    	System.out.println(
-    			Helper.shortFromNetworkOrderedBytes(Arrays.copyOfRange(message, 2, 4))
-    	);
-    	
-    	System.out.println(
-    		Arrays.toString(Arrays.copyOfRange(message, 4, 36))
-    	);
-    	System.out.println(Arrays.toString(key));
-    	
-    	System.out.println(
-    			Helper.shortFromNetworkOrderedBytes(Arrays.copyOfRange(message, 36, 38))
-    	);
-    	System.out.println(
-    			((0x000000FF) & Arrays.copyOfRange(message, 38, 39)[0])
-    	);
-    	
-    	System.out.println(
-        		Arrays.toString(Arrays.copyOfRange(message, 39, 44))
-        	);
-    	
-    	System.out.println(
-        		Arrays.toString(Arrays.copyOfRange(message, 44, 594))
-        	);
-    	System.out.println(Arrays.toString(publicKey));
-		
-		
-//		out.write(message, 0, message.length);
+		sendMessageBytes(put_message.fullMessageAsBytes());				
+	}
+	
+	private static void sendMessageBytes(byte[] messageBytes) throws IOException {
+		out.write(messageBytes, 0, messageBytes.length);
 	}
 
 }
