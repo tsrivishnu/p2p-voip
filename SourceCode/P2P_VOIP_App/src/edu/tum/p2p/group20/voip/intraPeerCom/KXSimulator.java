@@ -61,6 +61,12 @@ public class KXSimulator {
         ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
         byteStream.write(buff);
         byteStream.write(incomingBytes);
+        
+        short messageCode = Helper.shortFromNetworkOrderedBytes(
+			Arrays.copyOfRange(byteStream.toByteArray(), 2, 4)
+		);
+        
+        System.out.println("Received Message: " + MessagesLegend.nameForCode(messageCode));
 		
         return byteStream.toByteArray();
 	}

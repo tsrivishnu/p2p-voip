@@ -7,11 +7,14 @@ import java.util.Arrays;
 import org.apache.commons.codec.binary.Base64;
 
 import edu.tum.p2p.group20.voip.intraPeerCom.Helper;
+import edu.tum.p2p.group20.voip.intraPeerCom.MessagesLegend;
 
 public class Put {
 	public byte[] key;
 	public byte[] ttl;
-	public byte[] messageCode = Helper.networkOrderedBytesFromShort((short) 500);
+	public byte[] messageCode = Helper.networkOrderedBytesFromShort(
+		(short) MessagesLegend.codeForName("MSG_DHT_PUT")
+	);
 	public byte[] reserved = new byte[3];
 	public byte replication;
 	public byte[] content;

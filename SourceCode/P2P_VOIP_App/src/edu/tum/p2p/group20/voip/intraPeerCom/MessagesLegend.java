@@ -14,22 +14,22 @@ import java.util.Objects;
  *
  */
 public class MessagesLegend {
-	public static final Map<String, Integer> legend;
+	public static final Map<String, Short> legend;
 	static
     {
-		legend = new HashMap<String, Integer>();
-		legend.put("MSG_DHT_PUT", 500);
-		legend.put("MSG_DHT_GET", 501);
-		legend.put("MSG_DHT_TRACE", 502);
-		legend.put("MSG_DHT_GET_REPLY", 503);
-		legend.put("MSG_DHT_TRACE_REPLY", 504);
-		legend.put("MSG_DHT_ERROR", 505);
+		legend = new HashMap<String, Short>();
+		legend.put("MSG_DHT_PUT", (short) 500);
+		legend.put("MSG_DHT_GET", (short) 501);
+		legend.put("MSG_DHT_TRACE", (short) 502);
+		legend.put("MSG_DHT_GET_REPLY", (short) 503);
+		legend.put("MSG_DHT_TRACE_REPLY", (short) 504);
+		legend.put("MSG_DHT_ERROR", (short) 505);
 		
-		legend.put("MSG_KX_TN_BUILD_IN", 600);
-		legend.put("MSG_KX_TN_BUILD_OUT", 601);
-		legend.put("MSG_KX_TN_READY", 602);
-		legend.put("MSG_KX_TN_DESTROY", 603);
-		legend.put("MSG_KX_ERROR", 604);		
+		legend.put("MSG_KX_TN_BUILD_IN", (short) 600);
+		legend.put("MSG_KX_TN_BUILD_OUT", (short) 601);
+		legend.put("MSG_KX_TN_READY", (short) 602);
+		legend.put("MSG_KX_TN_DESTROY", (short) 603);
+		legend.put("MSG_KX_ERROR", (short) 604);		
     }	
 	
 	/**
@@ -38,8 +38,8 @@ public class MessagesLegend {
 	 * @param messageCode
 	 * @return null or message name
 	 */
-	public static String nameForCode(Integer messageCode) {
-	    for (Entry<String, Integer> entry : legend.entrySet()) {
+	public static String nameForCode(short messageCode) {
+	    for (Entry<String, Short> entry : legend.entrySet()) {
 	        if (Objects.equals(messageCode, entry.getValue())) {
 	            return entry.getKey();
 	        }
@@ -53,7 +53,7 @@ public class MessagesLegend {
 	 * @param messageName
 	 * @return null or code for the message name
 	 */
-	public static Integer codeForName(String messageName) {
+	public static short codeForName(String messageName) {
 		return legend.get(messageName);
 	}
 }
