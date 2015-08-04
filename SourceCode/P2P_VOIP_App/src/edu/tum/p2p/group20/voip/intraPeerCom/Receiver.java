@@ -1,5 +1,6 @@
 package edu.tum.p2p.group20.voip.intraPeerCom;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -29,6 +30,8 @@ public class Receiver {
 	private static Socket clientSocket;
 	private static OutputStream out;
 	private static InputStream in;
+	public static String lastReceivedMessageName;
+	public static byte[] lastReceivedMessage;
 	
 	public static void main(String[] args) throws NumberFormatException, UnknownHostException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
 
@@ -41,9 +44,9 @@ public class Receiver {
         
         try {
         	serverSocket = new ServerSocket(portNumber);
-//        	clientSocket = serverSocket.accept();
-//	        out = clientSocket.getOutputStream();
-//        	in = clientSocket.getInputStream();
+        	clientSocket = serverSocket.accept();
+	        out = clientSocket.getOutputStream();
+        	in = clientSocket.getInputStream();
         		
             KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
         	String hostPseudoIdentity = "9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
@@ -52,9 +55,10 @@ public class Receiver {
         	messageDigest.update(hostPseudoIdentity.getBytes());        	
         	byte[] key = messageDigest.digest();
 
-        	//Send DHT trace
-        	Trace traceMessage = new Trace(key);
-        	byte[] traceMessageBytes = traceMessage.fullMessageAsBytes();
+
+        	// TODO Send an wait for DHT reply for a timeout
+        	sendDhtTraceMessage(key);        	
+        	readIncomingMessage();
         	
         	sendDhtPutMessage(key, hostKeyPair.getPublic().getEncoded());
 
@@ -71,8 +75,39 @@ public class Receiver {
 		sendMessageBytes(put_message.fullMessageAsBytes());				
 	}
 	
+	public static void sendDhtTraceMessage(byte[] key) throws IOException {
+		Trace traceMessage = new Trace(key);
+    	byte[] traceMessageBytes = traceMessage.fullMessageAsBytes();
+    	sendMessageBytes(traceMessageBytes);
+	}
+	
 	private static void sendMessageBytes(byte[] messageBytes) throws IOException {
 		out.write(messageBytes, 0, messageBytes.length);
+	}
+	
+	private static byte[] readIncomingMessage() throws IOException {
+		byte[] buff = new byte[2];		
+    	// First read the length
+        in.read(buff, 0, buff.length);
+        
+        short incomingSize = Helper.shortFromNetworkOrderedBytes(buff);
+        incomingSize = (short) (incomingSize - 2); // Cause two bytes are already read.
+        byte[] incomingBytes = new byte[incomingSize];
+        in.read(incomingBytes, 0, incomingSize);
+        
+        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+        byteStream.write(buff);
+        byteStream.write(incomingBytes);
+        
+        short messageCode = Helper.shortFromNetworkOrderedBytes(
+			Arrays.copyOfRange(byteStream.toByteArray(), 2, 4)
+		);
+        
+        System.out.println("Received Message: " + MessagesLegend.nameForCode(messageCode));
+        lastReceivedMessageName = MessagesLegend.nameForCode(messageCode);
+        lastReceivedMessage = byteStream.toByteArray();
+        
+        return lastReceivedMessage;
 	}
 
 }

@@ -7,9 +7,12 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -20,8 +23,10 @@ public class KXSimulator {
 	public static OutputStream out;
 	public static InputStream in;
 	public static Scanner userIn;
+	public static String lastReceivedMessageName;
+	public static byte[] lastReceivedMessage;
 
-	public static void main(String[] args) throws NumberFormatException, UnknownHostException, IOException {
+	public static void main(String[] args) throws NumberFormatException, UnknownHostException, IOException, NoSuchAlgorithmException {
 
 		if (args.length != 1) {
             System.err.println("Usage: java Sender <port number>");
@@ -35,12 +40,29 @@ public class KXSimulator {
         	
     		out = socket.getOutputStream();
         	in = socket.getInputStream();
-        	userIn = new Scanner(System.in);        	
+        	userIn = new Scanner(System.in);   
+        	byte[] receivedMessage;
         	
-        	byte[] receivedMessage = readIncomingMessage();
+        	receiveMessagesLoop: while(readIncomingMessage() != null) {
+        		String userMessage = "What do you want to do?";
+        		userMessage += "\n1.Receive next message";
+        		userMessage += "\n2.Send DHT_TRACE_REPLY";
+        		userMessage += "\n3.Send DHT_ERROR";
+        		userMessage += "\n4.BREAK";
+                System.out.println(userMessage);
+                switch (userIn.nextLine()) {
+				case "2":
+					sendDhtTraceReply();
+					break;
+				case "4":
+					break receiveMessagesLoop;
+				default:
+					break;
+				}
+        	}
         	
-            System.out.println(Arrays.toString(receivedMessage));
-//            out.write(buff, 0, buff.length);
+        	
+            byte[] key = Arrays.copyOfRange(lastReceivedMessage, 2, 4);            
 
         } catch (IOException e) {
             System.out.println("Exception caught when trying to connect on port " + portNumber);
@@ -49,7 +71,7 @@ public class KXSimulator {
 	}
 	
 	private static byte[] readIncomingMessage() throws IOException {
-		byte[] buff = new byte[2];
+		byte[] buff = new byte[2];		
     	// First read the length
         in.read(buff, 0, buff.length);
         
@@ -67,8 +89,56 @@ public class KXSimulator {
 		);
         
         System.out.println("Received Message: " + MessagesLegend.nameForCode(messageCode));
+        lastReceivedMessageName = MessagesLegend.nameForCode(messageCode);
+        lastReceivedMessage = byteStream.toByteArray(); 
+        return lastReceivedMessage;
+	}
+	
+	private static void sendDhtTraceReply() throws NoSuchAlgorithmException, IOException {
+		byte[] size;
+		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 4, 36);
+		byte[] messageCode = Helper.networkOrderedBytesFromShort(
+				(short) MessagesLegend.codeForName("MSG_DHT_TRACE_REPLY")
+			);
 		
-        return byteStream.toByteArray();
+		MessageDigest md = MessageDigest.getInstance("SHA-256");
+		md.update("asdfsadf".getBytes());
+		byte[] peer1Id = md.digest();
+		byte[] peer1KxPort = Helper.networkOrderedBytesFromShort((short) 3001);
+		byte[] peer1reserved = new byte[2];
+		byte[] peer1ip = InetAddress.getByName("192.168.2.1").getAddress();
+		byte[] peer1ipv6 = InetAddress.getByName("FEDC:BA98:7654:3210:FEDC:BA98:7654:3210").getAddress();
+		
+		md.update("2sdfsadf".getBytes());
+		byte[] peer2Id = md.digest();
+		byte[] peer2KxPort = Helper.networkOrderedBytesFromShort((short) 3001);
+		byte[] peer2reserved = new byte[2];
+		byte[] peer2ip = InetAddress.getByName("192.168.2.2").getAddress();
+		byte[] peer2ipv6 = InetAddress.getByName("3ffe:2a00:100:7031::1").getAddress();
+		
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		outputStream.write(messageCode);
+		outputStream.write(key);
+		outputStream.write(peer1Id);
+		outputStream.write(peer1KxPort);
+		outputStream.write(peer1reserved);
+		outputStream.write(peer1ip);
+		outputStream.write(peer1ipv6);
+		
+		outputStream.write(peer2Id);
+		outputStream.write(peer2KxPort);
+		outputStream.write(peer2reserved);
+		outputStream.write(peer2ip);
+		outputStream.write(peer2ipv6);
+		
+		byte[] message = outputStream.toByteArray();
+		size = Helper.networkOrderedBytesFromShort((short) message.length);
+		
+		ByteArrayOutputStream outputStream2 = new ByteArrayOutputStream();
+		outputStream2.write(size);
+		outputStream2.write(message);
+		byte[] fullDhtReplyMessage = outputStream2.toByteArray();
+		out.write(fullDhtReplyMessage, 0, fullDhtReplyMessage.length);
 	}
 
 }
