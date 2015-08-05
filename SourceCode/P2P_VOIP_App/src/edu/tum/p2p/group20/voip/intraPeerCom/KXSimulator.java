@@ -47,7 +47,7 @@ public class KXSimulator {
         		String userMessage = "What do you want to do?";
         		userMessage += "\n1.Receive next message";
         		userMessage += "\n2.Send DHT_TRACE_REPLY";
-        		userMessage += "\n3.Send DHT_GET_REPLY";
+        		userMessage += "\n3.Send Dummy DHT_GET_REPLY";
         		userMessage += "\n4.Send DHT_ERROR";
         		userMessage += "\n5.Send nothing";
         		userMessage += "\n6.BREAK";
@@ -57,7 +57,7 @@ public class KXSimulator {
 					sendDhtTraceReply();
 					break;
 				case "3":
-//					sendDhtGetReply();
+					sendDhtDummyGetReply();
 					break;
 				case "6":
 					break receiveMessagesLoop;
@@ -99,6 +99,52 @@ public class KXSimulator {
         return lastReceivedMessage;
 	}
 	
+	/**
+	 * Send a Dummy DHT GET REPLY for the received DHT GET message.
+	 * This is only a Dummy, the content in this makes no sense.
+	 * 
+	 * @throws IOException
+	 */
+	private static void sendDhtDummyGetReply() throws IOException {
+		byte[] size;
+		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 4, 36);
+		byte[] messageCode = Helper.networkOrderedBytesFromShort(
+				(short) MessagesLegend.codeForName("MSG_DHT_GET_REPLY")
+			);
+		byte[] content = "Dummycontent".getBytes();		
+		
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();		
+		outputStream.write(messageCode);
+		outputStream.write(key);
+		outputStream.write(content);
+		
+		byte[] fullDhtReplyMessage = prependSizeForMessage(outputStream.toByteArray());		
+		out.write(fullDhtReplyMessage, 0, fullDhtReplyMessage.length);
+	}
+	
+	/**
+	 * Prepends the size field for a message after calculating the size of the message and
+	 * returns the full byte array of the full encapsulated message
+	 * 
+	 * @param message
+	 * @return full message with size as byte array
+	 * @throws IOException
+	 */
+	private static byte[] prependSizeForMessage(byte[] message) throws IOException {
+		byte[] size = Helper.networkOrderedBytesFromShort((short) (message.length + 2)); //+2 for size of size field
+		ByteArrayOutputStream outputStream2 = new ByteArrayOutputStream();
+		outputStream2.write(size);
+		outputStream2.write(message);
+		byte[] fullMessage = outputStream2.toByteArray();
+		return fullMessage;		
+	}
+	
+	/**
+	 * Send a Sample DHT TRACE REPLY message based on the last message received
+	 * 
+	 * @throws NoSuchAlgorithmException
+	 * @throws IOException
+	 */
 	private static void sendDhtTraceReply() throws NoSuchAlgorithmException, IOException {
 		byte[] size;
 		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 4, 36);
@@ -107,14 +153,14 @@ public class KXSimulator {
 			);
 		
 		MessageDigest md = MessageDigest.getInstance("SHA-256");
-		md.update("asdfsadf".getBytes());
+		md.update("exchangePoint1".getBytes());
 		byte[] peer1Id = md.digest();
 		byte[] peer1KxPort = Helper.networkOrderedBytesFromShort((short) 3001);
 		byte[] peer1reserved = new byte[2];
 		byte[] peer1ip = InetAddress.getByName("192.168.2.1").getAddress();
 		byte[] peer1ipv6 = InetAddress.getByName("FEDC:BA98:7654:3210:FEDC:BA98:7654:3210").getAddress();
 		
-		md.update("2sdfsadf".getBytes());
+		md.update("exchangePoint2".getBytes());
 		byte[] peer2Id = md.digest();
 		byte[] peer2KxPort = Helper.networkOrderedBytesFromShort((short) 3001);
 		byte[] peer2reserved = new byte[2];
@@ -136,13 +182,7 @@ public class KXSimulator {
 		outputStream.write(peer2ip);
 		outputStream.write(peer2ipv6);
 		
-		byte[] message = outputStream.toByteArray();
-		size = Helper.networkOrderedBytesFromShort((short) (message.length + 2)); //+2 for size of size field
-		
-		ByteArrayOutputStream outputStream2 = new ByteArrayOutputStream();
-		outputStream2.write(size);
-		outputStream2.write(message);
-		byte[] fullDhtReplyMessage = outputStream2.toByteArray();
+		byte[] fullDhtReplyMessage = prependSizeForMessage(outputStream.toByteArray());		
 		out.write(fullDhtReplyMessage, 0, fullDhtReplyMessage.length);
 	}
 

@@ -27,11 +27,11 @@ public class Get extends IntraPeerMessage {
 	 */
 	public boolean isValidReply(byte[] fullReplyMessage) {
 		String messagCode = IntraPeerMessage.messageCodeFromFullMessage(fullReplyMessage); 
-		if (!messagCode.equals("DHT_GET_REPLY")) {
+		if (!messagCode.equals("MSG_DHT_GET_REPLY")) {
 			return false;
 		}
 		
-		byte[] replyKey = Arrays.copyOfRange(fullReplyMessage, 4, fullReplyMessage.length);
+		byte[] replyKey = Arrays.copyOfRange(fullReplyMessage, 4, 36);
 		return Arrays.equals(byteValues.get("key"), replyKey);
 	}
 }

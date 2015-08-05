@@ -4,6 +4,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
+import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
@@ -46,7 +49,7 @@ public class Receiver {
         try {
         	serverSocket = new ServerSocket(portNumber);        	
         	clientSocket = serverSocket.accept();
-        	clientSocket.setSoTimeout(5000);
+        	clientSocket.setSoTimeout(10000); // 10 Seconds timeout
 	        out = clientSocket.getOutputStream();
         	in = clientSocket.getInputStream();
         		
@@ -61,27 +64,33 @@ public class Receiver {
         	
         	// finding a exchange point.
         	boolean isRandomPseudoIdChosen = false;
+        	// TODO what if you are never able to find a random non existing pseudo id? 
+        	//      this loop continues for ever?
         	while (!isRandomPseudoIdChosen) {
-	        	// Pick a random pseudo id and do DHT trace
+	        	// Pick a random pseudo id
 	        	randomPsuedoId = messageDigest.digest(new java.util.Date().toString().getBytes());
-	        	//Do a DHT_GET to find if that id exists
+	        	// Do a DHT_GET to find if that id exists
 	        	Get dhtGet = new Get(randomPsuedoId);
 	        	System.out.println("Sending DHT_GET for randomID");
 	        	sendMessageBytes(dhtGet.fullMessageAsBytes());
-	        	// TODO handle readTimeoutException
 	    		readIncomingMessage();
 	    		// When either message is not received or message is not a valid reply
 	    		// 	If message is a valid reply, that means the pseudo id exists.
 	    		if(lastReceivedMessage == null || !dhtGet.isValidReply(lastReceivedMessage)) {
 	    			isRandomPseudoIdChosen = true;
+	    			System.out.println("Found a random Pseudo ID");
 	    		}
         	}
     		
         	byte[] xchangePointInfoFromTrace = doDhtTraceForRandomExchangePoint(randomPsuedoId);        	       
         	
-        	Helper.trasnformXChangePointInfoFromDhtToKx(xchangePointInfoFromTrace);
+        	byte[] xChangePointInfoForKx = Helper
+        			.trasnformXChangePointInfoFromDhtToKx(xchangePointInfoFromTrace);
         	
-        	sendDhtPutMessage(key, hostKeyPair.getPublic().getEncoded());
+        	sendDhtPutMessage(key, hostKeyPair.getPublic().getEncoded(), xChangePointInfoForKx);
+        	
+        	// Send request to KX to build tunnel
+        	// Handle error response from KX
 
         } catch (IOException e) {
             System.out.println("Exception caught when trying to connect on port " + portNumber);
@@ -98,10 +107,10 @@ public class Receiver {
     	return Arrays.copyOfRange(lastReceivedMessage, lastReceivedMessage.length-56, lastReceivedMessage.length);
 	}
 	
-	public static void sendDhtPutMessage(byte[] key, byte[] publicKey) throws IOException {
+	public static void sendDhtPutMessage(byte[] key, byte[] publicKey, byte[] xchangePointInfo) throws IOException {
 		//TODO the content for this message shouldn't be jsut publickey, it should 
 		//		also include, I guess, exchange point info.
-		Put put_message = new Put(key, (short) 12, 255, publicKey);
+		Put put_message = new Put(key, (short) 12, 255, publicKey, xchangePointInfo);
 		sendMessageBytes(put_message.fullMessageAsBytes());				
 	}
 	
@@ -116,6 +125,8 @@ public class Receiver {
 	}
 	
 	private static byte[] readIncomingMessage() throws IOException {
+		// TODO: Where ever you are calling this method. Handle the error response of 
+		//  	that module. Or should we handle it here?
 		try {
 			lastReceivedMessageName = null;
 			lastReceivedMessage = null;
