@@ -2,8 +2,6 @@ package edu.tum.p2p.group20.voip.intraPeerCom.messages.dht;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.net.InetAddress;
-import java.util.Arrays;
 
 import edu.tum.p2p.group20.voip.intraPeerCom.Helper;
 
