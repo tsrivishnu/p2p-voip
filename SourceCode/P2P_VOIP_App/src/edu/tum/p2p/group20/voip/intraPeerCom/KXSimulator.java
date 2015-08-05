@@ -47,14 +47,19 @@ public class KXSimulator {
         		String userMessage = "What do you want to do?";
         		userMessage += "\n1.Receive next message";
         		userMessage += "\n2.Send DHT_TRACE_REPLY";
-        		userMessage += "\n3.Send DHT_ERROR";
-        		userMessage += "\n4.BREAK";
+        		userMessage += "\n3.Send DHT_GET_REPLY";
+        		userMessage += "\n4.Send DHT_ERROR";
+        		userMessage += "\n5.Send nothing";
+        		userMessage += "\n6.BREAK";
                 System.out.println(userMessage);
                 switch (userIn.nextLine()) {
 				case "2":
 					sendDhtTraceReply();
 					break;
-				case "4":
+				case "3":
+//					sendDhtGetReply();
+					break;
+				case "6":
 					break receiveMessagesLoop;
 				default:
 					break;
@@ -132,7 +137,7 @@ public class KXSimulator {
 		outputStream.write(peer2ipv6);
 		
 		byte[] message = outputStream.toByteArray();
-		size = Helper.networkOrderedBytesFromShort((short) message.length);
+		size = Helper.networkOrderedBytesFromShort((short) (message.length + 2)); //+2 for size of size field
 		
 		ByteArrayOutputStream outputStream2 = new ByteArrayOutputStream();
 		outputStream2.write(size);

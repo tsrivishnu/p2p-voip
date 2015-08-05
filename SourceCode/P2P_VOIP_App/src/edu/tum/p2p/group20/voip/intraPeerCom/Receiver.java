@@ -21,6 +21,7 @@ import org.apache.commons.codec.binary.Base64;
 import org.bouncycastle.crypto.tls.NewSessionTicket;
 
 import edu.tum.p2p.group20.voip.crypto.RSA;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Get;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Put;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Trace;
 
@@ -43,8 +44,9 @@ public class Receiver {
         int portNumber = Integer.parseInt(args[0]);
         
         try {
-        	serverSocket = new ServerSocket(portNumber);
+        	serverSocket = new ServerSocket(portNumber);        	
         	clientSocket = serverSocket.accept();
+        	clientSocket.setSoTimeout(5000);
 	        out = clientSocket.getOutputStream();
         	in = clientSocket.getInputStream();
         		
@@ -54,11 +56,30 @@ public class Receiver {
         	MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
         	messageDigest.update(hostPseudoIdentity.getBytes());        	
         	byte[] key = messageDigest.digest();
-
-
-        	// TODO Send an wait for DHT reply for a timeout
-        	sendDhtTraceMessage(key);        	
-        	readIncomingMessage();
+        	byte[] randomPsuedoId = null;
+        	
+        	
+        	// finding a exchange point.
+        	boolean isRandomPseudoIdChosen = false;
+        	while (!isRandomPseudoIdChosen) {
+	        	// Pick a random pseudo id and do DHT trace
+	        	randomPsuedoId = messageDigest.digest(new java.util.Date().toString().getBytes());
+	        	//Do a DHT_GET to find if that id exists
+	        	Get dhtGet = new Get(randomPsuedoId);
+	        	System.out.println("Sending DHT_GET for randomID");
+	        	sendMessageBytes(dhtGet.fullMessageAsBytes());
+	        	// TODO handle readTimeoutException
+	    		readIncomingMessage();
+	    		// When either message is not received or message is not a valid reply
+	    		// 	If message is a valid reply, that means the pseudo id exists.
+	    		if(lastReceivedMessage == null || !dhtGet.isValidReply(lastReceivedMessage)) {
+	    			isRandomPseudoIdChosen = true;
+	    		}
+        	}
+    		
+        	byte[] xchangePointInfoFromTrace = doDhtTraceForRandomExchangePoint(randomPsuedoId);        	       
+        	
+        	Helper.trasnformXChangePointInfoFromDhtToKx(xchangePointInfoFromTrace);
         	
         	sendDhtPutMessage(key, hostKeyPair.getPublic().getEncoded());
 
@@ -66,6 +87,15 @@ public class Receiver {
             System.out.println("Exception caught when trying to connect on port " + portNumber);
             System.out.println(e.getMessage());
         }
+	}
+	
+	public static byte[] doDhtTraceForRandomExchangePoint(byte[] key) throws IOException {
+		sendDhtTraceMessage(key);
+		readIncomingMessage();
+    	// read the trace message's last hops details because that will contain the
+    	// information that we need to for the exchange point.
+    	// i.e, look for the last 56 bytes in the messages.
+    	return Arrays.copyOfRange(lastReceivedMessage, lastReceivedMessage.length-56, lastReceivedMessage.length);
 	}
 	
 	public static void sendDhtPutMessage(byte[] key, byte[] publicKey) throws IOException {
@@ -86,28 +116,40 @@ public class Receiver {
 	}
 	
 	private static byte[] readIncomingMessage() throws IOException {
-		byte[] buff = new byte[2];		
-    	// First read the length
-        in.read(buff, 0, buff.length);
-        
-        short incomingSize = Helper.shortFromNetworkOrderedBytes(buff);
-        incomingSize = (short) (incomingSize - 2); // Cause two bytes are already read.
-        byte[] incomingBytes = new byte[incomingSize];
-        in.read(incomingBytes, 0, incomingSize);
-        
-        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-        byteStream.write(buff);
-        byteStream.write(incomingBytes);
-        
-        short messageCode = Helper.shortFromNetworkOrderedBytes(
-			Arrays.copyOfRange(byteStream.toByteArray(), 2, 4)
-		);
-        
-        System.out.println("Received Message: " + MessagesLegend.nameForCode(messageCode));
-        lastReceivedMessageName = MessagesLegend.nameForCode(messageCode);
-        lastReceivedMessage = byteStream.toByteArray();
-        
-        return lastReceivedMessage;
+		try {
+			lastReceivedMessageName = null;
+			lastReceivedMessage = null;
+			
+			byte[] buff = new byte[2];		
+	    	// First read the length
+	        in.read(buff, 0, buff.length);
+	        short incomingSize = Helper.shortFromNetworkOrderedBytes(buff);
+	        
+	        incomingSize = (short) (incomingSize - 2); // Cause two bytes are already read.
+	        byte[] incomingBytes = new byte[incomingSize];
+	        in.read(incomingBytes, 0, incomingSize);
+	        
+	        ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+	        byteStream.write(buff);
+	        byteStream.write(incomingBytes);
+	        
+	        short messageCode = Helper.shortFromNetworkOrderedBytes(
+				Arrays.copyOfRange(byteStream.toByteArray(), 2, 4)
+			);        
+	        
+	        System.out.println("Received Message: " + MessagesLegend.nameForCode(messageCode));
+	        
+	        // Assign message detail to the static variables
+	        lastReceivedMessageName = MessagesLegend.nameForCode(messageCode);
+	        lastReceivedMessage = byteStream.toByteArray();
+	        
+	        return lastReceivedMessage;
+	        
+		} catch(IOException e) {
+			System.out.println("Exception caught while trying to read network message");
+            System.out.println(e.getMessage());
+            
+            return null;
+		}
 	}
-
 }

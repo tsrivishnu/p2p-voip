@@ -99,4 +99,12 @@ public class IntraPeerMessage {
 		
 		return totalBytes;
 	}
+	
+	public static String messageCodeFromFullMessage(byte[] messageBytes) {
+		short messageCode = Helper.shortFromNetworkOrderedBytes(
+			Arrays.copyOfRange(messageBytes, 2, 4)
+		);
+		
+        return MessagesLegend.nameForCode(messageCode);
+	}
 }
