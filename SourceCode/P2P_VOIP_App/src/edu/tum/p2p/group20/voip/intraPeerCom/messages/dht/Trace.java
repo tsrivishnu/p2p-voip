@@ -1,5 +1,7 @@
 package edu.tum.p2p.group20.voip.intraPeerCom.messages.dht;
 
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.IntraPeerMessage;
+
 public class Trace extends IntraPeerMessage {	
 	static {
 		messageName = "MSG_DHT_TRACE";

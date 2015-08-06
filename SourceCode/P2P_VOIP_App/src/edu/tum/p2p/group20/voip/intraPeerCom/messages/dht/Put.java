@@ -4,6 +4,7 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import edu.tum.p2p.group20.voip.intraPeerCom.Helper;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.IntraPeerMessage;
 
 public class Put extends IntraPeerMessage {
 	

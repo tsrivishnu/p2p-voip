@@ -95,7 +95,29 @@ public class KXSimulator {
         
         System.out.println("Received Message: " + MessagesLegend.nameForCode(messageCode));
         lastReceivedMessageName = MessagesLegend.nameForCode(messageCode);
-        lastReceivedMessage = byteStream.toByteArray(); 
+        lastReceivedMessage = byteStream.toByteArray();
+        
+        if(lastReceivedMessageName.equals("MSG_KX_TN_BUILD_IN")) {
+
+        	byte[] xchangeInfoData = Arrays.copyOfRange(byteStream.toByteArray(), 40, byteStream.toByteArray().length);
+    		System.out.println(byteStream.toByteArray().length);
+    		System.out.println(Arrays.toString(Arrays.copyOfRange(xchangeInfoData, 4, 36)));
+    		System.out.println(
+    					Helper.shortFromNetworkOrderedBytes(
+    						Arrays.copyOfRange(xchangeInfoData, 0, 2)
+    					)
+    				);
+    		System.out.println(
+    				Helper.shortFromNetworkOrderedBytes(
+    					Arrays.copyOfRange(xchangeInfoData, 2, 4)
+    				)
+    			);
+    		
+    		System.out.println(InetAddress.getByAddress(Arrays.copyOfRange(xchangeInfoData, 36, 40)).getHostName());
+    		System.out.println(InetAddress.getByAddress(Arrays.copyOfRange(xchangeInfoData, 40, xchangeInfoData.length)).getHostName());
+    		System.out.println("******");
+        }
+        
         return lastReceivedMessage;
 	}
 	

@@ -2,6 +2,8 @@ package edu.tum.p2p.group20.voip.intraPeerCom.messages.dht;
 
 import java.util.Arrays;
 
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.IntraPeerMessage;
+
 public class Get extends IntraPeerMessage {	
 	static {
 		messageName = "MSG_DHT_GET";

@@ -17,6 +17,7 @@ import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Get;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Put;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Trace;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.BuildTNIncoming;
 
 public class Receiver {
 
@@ -80,6 +81,7 @@ public class Receiver {
         	sendDhtPutMessage(key, hostKeyPair.getPublic().getEncoded(), xChangePointInfoForKx);
         	
         	// Send request to KX to build tunnel
+        	sendKxBuildIncomingTunnel(key, xChangePointInfoForKx);
         	// Handle error response from KX
 
         } catch (IOException e) {
@@ -98,8 +100,6 @@ public class Receiver {
 	}
 	
 	public static void sendDhtPutMessage(byte[] key, byte[] publicKey, byte[] xchangePointInfo) throws IOException {
-		//TODO the content for this message shouldn't be jsut publickey, it should 
-		//		also include, I guess, exchange point info.
 		Put put_message = new Put(key, (short) 12, 255, publicKey, xchangePointInfo);
 		sendMessageBytes(put_message.fullMessageAsBytes());				
 	}
@@ -112,6 +112,11 @@ public class Receiver {
 	
 	private static void sendMessageBytes(byte[] messageBytes) throws IOException {
 		out.write(messageBytes, 0, messageBytes.length);
+	}
+	
+	public static void sendKxBuildIncomingTunnel(byte[] pseudoId, byte[] xchangePointInfo) throws IOException {
+		BuildTNIncoming buildTnMessage = new BuildTNIncoming(3, pseudoId, xchangePointInfo);
+		sendMessageBytes(buildTnMessage.fullMessageAsBytes());
 	}
 	
 	private static byte[] readIncomingMessage() throws IOException {
