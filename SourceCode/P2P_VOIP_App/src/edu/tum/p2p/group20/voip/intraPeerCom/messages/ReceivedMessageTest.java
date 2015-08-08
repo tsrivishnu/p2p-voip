@@ -26,27 +26,28 @@ public class ReceivedMessageTest {
     	byte[] key = messageDigest.digest();
     	
 		byte[] messageCode = Helper.networkOrderedBytesFromShort(
-				(short) MessagesLegend.codeForName("MSG_KX_ERROR")
+				(short) MessagesLegend.codeForName("MSG_KX_TN_READY")
 			);
 		
-		byte[] reserved = new byte[2];
-		byte[] request_type = Helper.networkOrderedBytesFromShort((short) 10);
+		byte[] reserved = new byte[4];
+		byte[] ipv4 = InetAddress.getByName("192.168.2.2").getAddress();
+		byte[] ipv6 = InetAddress.getByName("3ffe:2a00:100:7031::1").getAddress();
 		
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-		outputStream.write(messageCode);
-		outputStream.write(request_type);
+		outputStream.write(messageCode);		
+		outputStream.write(key);		
 		outputStream.write(reserved);
-		outputStream.write(key);
+		outputStream.write(ipv4);
+		outputStream.write(ipv6);
 		
-		byte[] fullDhtErrorMessage = prependSizeForMessage(outputStream.toByteArray());
+		byte[] fullTnReadyMessage = prependSizeForMessage(outputStream.toByteArray());
 		
-		ReceivedMessage receivedMessage = ReceivedMessageFactory.getReceivedMessageFor(fullDhtErrorMessage);
+		ReceivedMessage receivedMessage = ReceivedMessageFactory.getReceivedMessageFor(fullTnReadyMessage);
 		
-//		System.out.println(Helper.shortFromNetworkOrderedBytes(receivedMessage.byteValues.get("request_type")));
-//		System.out.println(Arrays.toString(receivedMessage.byteValues.get("request_type")));
-//		System.out.println(Arrays.toString(receivedMessage.byteValues.get("size")));
-		System.out.println(Arrays.toString(receivedMessage.byteValues.get("pseudoId")));
-		System.out.println(Arrays.toString(key));
+		System.out.println(InetAddress.getByAddress(receivedMessage.byteValues.get("ipv4")).toString());
+		System.out.println(InetAddress.getByAddress(receivedMessage.byteValues.get("ipv6")).toString());
+		System.out.println(Arrays.toString(receivedMessage.byteValues.get("ipv4")));
+		System.out.println(Arrays.toString(ipv4));
 		
 		System.out.println(receivedMessage.isValid(key));
 	}

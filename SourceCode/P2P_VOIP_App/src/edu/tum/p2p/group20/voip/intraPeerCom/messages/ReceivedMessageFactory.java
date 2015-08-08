@@ -8,6 +8,7 @@ import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.DhtError;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.GetReply;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.TraceReply;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.KxError;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.TnReady;
 
 public class ReceivedMessageFactory {
 	
@@ -31,6 +32,9 @@ public class ReceivedMessageFactory {
 			case "MSG_KX_ERROR":
 				receivedMessage = new KxError(fullMessageBytes);
 				break;
+			case "MSG_KX_TN_READY":
+				receivedMessage = new TnReady(fullMessageBytes);
+				break;	
 			default:
 				receivedMessage = new ReceivedMessage();
 				break;
