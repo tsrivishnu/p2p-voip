@@ -48,9 +48,13 @@ public class KXSimulator {
         		userMessage += "\n1.Receive next message";
         		userMessage += "\n2.Send DHT_TRACE_REPLY";
         		userMessage += "\n3.Send Dummy DHT_GET_REPLY";
-        		userMessage += "\n4.Send DHT_ERROR";
-        		userMessage += "\n5.Send nothing";
-        		userMessage += "\n6.BREAK";
+        		userMessage += "\n4.Send IN Tunnel Ready";
+        		userMessage += "\n5.Send OUT Tunnel Ready";
+        		userMessage += "\n6.Send DHT_ERROR";
+        		userMessage += "\n7.Send KX_ERROR";
+        		userMessage += "\n8.Send nothing";
+        		userMessage += "\n9.BREAK";
+        		userMessage += "\n10.Send reply with wrong pseudo ID";
                 System.out.println(userMessage);
                 switch (userIn.nextLine()) {
 				case "2":
@@ -59,7 +63,10 @@ public class KXSimulator {
 				case "3":
 					sendDhtDummyGetReply();
 					break;
-				case "6":
+				case "4":
+					sendTunnelReady(new byte[4]);
+					break;
+				case "9":
 					break receiveMessagesLoop;
 				default:
 					break;
@@ -185,6 +192,41 @@ public class KXSimulator {
 		
 		byte[] fullDhtReplyMessage = prependSizeForMessage(outputStream.toByteArray());		
 		out.write(fullDhtReplyMessage, 0, fullDhtReplyMessage.length);
+	}
+	
+	/**
+	 * Sends a tunnel ready reply to the requester with the give destinationIpAddress value
+	 * 
+	 * @param destinationIpAddress
+	 * @throws IOException
+	 */
+	private static void sendTunnelReady(byte[] destinationIpAddress) throws IOException {		
+		byte[] size;
+		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 4, 36);
+		
+		byte[] messageCode = Helper.networkOrderedBytesFromShort(
+				(short) MessagesLegend.codeForName("MSG_KX_TN_READY")
+			);
+		byte[] reserved = new byte[4];
+		
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		outputStream.write(messageCode);
+		outputStream.write(key);
+		outputStream.write(reserved);
+		outputStream.write(destinationIpAddress);
+		
+		byte[] fullTunnelReadyMessage = prependSizeForMessage(outputStream.toByteArray());		
+		out.write(fullTunnelReadyMessage, 0, fullTunnelReadyMessage.length);
+	}
+	
+	private static void sendErrorReply(String messageName) {
+		byte[] size;
+		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 4, 36);
+		
+		byte[] messageCode = Helper.networkOrderedBytesFromShort(
+				(short) MessagesLegend.codeForName(messageName)
+			);
+		byte[] reserved = new byte[4];
 	}
 
 }

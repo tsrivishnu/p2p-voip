@@ -28,7 +28,7 @@ public class Receiver {
 	public static String lastReceivedMessageName;
 	public static byte[] lastReceivedMessage;
 	
-	public static void main(String[] args) throws NumberFormatException, UnknownHostException, IOException, NoSuchAlgorithmException, InvalidKeySpecException {
+	public static void main(String[] args) throws Exception {
 
 		if (args.length != 1) {
             System.err.println("Usage: java Sender <port number>");
@@ -64,7 +64,7 @@ public class Receiver {
 	        	Get dhtGet = new Get(randomPsuedoId);
 	        	System.out.println("Sending DHT_GET for randomID");
 	        	sendMessageBytes(dhtGet.fullMessageAsBytes());
-	    		readIncomingMessage();
+	        	readIncomingAndHandleError();
 	    		// When either message is not received or message is not a valid reply
 	    		// 	If message is a valid reply, that means the pseudo id exists.
 	    		if(lastReceivedMessage == null || !dhtGet.isValidReply(lastReceivedMessage)) {
@@ -79,10 +79,19 @@ public class Receiver {
         			.trasnformXChangePointInfoFromDhtToKx(xchangePointInfoFromTrace);
         	
         	sendDhtPutMessage(key, hostKeyPair.getPublic().getEncoded(), xChangePointInfoForKx);
+        	readIncomingAndHandleError(); // This is just to see if you would get any error
         	
         	// Send request to KX to build tunnel
         	sendKxBuildIncomingTunnel(key, xChangePointInfoForKx);
         	// Handle error response from KX
+        	readIncomingAndHandleError();
+        	
+        	if(lastReceivedMessage != null && lastReceivedMessageName.equals("MSG_KX_TN_READY")) {
+        		System.out.println("You are now online!");
+        	} else {
+        		System.out.println("Offline!");
+        	}
+        	
 
         } catch (IOException e) {
             System.out.println("Exception caught when trying to connect on port " + portNumber);
@@ -90,9 +99,27 @@ public class Receiver {
         }
 	}
 	
-	public static byte[] doDhtTraceForRandomExchangePoint(byte[] key) throws IOException {
-		sendDhtTraceMessage(key);
+	private static void readIncomingAndHandleError() throws Exception {
 		readIncomingMessage();
+    	raiseExceptionIfError();
+	}
+	
+	private static void raiseExceptionIfError() throws Exception {
+		if ( lastReceivedMessage != null 
+				&& ( lastReceivedMessageName.equals("MSG_KX_ERROR")
+					 || lastReceivedMessageName.equals("MSG_DHT_ERROR"))
+			) {
+			throw new Exception("Error Received: "+lastReceivedMessageName);
+		}
+	}
+	
+	public static byte[] doDhtTraceForRandomExchangePoint(byte[] key) throws Exception {
+		sendDhtTraceMessage(key);
+		readIncomingAndHandleError();
+		// if no reply is received, raise exception
+		if (lastReceivedMessage == null) {
+			throw new Exception("DHT trace reply not received within timeout");
+		}
     	// read the trace message's last hops details because that will contain the
     	// information that we need to for the exchange point.
     	// i.e, look for the last 56 bytes in the messages.
