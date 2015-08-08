@@ -10,14 +10,24 @@ import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.TraceReply;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.KxError;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.TnReady;
 
+/**
+ * Factory to find the name of the message and return appropriate received message object
+ * 
+ * @author Sri Vishnu Totakura <srivishnu@totakura.in>
+ *
+ */
 public class ReceivedMessageFactory {
 	
-	public static ReceivedMessage getReceivedMessageFor(byte[] fullMessageBytes) {
+	public static ReceivedMessage getReceivedMessageFor(byte[] fullMessageBytes) throws Exception {
 		short messageCode = Helper.shortFromNetworkOrderedBytes(
 			Arrays.copyOfRange(fullMessageBytes, 2, 4)
 		);
 		
 		ReceivedMessage receivedMessage;
+		
+		if (MessagesLegend.nameForCode(messageCode) == null) {
+			throw new Exception("Received Message Type not found");
+		}
 		
 		switch (MessagesLegend.nameForCode(messageCode)) {
 			case "MSG_DHT_GET_REPLY":
@@ -36,8 +46,7 @@ public class ReceivedMessageFactory {
 				receivedMessage = new TnReady(fullMessageBytes);
 				break;	
 			default:
-				receivedMessage = new ReceivedMessage();
-				break;
+				throw new Exception("Received Message Type not found");
 		}
 		
 		return receivedMessage; 

@@ -25,10 +25,7 @@ public class ReceivedMessageTest {
     	messageDigest.update(hostPseudoIdentity.getBytes());        	
     	byte[] key = messageDigest.digest();
     	
-		byte[] messageCode = Helper.networkOrderedBytesFromShort(
-				(short) MessagesLegend.codeForName("MSG_KX_TN_READY")
-			);
-		
+		byte[] messageCode =  new byte[2];
 		byte[] reserved = new byte[4];
 		byte[] ipv4 = InetAddress.getByName("192.168.2.2").getAddress();
 		byte[] ipv6 = InetAddress.getByName("3ffe:2a00:100:7031::1").getAddress();

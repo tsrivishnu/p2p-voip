@@ -2,9 +2,9 @@ package edu.tum.p2p.group20.voip.intraPeerCom.messages.dht;
 
 import java.util.Arrays;
 
-import edu.tum.p2p.group20.voip.intraPeerCom.messages.IntraPeerMessage;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.RequestMessage;
 
-public class Get extends IntraPeerMessage {	
+public class Get extends RequestMessage {	
 	static {
 		messageName = "MSG_DHT_GET";
 		
@@ -28,7 +28,7 @@ public class Get extends IntraPeerMessage {
 	 * @return true or false
 	 */
 	public boolean isValidReply(byte[] fullReplyMessage) {
-		String messagCode = IntraPeerMessage.messageCodeFromFullMessage(fullReplyMessage); 
+		String messagCode = RequestMessage.messageCodeFromFullMessage(fullReplyMessage); 
 		if (!messagCode.equals("MSG_DHT_GET_REPLY")) {
 			return false;
 		}

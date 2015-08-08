@@ -11,13 +11,13 @@ import edu.tum.p2p.group20.voip.intraPeerCom.MessagesLegend;
 
 /**
  * Class that serves as parent class and handles basic functionalities of 
- * encapsulating required fields in a intra peer communication message into
+ * encapsulating required fields in a intra peer communication's request messages into
  * the required format
  * 
  * @author Sri Vishnu Totakura <srivishnu@totakura.in>
  *
  */
-public class IntraPeerMessage {
+public class RequestMessage {
 	/**
 	 * Fields that are part of the message.
 	 * Override these for each message child class
@@ -40,7 +40,7 @@ public class IntraPeerMessage {
 	 * Sets the size value to empty byte array of size 2 and adds the bytes
 	 * for the message code
 	 */
-	public IntraPeerMessage() {
+	public RequestMessage() {
 		byteValues.put("size", new byte[2]); // put empty bytes for size for now
 
 		byteValues.put(

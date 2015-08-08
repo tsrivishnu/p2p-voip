@@ -1,9 +1,9 @@
 package edu.tum.p2p.group20.voip.intraPeerCom.messages.kx;
 
 import edu.tum.p2p.group20.voip.intraPeerCom.Helper;
-import edu.tum.p2p.group20.voip.intraPeerCom.messages.IntraPeerMessage;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.RequestMessage;
 
-public class BuildTNIncoming extends IntraPeerMessage {
+public class BuildTNIncoming extends RequestMessage {
 	static {
 		messageName = "MSG_KX_TN_BUILD_IN";
 		

@@ -4,9 +4,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 
 import edu.tum.p2p.group20.voip.intraPeerCom.Helper;
-import edu.tum.p2p.group20.voip.intraPeerCom.messages.IntraPeerMessage;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.RequestMessage;
 
-public class Put extends IntraPeerMessage {
+public class Put extends RequestMessage {
 	
 	static {
 		messageName = "MSG_DHT_PUT";
