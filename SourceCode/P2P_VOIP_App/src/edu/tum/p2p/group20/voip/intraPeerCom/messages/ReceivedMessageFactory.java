@@ -5,6 +5,7 @@ import java.util.Arrays;
 import edu.tum.p2p.group20.voip.intraPeerCom.Helper;
 import edu.tum.p2p.group20.voip.intraPeerCom.MessagesLegend;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.GetReply;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.TraceReply;
 
 public class ReceivedMessageFactory {
 	

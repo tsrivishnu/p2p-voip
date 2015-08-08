@@ -178,17 +178,18 @@ public class KXSimulator {
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		outputStream.write(messageCode);
 		outputStream.write(key);
-		outputStream.write(peer1Id);
-		outputStream.write(peer1KxPort);
-		outputStream.write(peer1reserved);
-		outputStream.write(peer1ip);
-		outputStream.write(peer1ipv6);
 		
 		outputStream.write(peer2Id);
 		outputStream.write(peer2KxPort);
 		outputStream.write(peer2reserved);
 		outputStream.write(peer2ip);
 		outputStream.write(peer2ipv6);
+		
+		outputStream.write(peer1Id);
+		outputStream.write(peer1KxPort);
+		outputStream.write(peer1reserved);
+		outputStream.write(peer1ip);
+		outputStream.write(peer1ipv6);
 		
 		byte[] fullDhtReplyMessage = prependSizeForMessage(outputStream.toByteArray());		
 		out.write(fullDhtReplyMessage, 0, fullDhtReplyMessage.length);
