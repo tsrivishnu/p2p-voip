@@ -26,7 +26,7 @@ public class ReceivedMessageTest {
     	byte[] key = messageDigest.digest();
     	
 		byte[] messageCode = Helper.networkOrderedBytesFromShort(
-				(short) MessagesLegend.codeForName("MSG_DHT_ERROR")
+				(short) MessagesLegend.codeForName("MSG_KX_ERROR")
 			);
 		
 		byte[] reserved = new byte[2];

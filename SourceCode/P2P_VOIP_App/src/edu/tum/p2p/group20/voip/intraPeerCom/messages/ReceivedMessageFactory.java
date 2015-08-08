@@ -7,6 +7,7 @@ import edu.tum.p2p.group20.voip.intraPeerCom.MessagesLegend;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.DhtError;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.GetReply;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.TraceReply;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.KxError;
 
 public class ReceivedMessageFactory {
 	
@@ -26,6 +27,9 @@ public class ReceivedMessageFactory {
 				break;
 			case "MSG_DHT_ERROR":
 				receivedMessage = new DhtError(fullMessageBytes);
+				break;
+			case "MSG_KX_ERROR":
+				receivedMessage = new KxError(fullMessageBytes);
 				break;
 			default:
 				receivedMessage = new ReceivedMessage();
