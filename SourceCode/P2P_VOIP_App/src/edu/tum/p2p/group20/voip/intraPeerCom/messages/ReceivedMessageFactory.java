@@ -4,6 +4,7 @@ import java.util.Arrays;
 
 import edu.tum.p2p.group20.voip.intraPeerCom.Helper;
 import edu.tum.p2p.group20.voip.intraPeerCom.MessagesLegend;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.DhtError;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.GetReply;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.TraceReply;
 
@@ -22,6 +23,9 @@ public class ReceivedMessageFactory {
 				break;
 			case "MSG_DHT_TRACE_REPLY":
 				receivedMessage = new TraceReply(fullMessageBytes);
+				break;
+			case "MSG_DHT_ERROR":
+				receivedMessage = new DhtError(fullMessageBytes);
 				break;
 			default:
 				receivedMessage = new ReceivedMessage();

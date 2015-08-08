@@ -220,14 +220,24 @@ public class KXSimulator {
 		out.write(fullTunnelReadyMessage, 0, fullTunnelReadyMessage.length);
 	}
 	
-	private static void sendErrorReply(String messageName) {
+	private static void sendErrorReply(String messageName) throws Exception {
 		byte[] size;
 		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 4, 36);
 		
 		byte[] messageCode = Helper.networkOrderedBytesFromShort(
 				(short) MessagesLegend.codeForName(messageName)
 			);
-		byte[] reserved = new byte[4];
+		byte[] reserved = new byte[2];
+		byte[] request_type = Helper.networkOrderedBytesFromShort((short) 10);
+		
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+		outputStream.write(messageCode);
+		outputStream.write(request_type);
+		outputStream.write(reserved);
+		outputStream.write(key);
+		
+		byte[] fullDhtErrorMessage = prependSizeForMessage(outputStream.toByteArray());
+		out.write(fullDhtErrorMessage, 0, fullDhtErrorMessage.length);
 	}
 
 }
