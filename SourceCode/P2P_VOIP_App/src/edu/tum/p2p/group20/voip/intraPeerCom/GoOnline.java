@@ -21,7 +21,7 @@ import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.TraceReply;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.BuildTNIncoming;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.TnReady;
 
-public class Receiver {
+public class GoOnline {
 	
 	private static Socket clientSocket;
 	private static OutputStream out;
@@ -81,9 +81,7 @@ public class Receiver {
         	sendKxBuildIncomingTunnel(key, xChangePointInfoForKx);
         	readIncomingAndHandleError();
         	
-        	if(lastReceivedMessage != null 
-        			&& lastReceivedMessage.name().equals(TnReady.messageName)
-        			&& lastReceivedMessage.isValid(key)) {
+        	if (isValidMessage(lastReceivedMessage, TnReady.messageName, key)) {        		
         		
         		sendDhtPutMessage(key, hostKeyPair.getPublic().getEncoded(), xChangePointInfoForKx);
             	readIncomingAndHandleError(); // This is just to see if you would get any error
@@ -98,38 +96,36 @@ public class Receiver {
         }
 	}
 		
-	public static byte[] doDhtTraceForRandomExchangePoint(byte[] key) throws Exception {
+	private static byte[] doDhtTraceForRandomExchangePoint(byte[] key) throws Exception {
 		sendDhtTraceMessage(key);
 		readIncomingAndHandleError();
 		// if no reply is received, or received a wrong type raise exception
-		if (lastReceivedMessage == null 
-				|| !lastReceivedMessage.isValid(key)
-				|| !lastReceivedMessage.name().equals(TraceReply.messageName)) {
+		if (!isValidMessage(lastReceivedMessage, TraceReply.messageName, key)) {
 			throw new Exception("DHT trace reply error");
 		}
 		
 		return lastReceivedMessage.get("xchangePointInfo");		
 	}
 	
-	public static void sendDhtPutMessage(byte[] key, byte[] publicKey, byte[] xchangePointInfo) throws IOException {
+	private static void sendDhtPutMessage(byte[] key, byte[] publicKey, byte[] xchangePointInfo) throws IOException {
 		Put put_message = new Put(key, (short) 12, 255, publicKey, xchangePointInfo);
 		sendMessage(put_message);				
 	}
 	
-	public static void sendDhtTraceMessage(byte[] key) throws IOException {
+	private static void sendDhtTraceMessage(byte[] key) throws IOException {
 		Trace traceMessage = new Trace(key);
 		sendMessage(traceMessage);
+	}
+	
+	public static void sendKxBuildIncomingTunnel(byte[] pseudoId, byte[] xchangePointInfo) throws IOException {
+		BuildTNIncoming buildTnMessage = new BuildTNIncoming(3, pseudoId, xchangePointInfo);
+		sendMessage(buildTnMessage);
 	}
 	
 	private static void sendMessage(RequestMessage requestMessage) throws IOException {
 		byte[] messageBytes = requestMessage.fullMessageAsBytes();
 		System.out.println("Sending message: "  + requestMessage.messageName);
 		out.write(messageBytes, 0, messageBytes.length);
-	}
-	
-	public static void sendKxBuildIncomingTunnel(byte[] pseudoId, byte[] xchangePointInfo) throws IOException {
-		BuildTNIncoming buildTnMessage = new BuildTNIncoming(3, pseudoId, xchangePointInfo);
-		sendMessage(buildTnMessage);
 	}
 	
 	private static void readIncomingAndHandleError() throws Exception {
@@ -173,5 +169,11 @@ public class Receiver {
             
             return null;
 		}
+	}
+	
+	private static boolean isValidMessage(ReceivedMessage receivedMessage, String expectedName, byte[] pseudoId) {
+		return (receivedMessage != null 
+    			&& receivedMessage.name().equals(expectedName)
+    			&& receivedMessage.isValid(pseudoId));
 	}
 }
