@@ -6,18 +6,18 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.net.UnknownHostException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-import java.security.spec.InvalidKeySpecException;
-import java.util.Arrays;
 
 import edu.tum.p2p.group20.voip.crypto.RSA;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessageFactory;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Get;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Put;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Trace;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.TraceReply;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.BuildTNIncoming;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.TnReady;
 
 public class Receiver {
 
@@ -25,8 +25,7 @@ public class Receiver {
 	private static Socket clientSocket;
 	private static OutputStream out;
 	private static InputStream in;
-	public static String lastReceivedMessageName;
-	public static byte[] lastReceivedMessage;
+	public static ReceivedMessage lastReceivedMessage;
 	
 	public static void main(String[] args) throws Exception {
 
@@ -51,8 +50,7 @@ public class Receiver {
         	messageDigest.update(hostPseudoIdentity.getBytes());        	
         	byte[] key = messageDigest.digest();
         	byte[] randomPsuedoId = null;
-        	
-        	
+        	        	
         	// finding a exchange point.
         	boolean isRandomPseudoIdChosen = false;
         	// TODO what if you are never able to find a random non existing pseudo id? 
@@ -65,9 +63,10 @@ public class Receiver {
 	        	System.out.println("Sending DHT_GET for randomID");
 	        	sendMessageBytes(dhtGet.fullMessageAsBytes());
 	        	readIncomingAndHandleError();
-	    		// When either message is not received or message is not a valid reply
+	    		// When either message is not received or message is not a valid reply,
+	        	//  we have a random not existing pseudoId
 	    		// 	If message is a valid reply, that means the pseudo id exists.
-	    		if(lastReceivedMessage == null || !dhtGet.isValidReply(lastReceivedMessage)) {
+	    		if(lastReceivedMessage == null ||  !dhtGet.isValidReply(lastReceivedMessage)) {
 	    			isRandomPseudoIdChosen = true;
 	    			System.out.println("Found a random Pseudo ID");
 	    		}
@@ -76,54 +75,40 @@ public class Receiver {
         	byte[] xchangePointInfoFromTrace = doDhtTraceForRandomExchangePoint(randomPsuedoId);        	       
         	
         	byte[] xChangePointInfoForKx = Helper
-        			.trasnformXChangePointInfoFromDhtToKx(xchangePointInfoFromTrace);
-        	
-        	sendDhtPutMessage(key, hostKeyPair.getPublic().getEncoded(), xChangePointInfoForKx);
-        	readIncomingAndHandleError(); // This is just to see if you would get any error
+        			.trasnformXChangePointInfoFromDhtToKx(xchangePointInfoFromTrace);        	
         	
         	// Send request to KX to build tunnel
         	sendKxBuildIncomingTunnel(key, xChangePointInfoForKx);
-        	// Handle error response from KX
         	readIncomingAndHandleError();
         	
-        	if(lastReceivedMessage != null && lastReceivedMessageName.equals("MSG_KX_TN_READY")) {
+        	if(lastReceivedMessage != null 
+        			&& lastReceivedMessage.name().equals(TnReady.messageName)
+        			&& lastReceivedMessage.isValid(key)) {
+        		
+        		sendDhtPutMessage(key, hostKeyPair.getPublic().getEncoded(), xChangePointInfoForKx);
+            	readIncomingAndHandleError(); // This is just to see if you would get any error
+        		
         		System.out.println("You are now online!");
         	} else {
         		System.out.println("Offline!");
         	}
-        	
-
         } catch (IOException e) {
             System.out.println("Exception caught when trying to connect on port " + portNumber);
             System.out.println(e.getMessage());
         }
 	}
-	
-	private static void readIncomingAndHandleError() throws Exception {
-		readIncomingMessage();
-    	raiseExceptionIfError();
-	}
-	
-	private static void raiseExceptionIfError() throws Exception {
-		if ( lastReceivedMessage != null 
-				&& ( lastReceivedMessageName.equals("MSG_KX_ERROR")
-					 || lastReceivedMessageName.equals("MSG_DHT_ERROR"))
-			) {
-			throw new Exception("Error Received: "+lastReceivedMessageName);
-		}
-	}
-	
+		
 	public static byte[] doDhtTraceForRandomExchangePoint(byte[] key) throws Exception {
 		sendDhtTraceMessage(key);
 		readIncomingAndHandleError();
-		// if no reply is received, raise exception
-		if (lastReceivedMessage == null) {
-			throw new Exception("DHT trace reply not received within timeout");
+		// if no reply is received, or received a wrong type raise exception
+		if (lastReceivedMessage == null 
+				|| !lastReceivedMessage.isValid(key)
+				|| !lastReceivedMessage.name().equals(TraceReply.messageName)) {
+			throw new Exception("DHT trace reply error");
 		}
-    	// read the trace message's last hops details because that will contain the
-    	// information that we need to for the exchange point.
-    	// i.e, look for the last 56 bytes in the messages.
-    	return Arrays.copyOfRange(lastReceivedMessage, lastReceivedMessage.length-56, lastReceivedMessage.length);
+		
+		return lastReceivedMessage.get("xchangePointInfo");		
 	}
 	
 	public static void sendDhtPutMessage(byte[] key, byte[] publicKey, byte[] xchangePointInfo) throws IOException {
@@ -146,11 +131,19 @@ public class Receiver {
 		sendMessageBytes(buildTnMessage.fullMessageAsBytes());
 	}
 	
-	private static byte[] readIncomingMessage() throws IOException {
-		// TODO: Where ever you are calling this method. Handle the error response of 
-		//  	that module. Or should we handle it here?
+	private static void readIncomingAndHandleError() throws Exception {
+		readIncomingMessage();
+    	raiseExceptionIfError();
+	}
+	
+	private static void raiseExceptionIfError() throws Exception {
+		if ( lastReceivedMessage != null && lastReceivedMessage.isErrorType()) {
+			throw new Exception("Error message Received: "+ lastReceivedMessage.name());
+		}
+	}
+	
+	private static ReceivedMessage readIncomingMessage() throws Exception {
 		try {
-			lastReceivedMessageName = null;
 			lastReceivedMessage = null;
 			
 			byte[] buff = new byte[2];		
@@ -166,16 +159,11 @@ public class Receiver {
 	        byteStream.write(buff);
 	        byteStream.write(incomingBytes);
 	        
-	        short messageCode = Helper.shortFromNetworkOrderedBytes(
-				Arrays.copyOfRange(byteStream.toByteArray(), 2, 4)
-			);        
+	        lastReceivedMessage = ReceivedMessageFactory
+	        		.getReceivedMessageFor(byteStream.toByteArray());
 	        
-	        System.out.println("Received Message: " + MessagesLegend.nameForCode(messageCode));
-	        
-	        // Assign message detail to the static variables
-	        lastReceivedMessageName = MessagesLegend.nameForCode(messageCode);
-	        lastReceivedMessage = byteStream.toByteArray();
-	        
+	        System.out.println("Received message: " + lastReceivedMessage.name());
+			
 	        return lastReceivedMessage;
 	        
 		} catch(IOException e) {

@@ -26,7 +26,7 @@ public class KXSimulator {
 	public static String lastReceivedMessageName;
 	public static byte[] lastReceivedMessage;
 
-	public static void main(String[] args) throws NumberFormatException, UnknownHostException, IOException, NoSuchAlgorithmException {
+	public static void main(String[] args) throws Exception {
 
 		if (args.length != 1) {
             System.err.println("Usage: java Sender <port number>");
@@ -65,6 +65,12 @@ public class KXSimulator {
 					break;
 				case "4":
 					sendTunnelReady(new byte[4]);
+					break;
+				case "6":
+					sendErrorReply("MSG_DHT_ERROR");
+					break;
+				case "7":
+					sendErrorReply("MSG_KX_ERROR");
 					break;
 				case "9":
 					break receiveMessagesLoop;
@@ -202,8 +208,7 @@ public class KXSimulator {
 	 * @throws IOException
 	 */
 	private static void sendTunnelReady(byte[] destinationIpAddress) throws IOException {		
-		byte[] size;
-		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 4, 36);
+		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 8, 40);
 		
 		byte[] messageCode = Helper.networkOrderedBytesFromShort(
 				(short) MessagesLegend.codeForName("MSG_KX_TN_READY")
@@ -221,7 +226,6 @@ public class KXSimulator {
 	}
 	
 	private static void sendErrorReply(String messageName) throws Exception {
-		byte[] size;
 		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 4, 36);
 		
 		byte[] messageCode = Helper.networkOrderedBytesFromShort(

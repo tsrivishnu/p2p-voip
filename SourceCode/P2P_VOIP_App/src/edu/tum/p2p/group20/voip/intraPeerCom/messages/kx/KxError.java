@@ -24,4 +24,8 @@ public class KxError extends ReceivedMessage {
 		byteValues.put("reserved", Arrays.copyOfRange(fullMessageBytes, 6, 8));
 		byteValues.put("pseudoId", Arrays.copyOfRange(fullMessageBytes, 8, fullMessageBytes.length));    	
 	}
+	
+	public boolean isErrorType() {
+		return true;
+	}
 }

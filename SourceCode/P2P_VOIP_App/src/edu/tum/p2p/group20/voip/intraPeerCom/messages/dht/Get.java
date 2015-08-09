@@ -2,6 +2,7 @@ package edu.tum.p2p.group20.voip.intraPeerCom.messages.dht;
 
 import java.util.Arrays;
 
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.RequestMessage;
 
 public class Get extends RequestMessage {	
@@ -11,13 +12,13 @@ public class Get extends RequestMessage {
 		fields = new String[] {
 	      "size",
 	      "messageCode",
-	      "key"
+	      "pseudoId"
 		};
 	}
 	
 	public Get(byte[] pseudoIdToSearch) {
 		super();		
-		byteValues.put("key", pseudoIdToSearch);
+		byteValues.put("pseudoId", pseudoIdToSearch);
 	}
 	
 	/**
@@ -27,13 +28,12 @@ public class Get extends RequestMessage {
 	 * @param fullReplyMessage in byte[]
 	 * @return true or false
 	 */
-	public boolean isValidReply(byte[] fullReplyMessage) {
-		String messagCode = RequestMessage.messageCodeFromFullMessage(fullReplyMessage); 
+	public boolean isValidReply(ReceivedMessage replyMessage) {
+		String messagCode = replyMessage.name(); 
 		if (!messagCode.equals("MSG_DHT_GET_REPLY")) {
 			return false;
 		}
 		
-		byte[] replyKey = Arrays.copyOfRange(fullReplyMessage, 4, 36);
-		return Arrays.equals(byteValues.get("key"), replyKey);
+		return replyMessage.isValid(byteValues.get("pseudoId"));
 	}
 }
