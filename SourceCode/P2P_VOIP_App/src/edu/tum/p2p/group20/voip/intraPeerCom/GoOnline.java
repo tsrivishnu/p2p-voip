@@ -24,13 +24,19 @@ public class GoOnline {
 	public static IntraPeerCommunicator communicator;
 	
 	public static void main(String[] args) throws Exception {
-
 		if (args.length != 1) {
             System.err.println("Usage: java Sender <port number>");
             System.exit(1);
         }
          
         int portNumber = Integer.parseInt(args[0]);
+        goOnline(portNumber);
+		
+	}
+	
+	public static void goOnline(int portNumber) throws Exception {
+
+		
         
         try {
         	
