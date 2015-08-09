@@ -72,7 +72,13 @@ public class KXSimulator {
 					sendDhtDummyGetReply();
 					break;
 				case "4":
-					sendTunnelReady(new byte[4]);
+					sendTunnelReady(new byte[4], new byte[16]);
+					break;
+				case "5":			
+					sendTunnelReady(
+						InetAddress.getByName("192.168.2.2").getAddress(),
+						InetAddress.getByName("3ffe:2a00:100:7031::1").getAddress()
+					);
 					break;
 				case "6":
 					sendErrorReply("MSG_DHT_ERROR");
@@ -243,7 +249,7 @@ public class KXSimulator {
 	 * @param destinationIpAddress
 	 * @throws IOException
 	 */
-	private static void sendTunnelReady(byte[] destinationIpAddress) throws IOException {		
+	private static void sendTunnelReady(byte[] destinationIpv4, byte[] destinationIpv6) throws IOException {		
 		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 8, 40);
 		
 		byte[] messageCode = Helper.networkOrderedBytesFromShort(
@@ -255,7 +261,8 @@ public class KXSimulator {
 		outputStream.write(messageCode);
 		outputStream.write(key);
 		outputStream.write(reserved);
-		outputStream.write(destinationIpAddress);
+		outputStream.write(destinationIpv4);
+		outputStream.write(destinationIpv6);
 		
 		byte[] fullTunnelReadyMessage = prependSizeForMessage(outputStream.toByteArray());		
 		out.write(fullTunnelReadyMessage, 0, fullTunnelReadyMessage.length);
