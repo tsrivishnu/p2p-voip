@@ -1,5 +1,6 @@
 package edu.tum.p2p.group20.voip.intraPeerCom.messages;
 
+import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,8 +40,9 @@ public class ReceivedMessage {
 	 * 
 	 * @param pseudoId
 	 * @return true/false boolean
+	 * @throws Exception 
 	 */
-	public boolean isValid(byte[] pseudoId) {
+	public boolean isValid(byte[] pseudoId) throws Exception {
 		return Arrays.equals(byteValues.get("pseudoId"), pseudoId);
 	}
 	

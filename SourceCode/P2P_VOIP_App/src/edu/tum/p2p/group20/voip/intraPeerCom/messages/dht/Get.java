@@ -27,8 +27,9 @@ public class Get extends RequestMessage {
 	 * 
 	 * @param fullReplyMessage in byte[]
 	 * @return true or false
+	 * @throws Exception 
 	 */
-	public boolean isValidReply(ReceivedMessage replyMessage) {
+	public boolean isValidReply(ReceivedMessage replyMessage) throws Exception {
 		String messagCode = replyMessage.name(); 
 		if (!messagCode.equals("MSG_DHT_GET_REPLY")) {
 			return false;
