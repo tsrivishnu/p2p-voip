@@ -1,8 +1,11 @@
 package edu.tum.p2p.group20.voip.intraPeerCom;
 
 import java.io.IOException;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
 
 import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
@@ -71,7 +74,7 @@ public class GoOnline {
         	
         	if (communicator.isValidMessage(lastReceivedMessage, TnReady.messageName, key)) {        		
         		
-        		sendDhtPutMessage(key, hostKeyPair.getPublic().getEncoded(), xChangePointInfoForKx);
+        		sendDhtPutMessage(key, hostKeyPair, xChangePointInfoForKx);
         		lastReceivedMessage = communicator.readIncomingAndHandleError(); // This is just to see if you would get any error
         		
         		System.out.println("You are now online!");
@@ -97,8 +100,8 @@ public class GoOnline {
 		return lastReceivedMessage.get("xchangePointInfo");		
 	}
 	
-	private static void sendDhtPutMessage(byte[] key, byte[] publicKey, byte[] xchangePointInfo) throws IOException {
-		Put put_message = new Put(key, (short) 12, 255, publicKey, xchangePointInfo);
+	private static void sendDhtPutMessage(byte[] key, KeyPair rsaKeyPair, byte[] xchangePointInfo) throws IOException, InvalidKeyException, SignatureException, NoSuchAlgorithmException {
+		Put put_message = new Put(key, (short) 12, 255, rsaKeyPair, xchangePointInfo);
 		communicator.sendMessage(put_message);				
 	}
 	
