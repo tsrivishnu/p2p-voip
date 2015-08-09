@@ -55,7 +55,7 @@ public class KXSimulator {
         		String userMessage = "What do you want to do?";
         		userMessage += "\n1.Receive next message";
         		userMessage += "\n2.Send DHT_TRACE_REPLY";
-        		userMessage += "\n3.Send Dummy DHT_GET_REPLY";
+        		userMessage += "\n3.Send DHT_GET_REPLY";
         		userMessage += "\n4.Send IN Tunnel Ready";
         		userMessage += "\n5.Send OUT Tunnel Ready";
         		userMessage += "\n6.Send DHT_ERROR";
