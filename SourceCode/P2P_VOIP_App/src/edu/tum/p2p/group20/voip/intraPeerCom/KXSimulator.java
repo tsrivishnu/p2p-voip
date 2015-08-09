@@ -18,6 +18,7 @@ import java.util.Scanner;
 
 public class KXSimulator {
 	
+	private static ServerSocket serverSocket;
 	public static Socket socket;
 	
 	public static OutputStream out;
@@ -36,11 +37,12 @@ public class KXSimulator {
         int portNumber = Integer.parseInt(args[0]);
         
         try {
-        	socket = new Socket("127.0.0.1", portNumber);
-        	
-    		out = socket.getOutputStream();
+        	serverSocket = new ServerSocket(portNumber);        	
+        	socket = serverSocket.accept();
+	        out = socket.getOutputStream();
         	in = socket.getInputStream();
-        	userIn = new Scanner(System.in);   
+        	userIn = new Scanner(System.in); 
+        	
         	byte[] receivedMessage;
         	
         	receiveMessagesLoop: while(readIncomingMessage() != null) {

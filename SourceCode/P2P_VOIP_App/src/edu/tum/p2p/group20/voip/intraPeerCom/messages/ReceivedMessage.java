@@ -45,7 +45,9 @@ public class ReceivedMessage {
 	}
 	
 	public String name() {
-		return messageName;
+		return MessagesLegend.nameForCode(
+			Helper.shortFromNetworkOrderedBytes(byteValues.get("messageCode"))
+		);
 	}
 	
 	public byte[] get(String key) {

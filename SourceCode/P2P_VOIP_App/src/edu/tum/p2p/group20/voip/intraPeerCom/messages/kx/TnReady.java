@@ -6,7 +6,7 @@ import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 
 public class TnReady extends ReceivedMessage {
 	static {
-		messageName = "MSG_KX_GET_REPLY";
+		messageName = "MSG_KX_TN_READY";
 		
 		fields = new String[] {
 	      "size",

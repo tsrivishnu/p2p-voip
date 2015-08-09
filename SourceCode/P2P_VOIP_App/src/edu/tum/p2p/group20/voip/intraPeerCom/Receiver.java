@@ -8,10 +8,12 @@ import java.net.ServerSocket;
 import java.net.Socket;
 import java.security.KeyPair;
 import java.security.MessageDigest;
+import java.util.Scanner;
 
 import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessageFactory;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.RequestMessage;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Get;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Put;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Trace;
@@ -20,8 +22,7 @@ import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.BuildTNIncoming;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.TnReady;
 
 public class Receiver {
-
-	private static ServerSocket serverSocket;
+	
 	private static Socket clientSocket;
 	private static OutputStream out;
 	private static InputStream in;
@@ -36,11 +37,10 @@ public class Receiver {
          
         int portNumber = Integer.parseInt(args[0]);
         
-        try {
-        	serverSocket = new ServerSocket(portNumber);        	
-        	clientSocket = serverSocket.accept();
+        try {        	
+        	clientSocket = new Socket("127.0.0.1", portNumber);
         	clientSocket.setSoTimeout(10000); // 10 Seconds timeout
-	        out = clientSocket.getOutputStream();
+    		out = clientSocket.getOutputStream();
         	in = clientSocket.getInputStream();
         		
             KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
@@ -61,7 +61,7 @@ public class Receiver {
 	        	// Do a DHT_GET to find if that id exists
 	        	Get dhtGet = new Get(randomPsuedoId);
 	        	System.out.println("Sending DHT_GET for randomID");
-	        	sendMessageBytes(dhtGet.fullMessageAsBytes());
+	        	sendMessage(dhtGet);
 	        	readIncomingAndHandleError();
 	    		// When either message is not received or message is not a valid reply,
 	        	//  we have a random not existing pseudoId
@@ -113,22 +113,23 @@ public class Receiver {
 	
 	public static void sendDhtPutMessage(byte[] key, byte[] publicKey, byte[] xchangePointInfo) throws IOException {
 		Put put_message = new Put(key, (short) 12, 255, publicKey, xchangePointInfo);
-		sendMessageBytes(put_message.fullMessageAsBytes());				
+		sendMessage(put_message);				
 	}
 	
 	public static void sendDhtTraceMessage(byte[] key) throws IOException {
 		Trace traceMessage = new Trace(key);
-    	byte[] traceMessageBytes = traceMessage.fullMessageAsBytes();
-    	sendMessageBytes(traceMessageBytes);
+		sendMessage(traceMessage);
 	}
 	
-	private static void sendMessageBytes(byte[] messageBytes) throws IOException {
+	private static void sendMessage(RequestMessage requestMessage) throws IOException {
+		byte[] messageBytes = requestMessage.fullMessageAsBytes();
+		System.out.println("Sending message: "  + requestMessage.messageName);
 		out.write(messageBytes, 0, messageBytes.length);
 	}
 	
 	public static void sendKxBuildIncomingTunnel(byte[] pseudoId, byte[] xchangePointInfo) throws IOException {
 		BuildTNIncoming buildTnMessage = new BuildTNIncoming(3, pseudoId, xchangePointInfo);
-		sendMessageBytes(buildTnMessage.fullMessageAsBytes());
+		sendMessage(buildTnMessage);
 	}
 	
 	private static void readIncomingAndHandleError() throws Exception {

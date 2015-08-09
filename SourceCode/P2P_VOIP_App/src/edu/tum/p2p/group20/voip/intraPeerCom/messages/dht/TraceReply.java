@@ -6,7 +6,7 @@ import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 
 public class TraceReply extends ReceivedMessage {
 	static {
-		messageName = "MSG_DHT_GET_REPLY";
+		messageName = "MSG_DHT_TRACE_REPLY";
 		
 		fields = new String[] {
 	      "size",
