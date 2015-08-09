@@ -76,7 +76,7 @@ public class IntraPeerCommunicator {
 		}
 	}
 	
-	protected boolean isValidMessage(ReceivedMessage receivedMessage, String expectedName, byte[] pseudoId) {
+	protected boolean isValidMessage(ReceivedMessage receivedMessage, String expectedName, byte[] pseudoId) throws Exception {
 		return (receivedMessage != null 
     			&& receivedMessage.name().equals(expectedName)
     			&& receivedMessage.isValid(pseudoId));

@@ -11,10 +11,16 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.Scanner;
+
+import edu.tum.p2p.group20.voip.crypto.RSA;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Put;
 
 public class KXSimulator {
 	
@@ -120,19 +126,57 @@ public class KXSimulator {
 	 * This is only a Dummy, the content in this makes no sense.
 	 * 
 	 * @throws IOException
+	 * @throws NoSuchAlgorithmException 
+	 * @throws SignatureException 
+	 * @throws InvalidKeyException 
 	 */
-	private static void sendDhtDummyGetReply() throws IOException {
+	private static void sendDhtDummyGetReply() throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
 		byte[] size;
-		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 4, 36);
+		byte[] pseudoId = Arrays.copyOfRange(lastReceivedMessage, 4, 36);
 		byte[] messageCode = Helper.networkOrderedBytesFromShort(
 				(short) MessagesLegend.codeForName("MSG_DHT_GET_REPLY")
 			);
-		byte[] content = "Dummycontent".getBytes();		
 		
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();		
+		// xChangePointInfo
+		MessageDigest md = MessageDigest.getInstance("SHA-256");
+		md.update("exchangePoint2".getBytes());
+		byte[] peer2Id = md.digest();
+		byte[] peer2KxPort = Helper.networkOrderedBytesFromShort((short) 3001);
+		byte[] peer2reserved = new byte[2];
+		byte[] peer2ip = InetAddress.getByName("192.168.2.2").getAddress();
+		byte[] peer2ipv6 = InetAddress.getByName("3ffe:2a00:100:7031::1").getAddress();
+		
+		ByteArrayOutputStream xchangeStream = new ByteArrayOutputStream();
+		xchangeStream.write(peer2KxPort);
+		xchangeStream.write(peer2reserved);
+		xchangeStream.write(peer2Id);
+		xchangeStream.write(peer2ip);
+		xchangeStream.write(peer2ipv6);
+		byte[] xchangePointInfo = xchangeStream.toByteArray();
+		
+		KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		outputStream.write(messageCode);
-		outputStream.write(key);
-		outputStream.write(content);
+		outputStream.write(pseudoId);		
+		//content
+		outputStream.write(hostKeyPair.getPublic().getEncoded());
+		outputStream.write(pseudoId);
+		outputStream.write(xchangePointInfo);
+		
+		ByteArrayOutputStream toBeSignedStream = new ByteArrayOutputStream();
+		toBeSignedStream.write(pseudoId);
+		toBeSignedStream.write(xchangePointInfo);
+		byte[] signature = RSA.sign(hostKeyPair.getPrivate(), toBeSignedStream.toByteArray());
+		
+		outputStream.write(signature);
+		
+		System.out.println(Arrays.toString(hostKeyPair.getPublic().getEncoded()));
+    	System.out.println(Arrays.toString(pseudoId));
+    	System.out.println(Arrays.toString(xchangePointInfo));
+    	System.out.println(Arrays.toString(signature));
+    	System.out.println(signature.length);
+		
+//		Put samplePut = new Put(pseudoId, 1000, 2, hostKeyPair.getPublic().getEncoded(), xchangePointInfo);
 		
 		byte[] fullDhtReplyMessage = prependSizeForMessage(outputStream.toByteArray());		
 		out.write(fullDhtReplyMessage, 0, fullDhtReplyMessage.length);
@@ -245,5 +289,4 @@ public class KXSimulator {
 		byte[] fullDhtErrorMessage = prependSizeForMessage(outputStream.toByteArray());
 		out.write(fullDhtErrorMessage, 0, fullDhtErrorMessage.length);
 	}
-
 }

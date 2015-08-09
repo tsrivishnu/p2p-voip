@@ -22,6 +22,7 @@ import java.security.Signature;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
@@ -85,11 +86,23 @@ public class RSA {
 	    return pubKey;
 	}
 	
+	public static RSAPublicKey getPublicKeyFromBytes(byte[] publickKeyBytes) throws InvalidKeySpecException, NoSuchAlgorithmException {
+		return (RSAPublicKey) KeyFactory.getInstance("RSA")
+				.generatePublic(new X509EncodedKeySpec(publickKeyBytes));
+	}
+	
 	public static String sign(PrivateKey privateKey, String message) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, UnsupportedEncodingException {
 	    Signature sign = Signature.getInstance("SHA1withRSA");
 	    sign.initSign(privateKey);
 	    sign.update(message.getBytes("UTF-8"));
 	    return new String(Base64.encodeBase64(sign.sign()), "UTF-8");
+	}
+	
+	public static byte[] sign(PrivateKey privateKey, byte[] messageBytes) throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {
+		Signature sign = Signature.getInstance("SHA1withRSA");
+		sign.initSign(privateKey);
+		sign.update(messageBytes);
+		return sign.sign();
 	}
 	
 	
@@ -98,6 +111,13 @@ public class RSA {
 	    sign.initVerify(publicKey);
 	    sign.update(message.getBytes("UTF-8"));
 	    return sign.verify(Base64.decodeBase64(signature.getBytes("UTF-8")));
+	}
+	
+	public static boolean verify(PublicKey publicKey, byte[] messageBytes, byte[] signatureBytes) throws SignatureException, NoSuchAlgorithmException, UnsupportedEncodingException, InvalidKeyException {
+	    Signature sign = Signature.getInstance("SHA1withRSA");
+	    sign.initVerify(publicKey);
+	    sign.update(messageBytes);
+	    return sign.verify(signatureBytes);
 	}
 	
 	public static String encrypt(String rawText, PublicKey publicKey) throws IOException, GeneralSecurityException {
