@@ -43,15 +43,10 @@ public class MakeCall {
         	if (!communicator.isValidMessage(lastReceivedMessage, GetReply.messageName, pseudoIdToSearch)) {
         		throw new Exception("GET reply error");
         	}
-        	byte[] xchangePointInfoForKx = lastReceivedMessage.get("content");
+        	byte[] xchangePointInfoForKx = lastReceivedMessage.get("xchangePointInfoForKx");
         	
-        	System.out.println(lastReceivedMessage.name());
-        	System.out.println(lastReceivedMessage.isValid(pseudoIdToSearch));
-        	System.out.println(Arrays.toString(lastReceivedMessage.get("publicKey")));
-        	System.out.println(Arrays.toString(lastReceivedMessage.get("pseudoIdToBeSigned")));
-        	System.out.println(Arrays.toString(lastReceivedMessage.get("xchangePointInfoForKx")));
-        	System.out.println(Arrays.toString(lastReceivedMessage.get("signature")));
-        	System.out.println(lastReceivedMessage.get("signature").length);
+        	// As for tunnel build here.
+        	
         } catch (IOException e) {
             System.out.println("Exception caught when trying to connect on port " + portNumber);
             System.out.println(e.getMessage());

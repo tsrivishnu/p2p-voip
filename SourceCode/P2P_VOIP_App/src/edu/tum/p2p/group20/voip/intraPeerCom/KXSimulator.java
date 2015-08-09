@@ -131,7 +131,7 @@ public class KXSimulator {
 	 * @throws InvalidKeyException 
 	 */
 	private static void sendDhtDummyGetReply() throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
-		byte[] size;
+
 		byte[] pseudoId = Arrays.copyOfRange(lastReceivedMessage, 4, 36);
 		byte[] messageCode = Helper.networkOrderedBytesFromShort(
 				(short) MessagesLegend.codeForName("MSG_DHT_GET_REPLY")
@@ -155,28 +155,18 @@ public class KXSimulator {
 		byte[] xchangePointInfo = xchangeStream.toByteArray();
 		
 		KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
+		
+		// We use a sample put to get all the signature and proper content encapsulation
+		Put samplePut = new Put(pseudoId,(short) 1000, 2, hostKeyPair, xchangePointInfo);
+
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		outputStream.write(messageCode);
-		outputStream.write(pseudoId);		
-		//content
-		outputStream.write(hostKeyPair.getPublic().getEncoded());
 		outputStream.write(pseudoId);
-		outputStream.write(xchangePointInfo);
-		
-		ByteArrayOutputStream toBeSignedStream = new ByteArrayOutputStream();
-		toBeSignedStream.write(pseudoId);
-		toBeSignedStream.write(xchangePointInfo);
-		byte[] signature = RSA.sign(hostKeyPair.getPrivate(), toBeSignedStream.toByteArray());
-		
-		outputStream.write(signature);
-		
-		System.out.println(Arrays.toString(hostKeyPair.getPublic().getEncoded()));
-    	System.out.println(Arrays.toString(pseudoId));
-    	System.out.println(Arrays.toString(xchangePointInfo));
-    	System.out.println(Arrays.toString(signature));
-    	System.out.println(signature.length);
-		
-//		Put samplePut = new Put(pseudoId, 1000, 2, hostKeyPair.getPublic().getEncoded(), xchangePointInfo);
+		//content
+		outputStream.write(samplePut.byteValues.get("publicKey"));
+		outputStream.write(samplePut.byteValues.get("pseudoIdToBeSigned"));
+		outputStream.write(samplePut.byteValues.get("xchangePointInfoForKx"));
+		outputStream.write(samplePut.byteValues.get("signature"));
 		
 		byte[] fullDhtReplyMessage = prependSizeForMessage(outputStream.toByteArray());		
 		out.write(fullDhtReplyMessage, 0, fullDhtReplyMessage.length);
