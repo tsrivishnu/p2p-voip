@@ -16,6 +16,8 @@ import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.TraceReply;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.BuildTNIncoming;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.TnReady;
 
+
+// TODO handle KX_TN_DESTROY when the process has to be killled
 public class GoOnline {
 	
 	public static ReceivedMessage lastReceivedMessage;
