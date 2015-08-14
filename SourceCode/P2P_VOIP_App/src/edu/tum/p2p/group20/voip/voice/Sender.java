@@ -55,10 +55,12 @@ public class Sender {
         	String inputFromUser;
         	
         	// get hostkey
+        	//will come from cmd line or settings
         	KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/sender_private.pem");
         	String hostPublicKeyEncoded = Base64.encodeBase64String(hostKeyPair.getPublic().getEncoded());
         	PublicKey otherPartyPublicKey = RSA.getPublicKey("lib/receiver.pub");
         	String hostPseudoIdentity = "dc429ac06ffec501db88cbed0c5c685d82542c927f0fb3e28b4845be16156dea";
+        	//get this from UI
         	String otherPartyPseudoIdentity = "9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
         	
         	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
