@@ -1,25 +1,17 @@
 package edu.tum.p2p.group20.voip.voice;
 
-import java.net.*;
-import java.nio.charset.StandardCharsets;
-import java.io.*;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
+
+
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.PrintWriter;
+import java.net.Socket;
+import java.security.GeneralSecurityException;
 import java.security.KeyPair;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.Security;
-import java.security.spec.InvalidParameterSpecException;
-import java.util.*;
+import java.util.Scanner;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
-
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 import org.apache.commons.codec.binary.Base64;
 
 import edu.tum.p2p.group20.voip.com.Message;
@@ -34,6 +26,7 @@ import edu.tum.p2p.group20.voip.dh.SessionKeyManager;
 // To be more precise, it is the caller, who is to call a receiver.
 
 public class Sender {
+	private Socket socket;
     public static void main(String[] args)
     		throws IllegalStateException, Exception {
         
@@ -43,16 +36,23 @@ public class Sender {
         }
          
         int portNumber = Integer.parseInt(args[0]);
+        Sender sender = new Sender();
+        sender.initiateCall(portNumber);
+        
+    }
+
+	private CallInitiatorListener callInitiatorListener;
+    
+    public void initiateCall(int portNumber) throws IllegalStateException, Exception {
          
-        try (
-            Socket socket = new Socket("127.0.0.1", portNumber);
+        try {
+        	//TODO: check which IP is to be used here TUN IP or Destination IP from result of OUTGOING_TUNNEL_READY
+            socket = new Socket("127.0.0.1", portNumber);
         	
             PrintWriter out = new PrintWriter(socket.getOutputStream(), true);                   
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         	Scanner userIn = new Scanner(System.in);
-        ) {
         	String inputLine;
-        	String inputFromUser;
         	
         	// get hostkey
         	//will come from cmd line or settings
@@ -130,11 +130,17 @@ public class Sender {
         	// Read CALL_ACCEPT/ CALL_DECLINE
         	inputLine = in.readLine();            	
         	Message callAcceptMessage = new Message(inputLine, true, messageCrypto);
+        	lastTimestamp = callAcceptMessage.timestamp();
         	if (!callAcceptMessage.isValid(lastTimestamp)) {
+        		//CALL_DECLINE
+        		
         		throw new Exception("Message validation failed");
         	}
         	callAcceptMessage.decrypt();
-        	lastTimestamp = callAcceptMessage.timestamp();
+        	//TODO: check if this message is accepted or declined
+        	callInitiatorListener.onCallAccepted(otherPartyPseudoIdentity);
+        	//TODO: create a loop in new thread for continuously receiving other control messages
+        	//TODO: create other methods to send messages 
         	System.out.println(callAcceptMessage.get("type"));
         	
 
@@ -143,4 +149,21 @@ public class Sender {
             System.out.println(e.getMessage());
         }
     }
+
+	public void setCallInitiatorListener(
+			CallInitiatorListener callInitiatorListener) {
+		// TODO Auto-generated method stub
+		this.callInitiatorListener=callInitiatorListener;
+		
+	}
+	
+	public void disconnectCall(){
+		//TODO: send disconnect message using same socket
+		try {
+			socket.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+	}
 }

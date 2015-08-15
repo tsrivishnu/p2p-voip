@@ -2,9 +2,9 @@ package edu.tum.p2p.group20.voip.intraPeerCom.messages.kx;
 
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.RequestMessage;
 
-public class BuildTNIncoming extends RequestMessage {
+public class BuildTNOutgoing extends RequestMessage {
 	static {
-		messageName = "MSG_KX_TN_BUILD_IN";
+		messageName = "MSG_KX_TN_BUILD_OUT";
 		
 		fields = new String[] {
 	      "size",
@@ -16,7 +16,7 @@ public class BuildTNIncoming extends RequestMessage {
 		};
 	}
 	
-	public BuildTNIncoming(int totalHops, byte[] pseudoId, byte[] xchangePointInfo) {
+	public BuildTNOutgoing(int totalHops, byte[] pseudoId, byte[] xchangePointInfo) {
 		super();
 		byteValues.put("totalHops", new byte[] { (byte) totalHops });
 		// confused on why an int is directly casted as byte without bothering about endianness?

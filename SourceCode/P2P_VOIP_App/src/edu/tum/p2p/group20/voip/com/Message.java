@@ -5,6 +5,7 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
@@ -131,7 +132,7 @@ public class Message {
 	 * @throws IllegalBlockSizeException 
 	 * @throws ShortBufferException 
 	 */
-	public Boolean isValid(java.util.Date prevTimestamp) throws InvalidKeyException,
+	public boolean isValid(Date prevTimestamp) throws InvalidKeyException,
 					SignatureException, NoSuchAlgorithmException, UnsupportedEncodingException,
 					java.text.ParseException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, ParseException {
 		
@@ -230,7 +231,7 @@ public class Message {
 	 * @throws SignatureException
 	 * @throws UnsupportedEncodingException
 	 */
-	public String asJSONStringForExchange(Boolean addTimestamp, Boolean addSignature) throws InvalidKeyException, NoSuchAlgorithmException, SignatureException, UnsupportedEncodingException {
+	public String asJSONStringForExchange(boolean addTimestamp, boolean addSignature) throws InvalidKeyException, NoSuchAlgorithmException, SignatureException, UnsupportedEncodingException {
 		if (addTimestamp) {
 			addTimestamp();
 		}
@@ -259,7 +260,7 @@ public class Message {
 	 * 
 	 */
 	private void addTimestamp() {
-		fullMessage.put("timestamp", dateFormatter.format(new java.util.Date()));
+		fullMessage.put("timestamp", dateFormatter.format(new Date()));
 	}
 	
 	private void addPseudoIdentities() {

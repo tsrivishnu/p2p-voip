@@ -13,29 +13,39 @@ import javax.sound.sampled.SourceDataLine;
 
 public class VoicePlayer extends Thread {
 
-	private static final String IP_TO_STREAM_TO = "localhost";
-	private static final int PORT_TO_STREAM_TO = 8888;
+	//TUN interface IP
+	private static final String REMOTE_IP = "localhost";
+	//Port configured for voice data
+	private static final int PORT = 8000;
+	
+	//Socket for receiving UDP voice data packet
 	private  DatagramSocket sock;
+	//Packet that will contain actual data
 	private DatagramPacket datagram;
+	//Audio playback line
 	DataLine.Info dataLineInfo;
 	SourceDataLine sourceDataLine;
-
-	/** Creates a new instance of RadioReceiver */
-	public VoicePlayer() {
-	}
-
+	
+	//Flag to stop this thread
+	private boolean stop;
+	
+	@Override
+	/**
+	 * Overridden method that is called when this start() method is invoked for this thread
+	 */
 	public void run() {
 		byte b[] = null;
 		initializeSocket();
 		try {
 			initializeSound();
-			while (true) {
+			while (!stop) {
 				b = receiveThruUDP();
+				//TODO: decrypt b with session key
 				toSpeaker(b);
 			}
 		} catch (LineUnavailableException e) {
 			// TODO Auto-generated catch block
-			System.out.println("Cannot initialize line");
+			System.err.println("Cannot initialize line");
 			e.printStackTrace();
 		}
 		
@@ -54,11 +64,11 @@ public class VoicePlayer extends Thread {
 	
 	private void initializeSocket(){
 		try{
-			sock = new DatagramSocket(PORT_TO_STREAM_TO);
+			sock = new DatagramSocket(PORT);
 			byte soundpacket[] = new byte[16000];
 			datagram = new DatagramPacket(soundpacket,
-					soundpacket.length, InetAddress.getByName(IP_TO_STREAM_TO),
-					PORT_TO_STREAM_TO);
+					soundpacket.length, InetAddress.getByName(REMOTE_IP),
+					PORT);
 		} catch(IOException ex){
 			System.out.println("Cannot initialize UDP socket");
 		}
@@ -71,7 +81,7 @@ public class VoicePlayer extends Thread {
 		}
 	}
 
-	public  byte[] receiveThruUDP() {
+	private  byte[] receiveThruUDP() {
 		try {
 			sock.receive(datagram);
 			return datagram.getData(); // soundpacket ;
@@ -93,10 +103,13 @@ public class VoicePlayer extends Thread {
 		
 	}
 	
-	private void stopSound(){
+	public void stopSound(){
+		stop =true;
 		if(sourceDataLine!=null){
 			sourceDataLine.close();
+			sourceDataLine=null;
 		}
+		closeSocket();
 		
 	}
 	
@@ -108,8 +121,8 @@ public class VoicePlayer extends Thread {
 			sourceDataLine.write(soundbytes, 0, soundbytes.length);
 			sourceDataLine.drain();
 		} catch (Exception e) {
+			System.out.println("Exception while playback of received audio");
 			e.printStackTrace();
-			System.out.println("not working in speakers 2 ");
 		}
 
 	}

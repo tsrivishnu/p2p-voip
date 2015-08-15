@@ -11,10 +11,16 @@ import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.UnknownHostException;
+import java.security.InvalidKeyException;
+import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.SignatureException;
 import java.util.Arrays;
 import java.util.Scanner;
+
+import edu.tum.p2p.group20.voip.crypto.RSA;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Put;
 
 public class KXSimulator {
 	
@@ -30,7 +36,7 @@ public class KXSimulator {
 	public static void main(String[] args) throws Exception {
 
 		if (args.length != 1) {
-            System.err.println("Usage: java Sender <port number>");
+            System.err.println("Usage: java KXSimulator <port number>");
             System.exit(1);
         }
          
@@ -49,7 +55,7 @@ public class KXSimulator {
         		String userMessage = "What do you want to do?";
         		userMessage += "\n1.Receive next message";
         		userMessage += "\n2.Send DHT_TRACE_REPLY";
-        		userMessage += "\n3.Send Dummy DHT_GET_REPLY";
+        		userMessage += "\n3.Send DHT_GET_REPLY";
         		userMessage += "\n4.Send IN Tunnel Ready";
         		userMessage += "\n5.Send OUT Tunnel Ready";
         		userMessage += "\n6.Send DHT_ERROR";
@@ -66,7 +72,13 @@ public class KXSimulator {
 					sendDhtDummyGetReply();
 					break;
 				case "4":
-					sendTunnelReady(new byte[4]);
+					sendTunnelReady(new byte[4], new byte[16]);
+					break;
+				case "5":			
+					sendTunnelReady(
+						InetAddress.getByName("192.168.2.2").getAddress(),
+						InetAddress.getByName("3ffe:2a00:100:7031::1").getAddress()
+					);
 					break;
 				case "6":
 					sendErrorReply("MSG_DHT_ERROR");
@@ -120,19 +132,47 @@ public class KXSimulator {
 	 * This is only a Dummy, the content in this makes no sense.
 	 * 
 	 * @throws IOException
+	 * @throws NoSuchAlgorithmException 
+	 * @throws SignatureException 
+	 * @throws InvalidKeyException 
 	 */
-	private static void sendDhtDummyGetReply() throws IOException {
-		byte[] size;
-		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 4, 36);
+	private static void sendDhtDummyGetReply() throws IOException, NoSuchAlgorithmException, InvalidKeyException, SignatureException {
+
+		byte[] pseudoId = Arrays.copyOfRange(lastReceivedMessage, 4, 36);
 		byte[] messageCode = Helper.networkOrderedBytesFromShort(
 				(short) MessagesLegend.codeForName("MSG_DHT_GET_REPLY")
 			);
-		byte[] content = "Dummycontent".getBytes();		
 		
-		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();		
+		// xChangePointInfo
+		MessageDigest md = MessageDigest.getInstance("SHA-256");
+		md.update("exchangePoint2".getBytes());
+		byte[] peer2Id = md.digest();
+		byte[] peer2KxPort = Helper.networkOrderedBytesFromShort((short) 3001);
+		byte[] peer2reserved = new byte[2];
+		byte[] peer2ip = InetAddress.getByName("192.168.2.2").getAddress();
+		byte[] peer2ipv6 = InetAddress.getByName("3ffe:2a00:100:7031::1").getAddress();
+		
+		ByteArrayOutputStream xchangeStream = new ByteArrayOutputStream();
+		xchangeStream.write(peer2KxPort);
+		xchangeStream.write(peer2reserved);
+		xchangeStream.write(peer2Id);
+		xchangeStream.write(peer2ip);
+		xchangeStream.write(peer2ipv6);
+		byte[] xchangePointInfo = xchangeStream.toByteArray();
+		
+		KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
+		
+		// We use a sample put to get all the signature and proper content encapsulation
+		Put samplePut = new Put(pseudoId,(short) 1000, 2, hostKeyPair, xchangePointInfo);
+
+		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
 		outputStream.write(messageCode);
-		outputStream.write(key);
-		outputStream.write(content);
+		outputStream.write(pseudoId);
+		//content
+		outputStream.write(samplePut.byteValues.get("publicKey"));
+		outputStream.write(samplePut.byteValues.get("pseudoIdToBeSigned"));
+		outputStream.write(samplePut.byteValues.get("xchangePointInfoForKx"));
+		outputStream.write(samplePut.byteValues.get("signature"));
 		
 		byte[] fullDhtReplyMessage = prependSizeForMessage(outputStream.toByteArray());		
 		out.write(fullDhtReplyMessage, 0, fullDhtReplyMessage.length);
@@ -209,7 +249,7 @@ public class KXSimulator {
 	 * @param destinationIpAddress
 	 * @throws IOException
 	 */
-	private static void sendTunnelReady(byte[] destinationIpAddress) throws IOException {		
+	private static void sendTunnelReady(byte[] destinationIpv4, byte[] destinationIpv6) throws IOException {		
 		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 8, 40);
 		
 		byte[] messageCode = Helper.networkOrderedBytesFromShort(
@@ -221,7 +261,8 @@ public class KXSimulator {
 		outputStream.write(messageCode);
 		outputStream.write(key);
 		outputStream.write(reserved);
-		outputStream.write(destinationIpAddress);
+		outputStream.write(destinationIpv4);
+		outputStream.write(destinationIpv6);
 		
 		byte[] fullTunnelReadyMessage = prependSizeForMessage(outputStream.toByteArray());		
 		out.write(fullTunnelReadyMessage, 0, fullTunnelReadyMessage.length);
@@ -245,5 +286,4 @@ public class KXSimulator {
 		byte[] fullDhtErrorMessage = prependSizeForMessage(outputStream.toByteArray());
 		out.write(fullDhtErrorMessage, 0, fullDhtErrorMessage.length);
 	}
-
 }
