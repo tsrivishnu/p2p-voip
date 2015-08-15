@@ -1,6 +1,5 @@
 package edu.tum.p2p.group20.voip.intraPeerCom.messages.kx;
 
-import edu.tum.p2p.group20.voip.intraPeerCom.Helper;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.RequestMessage;
 
 public class BuildTNOutgoing extends RequestMessage {

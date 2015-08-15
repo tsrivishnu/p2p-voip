@@ -1,7 +1,5 @@
 package edu.tum.p2p.group20.voip.intraPeerCom.messages.dht;
 
-import java.util.Arrays;
-
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.RequestMessage;
 

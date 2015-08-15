@@ -4,6 +4,7 @@ import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
+import java.net.UnknownHostException;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -13,32 +14,41 @@ import javax.sound.sampled.Mixer;
 import javax.sound.sampled.Port;
 import javax.sound.sampled.TargetDataLine;
 
+import edu.tum.p2p.group20.voip.com.MessageCrypto;
+
 public class VoiceRecorder extends Thread {
 
-	private static final String IP_TO_STREAM_TO = "localhost";
-	private static final int PORT_TO_STREAM_TO = 8888;
+	private static final String TUN_IP = "localhost";
+	private static final String DESTINATION_IP = "localhost";
+	private static final int PORT = 7000;
 	private DatagramSocket sock;
-
-	/** Creates a new instance of MicPlayer */
-	public VoiceRecorder() {
-
-	}
+	private boolean stop;
+	private String sessionKey;
+	private MessageCrypto encryptor;
+	private TargetDataLine targetDataLine;
 	
 	public void run() {
 		try {
 
 			DataLine.Info dataLineInfo = new DataLine.Info(
 					TargetDataLine.class, getAudioFormat());
-			TargetDataLine targetDataLine = (TargetDataLine) AudioSystem
+			targetDataLine = (TargetDataLine) AudioSystem
 					.getLine(dataLineInfo);
 			targetDataLine.open(getAudioFormat());
 			targetDataLine.start();
 			byte tempBuffer[] = new byte[16000];
 
 			initializeSocket();
-			while (true) {
+			if(encryptor==null){
+//				encryptor= new 
+			}
+			while (!stop) {
 				targetDataLine.read(tempBuffer, 0, tempBuffer.length);
-				sendThruUDP(tempBuffer);
+				if(!stop){
+					//TODO:encrypt the packet with session key
+					//TODO:what about signing
+					sendThruUDP(tempBuffer);
+				}
 			}
 
 		} catch (Exception e) {
@@ -77,10 +87,13 @@ public class VoiceRecorder extends Thread {
 	
 	private void initializeSocket(){
 		try {
-			sock = new DatagramSocket();
+			sock = new DatagramSocket(7000,InetAddress.getByName(TUN_IP));
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
 			System.out.println(" Unable to initialize UDP socket");
+			e.printStackTrace();
+		} catch (UnknownHostException e) {
+			System.out.println("Cannot create UDP socket to TUN interface");
 			e.printStackTrace();
 		}
 	}
@@ -96,12 +109,29 @@ public class VoiceRecorder extends Thread {
 	public void sendThruUDP(byte soundpacket[]) {
 		try {
 			sock.send(new DatagramPacket(soundpacket, soundpacket.length,
-					InetAddress.getByName(IP_TO_STREAM_TO), PORT_TO_STREAM_TO));
+					InetAddress.getByName(DESTINATION_IP), PORT));
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println(" Unable to send soundpacket using UDP ");
 		}
 
+	}
+	
+	public void stopRecording(){
+		stop =true;
+		if(targetDataLine!=null){
+			targetDataLine.close();
+			targetDataLine=null;
+		}
+		closeSocket();
+	}
+
+	public String getSessionKey() {
+		return sessionKey;
+	}
+
+	public void setSessionKey(String sessionKey) {
+		this.sessionKey = sessionKey;
 	}
 
 }

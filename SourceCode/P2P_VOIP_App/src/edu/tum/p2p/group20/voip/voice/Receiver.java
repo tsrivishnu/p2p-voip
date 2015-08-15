@@ -1,24 +1,11 @@
 package edu.tum.p2p.group20.voip.voice;
 import java.net.*;
-import java.security.InvalidAlgorithmParameterException;
-import java.security.InvalidKeyException;
 import java.security.KeyPair;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.Security;
-import java.security.spec.InvalidKeySpecException;
-import java.util.Scanner;
+import java.util.Date;
 import java.io.*;
 
-import javax.crypto.Cipher;
-import javax.crypto.spec.SecretKeySpec;
-
 import org.apache.commons.codec.binary.Base64;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
-import org.json.simple.parser.JSONParser;
-import org.json.simple.parser.ParseException;
 
 import edu.tum.p2p.group20.voip.com.Message;
 import edu.tum.p2p.group20.voip.com.MessageCrypto;
@@ -31,25 +18,53 @@ import edu.tum.p2p.group20.voip.dh.SessionKeyManager;
 // To be more precise, it is the callee, who is ready to receive calls.
 
 public class Receiver {
-    public static void main(String[] args) throws IllegalStateException, Exception {
-         
+	
+	//Listener for call notifications
+	private CallReceiverListener callReceiverListener;
+	private ServerSocket serverSocket;//Listening on IncomingTunnel TUN device
+	private Socket clientSocket;//socket if some-remote party tries to make a connection to TUN device
+	private KeyPair hostKeyPair;//Localhost Public-Private key pair
+	private int portNumber;
+	private InetAddress bindAddress;
+	
+	/**
+	 * Initializes the receiver with Incoming Tunnel IP and Port
+	 * @param port
+	 * @param addr
+	 */
+	
+	public void init(InetAddress addr, int port){
+		bindAddress = addr;
+		portNumber = port;
+	}
+	
+	public static void main(String[] args) throws IllegalStateException, Exception {
+        Receiver receiver = new Receiver();
         if (args.length != 1) {
             System.err.println("Usage: java Receiver <port number>");
             System.exit(1);
         }
+        InetAddress addr = InetAddress.getLocalHost(); 
+        int port = Integer.parseInt(args[0]);
+        receiver.init(addr, port);
+        receiver.waitForCall();
+	}
+    public void waitForCall() throws IllegalStateException, Exception {
          
-        int portNumber = Integer.parseInt(args[0]);
          
-        try (
-            ServerSocket serverSocket = new ServerSocket(Integer.parseInt(args[0]));
-            Socket clientSocket = serverSocket.accept();        	
-        	
+        try {
+        	//Can allow 2 pending connections and listens to Incoming Tunnel IP and Port
+        	serverSocket = new ServerSocket(portNumber,2,bindAddress);
+        	//TODO: loop serverSocket.accept() to handle more connection
+        	//TODO: create a thread to handle a single client socket
+            clientSocket = serverSocket.accept();        	
+         	
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);                   
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
-        	Scanner userIn = new Scanner(System.in);
-        ) {
+         	
             String inputLine;
-            String inputFromUser;
+//            Scanner userIn = new Scanner(System.in);
+//            String inputFromUser;
             
             KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
             PublicKey otherPartyPublicKey = null; // We get to know this from PING message.
@@ -58,7 +73,7 @@ public class Receiver {
         	
         	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
         	
-        	java.util.Date lastTimestamp;
+        	Date lastTimestamp;
         	
             while ((inputLine = in.readLine()) != null) {
 
@@ -128,20 +143,24 @@ public class Receiver {
             	callInitAckMessage.encrypt();
             	out.println(callInitAckMessage.asJSONStringForExchange());            
             	
+            	
+            	
             	// Show ringing to the user and ask him to accep the call!
-            	System.out.println("Incoming call: Accept? (y/n): ");
-
-        		inputFromUser = userIn.nextLine();
-        		inputFromUser.replaceAll("(\\r|\\n)", "");
-            	if (inputFromUser.equals("y")) {
-
+            	
+            	boolean accept = callReceiverListener.onIncomingCall(otherPartyPseudoIdentity);
+//            	System.out.println("Incoming call: Accept? (y/n): ");
+//
+//        		inputFromUser = userIn.nextLine();
+//        		inputFromUser.replaceAll("(\\r|\\n)", "");
+//            	if (inputFromUser.equals("y")) {
+            	if (accept) {
             		// Send CALL_ACCEPT
                 	Message callAcceptMessage = new Message(messageCrypto);
                 	callAcceptMessage.put("type", "CALL_ACCEPT");
                 	callAcceptMessage.encrypt();
                 	out.println(callAcceptMessage.asJSONStringForExchange());            		
-            	} else if (inputFromUser.equals('n')) {
-
+            	//} else if (inputFromUser.equals('n')) {
+            	} else {
             		// Send CALL_DECLINE
                 	Message callAcceptMessage = new Message(messageCrypto);
                 	callAcceptMessage.put("type", "CALL_DECLINE");
@@ -154,5 +173,33 @@ public class Receiver {
                 + portNumber + " or listening for a connection");
             System.out.println(e.getMessage());
         }
+    }
+    
+    public void disconnectCall(){
+    	//TODO: Send disconnect message to clientSocket
+    	if(clientSocket!=null){
+    		try {
+				clientSocket.close();
+				clientSocket=null;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
+    }
+    /**
+     * Rip everything as user wants to close the application or go offline
+     */
+    public void shutDown(){
+    	disconnectCall();
+    	if(serverSocket!=null){
+    		try {
+				serverSocket.close();
+				serverSocket=null;
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
     }
 }

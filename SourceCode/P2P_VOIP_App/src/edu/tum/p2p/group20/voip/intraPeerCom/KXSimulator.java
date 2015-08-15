@@ -36,7 +36,7 @@ public class KXSimulator {
 	public static void main(String[] args) throws Exception {
 
 		if (args.length != 1) {
-            System.err.println("Usage: java Sender <port number>");
+            System.err.println("Usage: java KXSimulator <port number>");
             System.exit(1);
         }
          
