@@ -11,7 +11,7 @@ import org.apache.commons.codec.binary.Base64;
  * Class responsible for validating the same module running on another 
  * computer or instance.
  * 
- * It generates verification hash or verfies a verification hash send by another module.
+ * It generates verification hash or verifies a verification hash send by another module.
  * 
  * @author Sri Vishnu Totakura <srivishnu@totakura.in>
  *

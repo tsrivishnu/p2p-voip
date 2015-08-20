@@ -1,75 +1,81 @@
 package edu.tum.p2p.group20.voip.voice;
 import java.net.*;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.SignatureException;
 import java.util.Date;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
 
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.ShortBufferException;
+import javax.swing.Timer;
+
 import org.apache.commons.codec.binary.Base64;
+import org.json.simple.parser.ParseException;
 
 import edu.tum.p2p.group20.voip.com.Message;
 import edu.tum.p2p.group20.voip.com.MessageCrypto;
 import edu.tum.p2p.group20.voip.com.ModuleValidator;
+import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.crypto.RSA;
+import edu.tum.p2p.group20.voip.crypto.SHA2;
 import edu.tum.p2p.group20.voip.dh.SessionKeyManager;
 
 // Receiver is basically a Server in the TCP Client-Server paradigm.
 // It listens to receive messages on a socket.
 // To be more precise, it is the callee, who is ready to receive calls.
 
-public class Receiver {
+public class Receiver extends Thread {
 	
 	//Listener for call notifications
 	private CallReceiverListener callReceiverListener;
-	private ServerSocket serverSocket;//Listening on IncomingTunnel TUN device
 	private Socket clientSocket;//socket if some-remote party tries to make a connection to TUN device
 	private KeyPair hostKeyPair;//Localhost Public-Private key pair
 	private int portNumber;
 	private InetAddress bindAddress;
+	private boolean stop;//flag to quit the thread loop
+	private static int status;//status of the receiver
+	private final static int IDLE=1;//no incoming call
+	private final static int BUSY=2;//establishing incoming call
+	private final static int WAIT=3;//incoming call is already existing
+	private ConfigParser configParser;
+	
 	
 	/**
-	 * Initializes the receiver with Incoming Tunnel IP and Port
-	 * @param port
-	 * @param addr
+	 * @param clientSocket2
 	 */
-	
-	public void init(InetAddress addr, int port){
-		bindAddress = addr;
-		portNumber = port;
+	public Receiver(Socket socket,ConfigParser parser, CallReceiverListener listener) {
+		
+		clientSocket = socket;
+		configParser = parser;
+		callReceiverListener = listener;
 	}
+
 	
-	public static void main(String[] args) throws IllegalStateException, Exception {
-        Receiver receiver = new Receiver();
-        if (args.length != 1) {
-            System.err.println("Usage: java Receiver <port number>");
-            System.exit(1);
-        }
-        InetAddress addr = InetAddress.getLocalHost(); 
-        int port = Integer.parseInt(args[0]);
-        receiver.init(addr, port);
-        receiver.waitForCall();
-	}
-    public void waitForCall() throws IllegalStateException, Exception {
+	@Override
+    public void run() {
          
          
         try {
-        	//Can allow 2 pending connections and listens to Incoming Tunnel IP and Port
-        	serverSocket = new ServerSocket(portNumber,2,bindAddress);
-        	//TODO: loop serverSocket.accept() to handle more connection
-        	//TODO: create a thread to handle a single client socket
-            clientSocket = serverSocket.accept();        	
-         	
+  
             PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);                   
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
          	
             String inputLine;
-//            Scanner userIn = new Scanner(System.in);
-//            String inputFromUser;
             
-            KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
+            KeyPair hostKeyPair = RSA.getKeyPairFromFile(configParser.getHostKey());
             PublicKey otherPartyPublicKey = null; // We get to know this from PING message.
         	String otherPartyPseudoIdentity = null; // We get to know this from PING message.
-        	String hostPseudoIdentity = "9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
+        	//TODO: hash the public key of hostKeyPair to get hostPseudoIdentity
+        	PublicKey hostPublicKey = hostKeyPair.getPublic();
+        	SHA2 sha2 = new SHA2();
+        	//TODO: check how to get this host public key as a string
+        	String hostPseudoIdentity = sha2.makeSHA2Hash(new String(hostPublicKey.getEncoded())); 
         	
         	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
         	
@@ -84,7 +90,11 @@ public class Receiver {
 					(String) receivedPingMessage.get("verificationHash")
 				);
             	if (!moduleValidator.isValid()) {
-            		throw new Exception("Voip Module Verification Fail");
+            		//TODO: add log4j here
+            		//quiting this thread
+            		clientSocket.close();
+            		return;
+            		//throw new Exception("Voip Module Verification Fail");
             	}
             	System.out.println(receivedPingMessage.get("type"));
             	
@@ -96,83 +106,175 @@ public class Receiver {
             	messageCrypto.otherPartyPseudoIdentity = otherPartyPseudoIdentity; 
             	messageCrypto.otherPartyPublicKey = RSA.getPublicKeyFromString((String) receivedPingMessage.get("senderPublicKey"));
             	lastTimestamp = receivedPingMessage.timestamp();
-            	
-            	// Send PING_REPLY with module verification            	
-            	moduleValidator = new ModuleValidator();
-            	Message pingReply = new Message(messageCrypto);
-            	pingReply.put("type", "PING_REPLY");
-            	pingReply.put("verificationHash", moduleValidator.digest);
-            	pingReply.put("verificationTimestamp", moduleValidator.timestampString);
-            	out.println(pingReply.asJSONStringForExchange());
-            	
-            	// Receive other parties DHPublicKey data
-            	inputLine = in.readLine();
-            	Message receivedDhMessage = new Message(inputLine, false, messageCrypto);
-            	if (!receivedDhMessage.isValid(lastTimestamp)) {
-            		throw new Exception("Message validation failed");
-            	}
-            	System.out.println(receivedDhMessage.get("type"));
-            	String senderPublicKeyString = (String) receivedDhMessage.get("DHPublicKey");
+            	if(status==IDLE){
+	            	// Send PING_REPLY with module verification            	
+	            	moduleValidator = new ModuleValidator();
+	            	Message pingReply = new Message(messageCrypto);
+	            	pingReply.put("type", "PING_REPLY");
+	            	pingReply.put("verificationHash", moduleValidator.digest);
+	            	pingReply.put("verificationTimestamp", moduleValidator.timestampString);
+	            	out.println(pingReply.asJSONStringForExchange());
+	            	
+	            	// Receive other parties DHPublicKey data
+	            	inputLine = in.readLine();
+	            	Message receivedDhMessage = new Message(inputLine, false, messageCrypto);
+	            	if (!receivedDhMessage.isValid(lastTimestamp)) {
+	            		//TODO: add log4j here
+	            		//quiting this thread
+	            		clientSocket.close();
+	            		return;
+	            		//throw new Exception("Message validation failed");
+	            	}
+	            	System.out.println(receivedDhMessage.get("type"));
+	            	String senderPublicKeyString = (String) receivedDhMessage.get("DHPublicKey");
 
-            	SessionKeyManager receiverKeyManager = SessionKeyManager.makeSecondParty(senderPublicKeyString);
-            	byte [] sessionKey = receiverKeyManager.makeSessionKey(senderPublicKeyString);
-            	
-            	System.out.println("SessionKey: "+Base64.encodeBase64String(sessionKey));
-            	            	
-            	messageCrypto.setSessionKey(sessionKey);
-            	
-            	// Send your dh params to the other party.
-            	Message dhPublicMessage = new Message(messageCrypto);
-            	dhPublicMessage.put("type", "DH_REPLY");
-            	dhPublicMessage.put("DHPublicKey", receiverKeyManager.base64PublicDHKeyString());        	
-            	out.println(dhPublicMessage.asJSONStringForExchange());
-               	
-            	// Read CALL_INIT
-            	inputLine = in.readLine();            	
-            	Message receivedMessage = new Message(inputLine, true, messageCrypto);
-            	if (!receivedMessage.isValid(lastTimestamp)) {
-            		throw new Exception("Message validation failed");
-            	}
-            	receivedMessage.decrypt();
-            	lastTimestamp = receivedMessage.timestamp();
-            	System.out.println(receivedMessage.get("type"));
-            	
-            	 // Send CALL_INIT_ACK.
-            	Message callInitAckMessage = new Message(messageCrypto);
-            	callInitAckMessage.put("type", "CALL_INIT_ACK");
-            	callInitAckMessage.encrypt();
-            	out.println(callInitAckMessage.asJSONStringForExchange());            
-            	
-            	
-            	
-            	// Show ringing to the user and ask him to accep the call!
-            	
-            	boolean accept = callReceiverListener.onIncomingCall(otherPartyPseudoIdentity);
-//            	System.out.println("Incoming call: Accept? (y/n): ");
-//
-//        		inputFromUser = userIn.nextLine();
-//        		inputFromUser.replaceAll("(\\r|\\n)", "");
-//            	if (inputFromUser.equals("y")) {
-            	if (accept) {
-            		// Send CALL_ACCEPT
-                	Message callAcceptMessage = new Message(messageCrypto);
-                	callAcceptMessage.put("type", "CALL_ACCEPT");
-                	callAcceptMessage.encrypt();
-                	out.println(callAcceptMessage.asJSONStringForExchange());            		
-            	//} else if (inputFromUser.equals('n')) {
+	            	SessionKeyManager receiverKeyManager = SessionKeyManager.makeSecondParty(senderPublicKeyString);
+	            	byte [] sessionKey = receiverKeyManager.makeSessionKey(senderPublicKeyString);
+	            	
+	            	System.out.println("SessionKey: "+Base64.encodeBase64String(sessionKey));
+	            	            	
+	            	messageCrypto.setSessionKey(sessionKey);
+	            	
+	            	// Send your dh params to the other party.
+	            	Message dhPublicMessage = new Message(messageCrypto);
+	            	dhPublicMessage.put("type", "DH_REPLY");
+	            	dhPublicMessage.put("DHPublicKey", receiverKeyManager.base64PublicDHKeyString());        	
+	            	out.println(dhPublicMessage.asJSONStringForExchange());
+	               	
+	            	// Read CALL_INIT
+	            	inputLine = in.readLine();            	
+	            	Message receivedMessage = new Message(inputLine, true, messageCrypto);
+	            	if (!receivedMessage.isValid(lastTimestamp)) {
+	            		//TODO: add log4j here
+	            		//quiting this thread
+	            		clientSocket.close();
+	            		return;
+	            		//throw new Exception("Message validation failed");
+	            	}
+	            	receivedMessage.decrypt();
+	            	lastTimestamp = receivedMessage.timestamp();
+	            	System.out.println(receivedMessage.get("type"));
+	            	
+	            	 // Send CALL_INIT_ACK.
+	            	Message callInitAckMessage = new Message(messageCrypto);
+	            	callInitAckMessage.put("type", "CALL_INIT_ACK");
+	            	callInitAckMessage.encrypt();
+	            	out.println(callInitAckMessage.asJSONStringForExchange());            
+	            	
+	            	
+	            	
+	            	// Show incoming call to the user and ask him to accept the call!
+	            
+	            	boolean accept = callReceiverListener.onIncomingCall(otherPartyPseudoIdentity);
+
+	            	if (accept) {
+	            		// Send CALL_ACCEPT
+	                	Message callAcceptMessage = new Message(messageCrypto);
+	                	callAcceptMessage.put("type", "CALL_ACCEPT");
+	                	callAcceptMessage.encrypt();
+	                	out.println(callAcceptMessage.asJSONStringForExchange());
+	                	//TODO:
+	                	while(!stop){
+	                		// Read disconnect or Heartbeat message
+	    	            	inputLine = in.readLine(); 
+	    	            	Message newMessage = new Message(inputLine, true, messageCrypto);
+	    	            	if (!newMessage.isValid(lastTimestamp)) {
+	    	            		//TODO: Disconnect call as invalid message arrived
+	    	            		stop=true;
+	    	            		callReceiverListener.onCallDisconnected("Invalid message received from client!");
+	    	            		return;
+	    	            	} else {
+	    	            		newMessage.decrypt();
+	    	            		lastTimestamp = newMessage.timestamp();
+	    		            	System.out.println(newMessage.get("type"));
+	    		            	if("HEARTBEAT".equals(newMessage.get("type"))){
+	    		            		//send heartbeat acknowledgement
+	    		            		Message heartbeatAck = new Message(messageCrypto);
+	    		            		heartbeatAck.put("type", "HEARTBEAT_ACK");
+	    		            		heartbeatAck.encrypt();
+	    		                	out.println(heartbeatAck.asJSONStringForExchange());
+	    		            	} else if ("CALL_DISCONNECT".equals(newMessage.get("type"))){
+	    		            		stop=true;
+	    		            		callReceiverListener.onCallDisconnected("Remote client disconnected call!");
+	    		            		return;
+	    		            	}
+	    	            	}
+	                	}
+	            	} else {
+	            		// Send CALL_DECLINE
+	                	Message callAcceptMessage = new Message(messageCrypto);
+	                	callAcceptMessage.put("type", "CALL_DECLINE");
+	                	callAcceptMessage.encrypt();
+	                	out.println(callAcceptMessage.asJSONStringForExchange());
+	                	stop=true;
+	                	return;
+	            	}
+            	}else if(status==BUSY){
+            		//Send busy message and let remote user close the socket           	
+	            	moduleValidator = new ModuleValidator();
+	            	Message pingReply = new Message(messageCrypto);
+	            	pingReply.put("type", "PING_REPLY_BUSY");
+	            	pingReply.put("verificationHash", moduleValidator.digest);
+	            	pingReply.put("verificationTimestamp", moduleValidator.timestampString);
+	            	out.println(pingReply.asJSONStringForExchange());
+	            	stop=true;
+	            	//close connection after 2 sec
+	            	new Timer(2000, new ActionListener() {
+						
+						@Override
+						public void actionPerformed(ActionEvent e) {
+							try {
+								if(clientSocket!=null){
+									clientSocket.close();
+								}
+							} catch (IOException e1) {
+								// TODO log4j here not so serious
+								e1.printStackTrace();
+							}
+							
+						}
+					}).start();
+	            	return;
             	} else {
-            		// Send CALL_DECLINE
-                	Message callAcceptMessage = new Message(messageCrypto);
-                	callAcceptMessage.put("type", "CALL_DECLINE");
-                	callAcceptMessage.encrypt();
-                	out.println(callAcceptMessage.asJSONStringForExchange());
+            		//TODO: Implement waiting status and further flow
+            		//status==WAIT
+            		//Send WAIT message and let user keep waiting or cut the call
+            		//next message also should be sent by us
             	}
+            	
             }
         } catch (IOException e) {
             System.out.println("Exception caught when trying to listen on port "
                 + portNumber + " or listening for a connection");
             System.out.println(e.getMessage());
-        }
+        } catch (ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (java.text.ParseException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SignatureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (ShortBufferException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (IllegalBlockSizeException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (BadPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (Exception e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
     
     public void disconnectCall(){
@@ -187,19 +289,9 @@ public class Receiver {
 			}
     	}
     }
-    /**
-     * Rip everything as user wants to close the application or go offline
-     */
-    public void shutDown(){
-    	disconnectCall();
-    	if(serverSocket!=null){
-    		try {
-				serverSocket.close();
-				serverSocket=null;
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-    	}
-    }
+    
+  
+    
+    
+
 }

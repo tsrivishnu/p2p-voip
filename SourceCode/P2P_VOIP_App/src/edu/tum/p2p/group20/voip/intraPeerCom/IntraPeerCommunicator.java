@@ -18,7 +18,7 @@ public class IntraPeerCommunicator {
 	public InputStream in;
 	
 	public IntraPeerCommunicator(String ip, int portNumber) throws UnknownHostException, IOException {
-		clientSocket = new Socket("127.0.0.1", portNumber);
+		clientSocket = new Socket(ip, portNumber);
     	clientSocket.setSoTimeout(20000); // 10 Seconds timeout
 		out = clientSocket.getOutputStream();
     	in = clientSocket.getInputStream();

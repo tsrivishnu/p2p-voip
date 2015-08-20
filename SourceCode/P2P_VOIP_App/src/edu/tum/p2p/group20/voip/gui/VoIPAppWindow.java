@@ -12,7 +12,6 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import java.awt.BorderLayout;
-
 import java.awt.EventQueue;
 
 import javax.swing.JButton;
@@ -23,6 +22,7 @@ import com.jgoodies.forms.layout.ColumnSpec;
 import com.jgoodies.forms.factories.FormFactory;
 import com.jgoodies.forms.layout.RowSpec;
 
+import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.intraPeerCom.GoOnline;
 import edu.tum.p2p.group20.voip.intraPeerCom.GoOnlineEventListener;
 import edu.tum.p2p.group20.voip.intraPeerCom.MakeCall;
@@ -39,8 +39,10 @@ import javax.swing.JTextField;
 import javax.swing.JMenuBar;
 import javax.swing.JMenu;
 import javax.swing.JMenuItem;
-
 import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
+
+import org.apache.commons.configuration.ConfigurationException;
 
 
 /**
@@ -65,7 +67,21 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	private JLabel lblStatusMsg;
 	private VoicePlayer voicePlayer;
 	private VoiceRecorder voiceRecorder;
-	public VoIPAppWindow() {
+	
+	//Parser to read the config file given via cli arg
+	private ConfigParser configParser;
+	
+	public VoIPAppWindow(String confiFileName) {
+		try {
+			configParser = ConfigParser.getInstance(confiFileName);
+			System.out.println(configParser.toString());
+		} catch (ConfigurationException e) {
+			//the config File was not found
+			e.printStackTrace();
+			
+			System.exit(-1);
+			return;
+		}
 		setTitle("GROUP-20 P2P-VoIP App");
 		prefMgr=PreferenceManager.getInstance();
 		JPanel panel = new JPanel();
@@ -149,6 +165,9 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		mnSettings.add(mntmSettings);
 		setBounds(0, 0, 640, 480);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		
+		
+		
 	}
 
 
@@ -162,7 +181,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 					goOnlineModule.setEventListener(this);
 					//Todo: get this port number from settings
 					try {
-						boolean result = goOnlineModule.goOnline(6000);
+						boolean result = goOnlineModule.goOnline(configParser);
 //						if(result){
 //							lblStatusMsg.setText("You are Online now!");
 //						} else {
@@ -195,12 +214,12 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 				
 			case "Call" :
 				String pseudoId = recepientName.getText();
-				if(makeCallModule ==null){
+				if(pseudoId!=null && pseudoId.getBytes().length==256 &&makeCallModule ==null){
 					makeCallModule = new MakeCall();
 				}
 				try {
 					makeCallModule.setCallInitiatorListener(this);
-					makeCallModule.makeCall(7000, pseudoId);
+					makeCallModule.makeCall( pseudoId,configParser);
 				} catch (Exception e) {
 					// TODO Auto-generated catch block
 					e.printStackTrace();
@@ -216,21 +235,40 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		final String[] params = args;
-		EventQueue.invokeLater(new Runnable() {
-			public void run() {
-
-				try {
-					for(String arg:params){
-						System.out.println(arg);
-					}
-					appWindow = new VoIPAppWindow();
-					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-					appWindow.setVisible(true);
-				} catch (Exception e) {
-					e.printStackTrace();
-				}
+		if(params.length==2 && params[0].equals("-c")){
+			appWindow = new VoIPAppWindow(params[1]);
+			try {
+				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+			} catch (ClassNotFoundException | InstantiationException
+					| IllegalAccessException | UnsupportedLookAndFeelException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
 			}
-		});
+			appWindow.setVisible(true);
+		} else {
+			System.err.println("Usage: java -jar VoIPAppWindow -c <ConfigFilePath>");
+			System.exit(1);
+		}
+//		EventQueue.invokeLater(new Runnable() {
+//			public void run() {
+//
+//				try {
+//					
+//					if(params.length==2 && params[0].equals("-c")){
+//						appWindow = new VoIPAppWindow(params[1]);
+//						UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
+//						appWindow.setVisible(true);
+//					} else {
+//						System.err.println("Usage: java -jar VoIPAppWindow -c <ConfigFilePath>");
+//						System.exit(1);
+//					}
+//					
+//					
+//				} catch (Exception e) {
+//					e.printStackTrace();
+//				}
+//			}
+//		});
 
 	}
 
@@ -249,14 +287,14 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	}
 
 	@Override
-	public void onConnected() {
+	public void onOnline() {
 		// TODO Auto-generated method stub
 		lblStatusMsg.setText("Online");
 		lblStatusMsg.invalidate();
 	}
 	
 	@Override
-	public void onDisonnected() {
+	public void onOffline() {
 		lblStatusMsg.setText("Offline");
 		lblStatusMsg.invalidate();
 	}
@@ -346,5 +384,10 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		
 	}
 
+	public void safePrintln(String s) {
+		synchronized (System.out) {
+		    System.out.println(s);
+		}
+	}
 	
 }

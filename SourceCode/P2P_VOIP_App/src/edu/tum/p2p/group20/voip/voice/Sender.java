@@ -8,8 +8,13 @@ import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.SignatureException;
+import java.security.interfaces.RSAPublicKey;
+import java.util.Date;
 import java.util.Scanner;
 
 import org.apache.commons.codec.binary.Base64;
@@ -17,7 +22,9 @@ import org.apache.commons.codec.binary.Base64;
 import edu.tum.p2p.group20.voip.com.Message;
 import edu.tum.p2p.group20.voip.com.MessageCrypto;
 import edu.tum.p2p.group20.voip.com.ModuleValidator;
+import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.crypto.RSA;
+import edu.tum.p2p.group20.voip.crypto.SHA2;
 import edu.tum.p2p.group20.voip.dh.SessionKeyManager;
 
 // Sender is basically a client in the TCP Client-Server paradigm.
@@ -26,46 +33,54 @@ import edu.tum.p2p.group20.voip.dh.SessionKeyManager;
 // To be more precise, it is the caller, who is to call a receiver.
 
 public class Sender {
+
 	private Socket socket;
-    public static void main(String[] args)
-    		throws IllegalStateException, Exception {
-        
-        if (args.length != 1) {
-            System.err.println("Usage: java Sender <port number>");
-            System.exit(1);
-        }
-         
-        int portNumber = Integer.parseInt(args[0]);
-        Sender sender = new Sender();
-        sender.initiateCall(portNumber);
-        
-    }
 
 	private CallInitiatorListener callInitiatorListener;
+
+	private ConfigParser configParser;
+
+	private PrintWriter out;
+
+	private KeyPair hostKeyPair;
+
+	private String hostPublicKeyEncoded;
+
+	private RSAPublicKey otherPartyPublicKey;
+
+	private String hostPseudoIdentity;
+
+	private String otherPartyPseudoIdentity;
+
+	private MessageCrypto messageCrypto;
+
+	private Date lastTimestamp;
     
-    public void initiateCall(int portNumber) throws IllegalStateException, Exception {
-         
+    public void initiateCall(String receiverPublicKey, String destinationIP,ConfigParser parser) throws IllegalStateException, Exception {
+        configParser = parser;
         try {
         	//TODO: check which IP is to be used here TUN IP or Destination IP from result of OUTGOING_TUNNEL_READY
-            socket = new Socket("127.0.0.1", portNumber);
+            socket = new Socket(destinationIP, configParser.getVoipPort());
         	
-            PrintWriter out = new PrintWriter(socket.getOutputStream(), true);                   
+            out = new PrintWriter(socket.getOutputStream(), true);                   
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-        	Scanner userIn = new Scanner(System.in);
+        	
         	String inputLine;
         	
         	// get hostkey
         	//will come from cmd line or settings
-        	KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/sender_private.pem");
-        	String hostPublicKeyEncoded = Base64.encodeBase64String(hostKeyPair.getPublic().getEncoded());
-        	PublicKey otherPartyPublicKey = RSA.getPublicKey("lib/receiver.pub");
-        	String hostPseudoIdentity = "dc429ac06ffec501db88cbed0c5c685d82542c927f0fb3e28b4845be16156dea";
+        	hostKeyPair = RSA.getKeyPairFromFile(configParser.getHostKey());
+        	//hostPublicKeyEncoded = Base64.encodeBase64String(hostKeyPair.getPublic().getEncoded());
+        	//TODO: check what comes from UI the public key or the pseudoID
+        	otherPartyPublicKey = RSA.getPublicKeyFromString(receiverPublicKey);
+        	SHA2 sha2 = new SHA2();
+        	hostPseudoIdentity = sha2.makeSHA2Hash(receiverPublicKey);
         	//get this from UI
-        	String otherPartyPseudoIdentity = "9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
+        	this.otherPartyPseudoIdentity = sha2.makeSHA2Hash(receiverPublicKey);;
         	
-        	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
+        	messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
         	
-        	java.util.Date lastTimestamp = new java.util.Date();
+        	lastTimestamp = new Date();
         	
         	// Send initial ping to check module.
         	ModuleValidator moduleValidator = new ModuleValidator();
@@ -85,7 +100,13 @@ public class Sender {
         	}
         	lastTimestamp = pingReplyMessage.timestamp();
         	System.out.println(pingReplyMessage.get("type"));
-        	
+        	if("PING_BUSY".equals(pingReplyMessage.get("type"))){
+        		//the remote peer is busy
+        		//show this info to user and stop the call
+        		callInitiatorListener.onCallDisconnected("The remote user is busy");
+        		return;
+        		
+        	}
         	// Send DH with sender receiver.        	
         	// Generate and initiate DH
         	SessionKeyManager receiverKeyManager = SessionKeyManager.makeInitiator();
@@ -145,8 +166,8 @@ public class Sender {
         	
 
         } catch (IOException e) {
-            System.out.println("Exception caught when trying to connect on port " + portNumber);
             System.out.println(e.getMessage());
+            e.printStackTrace();
         }
     }
 
@@ -160,10 +181,34 @@ public class Sender {
 	public void disconnectCall(){
 		//TODO: send disconnect message using same socket
 		try {
-			socket.close();
+			// Send CALL_DISCONNECT.
+        	Message disconnectMsg = new Message(messageCrypto);
+        	disconnectMsg.put("type", "CALL_DISCONNECT");
+        	disconnectMsg.encrypt();
+        	out.println(disconnectMsg.asJSONStringForExchange());
+			
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		} catch (InvalidKeyException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (SignatureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} finally{
+			if(socket!=null){
+				try {
+					socket.close();
+				} catch (IOException e) {
+					// TODO Auto-generated catch block
+					e.printStackTrace();
+				}
+				socket=null;
+			}
 		}
 	}
 }

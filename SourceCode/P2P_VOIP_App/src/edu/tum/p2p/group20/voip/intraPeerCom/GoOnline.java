@@ -2,12 +2,15 @@ package edu.tum.p2p.group20.voip.intraPeerCom;
 
 import java.io.IOException;
 import java.net.InetAddress;
+import java.net.ServerSocket;
+import java.net.Socket;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 
+import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Get;
@@ -23,35 +26,43 @@ import edu.tum.p2p.group20.voip.voice.Receiver;
 public class GoOnline implements CallReceiverListener{
 
 	public static ReceivedMessage lastReceivedMessage;
-	public static IntraPeerCommunicator communicator;
+	//TODO: move the method calls to DHT and KX wrapper
+	public static IntraPeerCommunicator dhtCommunicator;
+	public static IntraPeerCommunicator kxCommunicator;
 	private GoOnlineEventListener eventListener;
 	private CallReceiverListener callReceiverListener;
 	private Thread receiverThread;
+	private ConfigParser configParser;
+	private ServerSocket serverSocket;
+	private boolean stop;
 
 
 	public static void main(String[] args) throws Exception {
 
 		GoOnline goOnline = new GoOnline();
-		if (args.length != 1) {
-			System.err.println("Usage: java Sender <port number>");
+		if (args.length != 2) {
+			System.err.println("Usage: java Sender -c <config>");
 			System.exit(1);
+			return;
 		}
 
-		int portNumber = Integer.parseInt(args[0]);
-		goOnline.goOnline(portNumber);
+		goOnline.goOnline(ConfigParser.getInstance(args[1]));
 
 	}
 	
 	
 
-	public boolean goOnline(int portNumber) throws Exception {
-
+	public boolean goOnline(final ConfigParser configParser) throws Exception {
+			this.configParser = configParser;
 		try {
-
-			communicator = new IntraPeerCommunicator("127.0.0.1", portNumber);
-
+			//Make separate communicator for DHT and KX module as they run on different host
+			dhtCommunicator = new IntraPeerCommunicator(configParser.getDhtHost(), configParser.getDhtPort());
+			kxCommunicator = new IntraPeerCommunicator(configParser.getKxhost(), configParser.getKxPort());
 			KeyPair hostKeyPair = RSA
-					.getKeyPairFromFile("lib/receiver_private.pem");
+					.getKeyPairFromFile(configParser.getHostKey());
+			/*TODO: to check how to generate hostPseudoIdentity
+			 * as it should be has of host's public key so that other user's can find it in DHT
+			*/
 			String hostPseudoIdentity = "9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
 
 			MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
@@ -71,8 +82,8 @@ public class GoOnline implements CallReceiverListener{
 				// Do a DHT_GET to find if that id exists
 				Get dhtGet = new Get(randomPsuedoId);
 				System.out.println("Sending DHT_GET for randomID");
-				communicator.sendMessage(dhtGet);
-				lastReceivedMessage = communicator.readIncomingAndHandleError();
+				dhtCommunicator.sendMessage(dhtGet);
+				lastReceivedMessage = dhtCommunicator.readIncomingAndHandleError();
 				// When either message is not received or message is not a valid
 				// reply,
 				// we have a random not existing pseudoId
@@ -90,49 +101,65 @@ public class GoOnline implements CallReceiverListener{
 
 			// Send request to KX to build tunnel
 			sendKxBuildIncomingTunnel(key, xChangePointInfoForKx);
-			lastReceivedMessage = communicator.readIncomingAndHandleError();
+			lastReceivedMessage = kxCommunicator.readIncomingAndHandleError();
 
-			if (communicator.isValidMessage(lastReceivedMessage,
+			if (kxCommunicator.isValidMessage(lastReceivedMessage,
 					TnReady.messageName, key)) {			
 				
-				//TODO: get this ip from the config file
-				String inTunnelIP = "localhost";
-				//TODO: We choose this port from config file 
-				int inTunnelPort = 7000;
-				
-				//TODO: Need to create a Receiver here
-				final Receiver receiver = new Receiver();
-				receiver.init(InetAddress.getByName(inTunnelIP), inTunnelPort);
-				
-				receiverThread = new Thread(new Runnable() {
+				//get this ip from the config file
+				String inTunnelIP = configParser.getTunIP();
+				//We choose this port from config file 
+				int inTunnelPort = configParser.getVoipPort();
+				try{
 					
-					@Override
-					public void run() {
-						// TODO Auto-generated method stub
-						try {
-							receiver.waitForCall();
-						} catch (Exception e) {
-							// TODO Auto-generated catch block
-							e.printStackTrace();
-						}
-					}
-				});
+					serverSocket = new ServerSocket(inTunnelPort,1,InetAddress.getByName(inTunnelIP));
+					new Thread(new Runnable() {
+						
+						@Override
+						public void run() {
+							while(!stop){
+					        	try{
+						            Socket clientSocket = serverSocket.accept();
+						          //creating a listener on incoming tunnel
+									final Receiver receiver = new Receiver(clientSocket,configParser,GoOnline.this);
+									//receiver.init(InetAddress.getByName(inTunnelIP), inTunnelPort);
+									receiver.start();
 				
-				receiverThread.start();
+					        	} catch(IOException e){
+					        		//TODO: show error to user if tunnel was broken
+					        		e.printStackTrace();
+					        	}
+					           
+				        	}
+							
+						}
+					}).start();
+				}catch(IOException e){
+					//TODO: show error to user and use log4j here
+					
+					e.printStackTrace();
+				}
+				//TODO: loop serverSocket.accept() to handle more connection
+	        	//TODO: create a thread to handle a single client socket
+				
+				
+				
+				
+
 				
 				sendDhtPutMessage(key, hostKeyPair, xChangePointInfoForKx);
-				lastReceivedMessage = communicator.readIncomingAndHandleError(); 
+				//lastReceivedMessage = dhtCommunicator.readIncomingAndHandleError(); 
 				// This is just to see if you would get any error
 				
 				System.out.println("You are now online!");
 				if(eventListener!=null){
-					eventListener.onConnected();
+					eventListener.onOnline();
 				}
 				return true;
 			} else {
 				System.out.println("Offline!");
 				if(eventListener!=null){
-					eventListener.onDisonnected();
+					eventListener.onOffline();
 				}
 				return false;
 
@@ -140,7 +167,7 @@ public class GoOnline implements CallReceiverListener{
 		} catch (IOException e) {
 			System.out
 					.println("Exception caught when trying to connect on port "
-							+ portNumber);
+							+ configParser);
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 			if(eventListener!=null){
@@ -150,7 +177,7 @@ public class GoOnline implements CallReceiverListener{
 		} catch (Exception e) {
 			System.err
 					.println("Exception caught when trying to connect on port "
-							+ portNumber);
+							+ configParser);
 			System.err.println(e.getMessage());
 			e.printStackTrace();
 			if(eventListener!=null){
@@ -174,14 +201,14 @@ public class GoOnline implements CallReceiverListener{
 	private static byte[] doDhtTraceForRandomExchangePoint(byte[] key)
 			throws Exception {
 		sendDhtTraceMessage(key);
-		lastReceivedMessage = communicator.readIncomingAndHandleError();
+		lastReceivedMessage = dhtCommunicator.readIncomingAndHandleError();
 		// if no reply is received, or received a wrong type raise exception
 		System.out.println(lastReceivedMessage);
 		if (lastReceivedMessage == null) {
 			throw new Exception("DHT trace reply timeout error");
 		}
 		System.out.println(lastReceivedMessage.name());
-		if (!communicator.isValidMessage(lastReceivedMessage,
+		if (!dhtCommunicator.isValidMessage(lastReceivedMessage,
 				TraceReply.messageName, key)) {
 			throw new Exception("DHT trace reply error");
 		}
@@ -194,19 +221,19 @@ public class GoOnline implements CallReceiverListener{
 			SignatureException, NoSuchAlgorithmException {
 		Put put_message = new Put(key, (short) 12, 255, rsaKeyPair,
 				xchangePointInfo);
-		communicator.sendMessage(put_message);
+		dhtCommunicator.sendMessage(put_message);
 	}
 
 	private static void sendDhtTraceMessage(byte[] key) throws IOException {
 		Trace traceMessage = new Trace(key);
-		communicator.sendMessage(traceMessage);
+		dhtCommunicator.sendMessage(traceMessage);
 	}
 
 	public static void sendKxBuildIncomingTunnel(byte[] pseudoId,
 			byte[] xchangePointInfo) throws IOException {
 		BuildTNIncoming buildTnMessage = new BuildTNIncoming(3, pseudoId,
 				xchangePointInfo);
-		communicator.sendMessage(buildTnMessage);
+		kxCommunicator.sendMessage(buildTnMessage);
 	}
 
 

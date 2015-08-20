@@ -176,13 +176,20 @@ public class Message {
 	 * @throws IllegalBlockSizeException
 	 * @throws BadPaddingException
 	 */
-	public void encrypt() throws InvalidKeyException, ShortBufferException,
-					IllegalBlockSizeException, BadPaddingException {
+	public void encrypt() {
 		
-		byte[] encryptedBytes = messageCrypto.encryptWithSessionKey(data.toJSONString());
-		encryptedData = Base64.encodeBase64String(encryptedBytes);
-		fullMessage.put("message", encryptedData);
-		isEncrypted = true;
+		byte[] encryptedBytes;
+		try {
+			encryptedBytes = messageCrypto.encryptWithSessionKey(data.toJSONString());
+			encryptedData = Base64.encodeBase64String(encryptedBytes);
+			fullMessage.put("message", encryptedData);
+			isEncrypted = true;
+		} catch (InvalidKeyException | ShortBufferException
+				| IllegalBlockSizeException | BadPaddingException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 	
 	/**
