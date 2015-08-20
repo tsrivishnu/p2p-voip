@@ -215,10 +215,14 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
+		final String[] params = args;
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 
 				try {
+					for(String arg:params){
+						System.out.println(arg);
+					}
 					appWindow = new VoIPAppWindow();
 					UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 					appWindow.setVisible(true);
