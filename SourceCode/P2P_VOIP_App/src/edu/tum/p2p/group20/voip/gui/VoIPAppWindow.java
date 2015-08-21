@@ -355,7 +355,9 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 
 
 	@Override
-	public void onCallDisconnected(String psudoId) {
+	public void onCallDisconnected(String pseudoId) {
+		lblStatusMsg.setText("Disconnect from: "+pseudoId);
+		lblStatusMsg.invalidate();
 		if(voicePlayer!=null){
 			voicePlayer.stopSound();
 			voicePlayer =null;
@@ -369,25 +371,40 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 
 	@Override
 	public void onCallInitiated(String pseudoId) {
-		// TODO Show calling status
-		
+		lblStatusMsg.setText("Connecting to: "+pseudoId);
+		lblStatusMsg.invalidate();
 		
 	}
 
 	@Override
 	public void onCallAccepted(String pseudoId) {
-		// TODO Show call connected status
+		lblStatusMsg.setText("Connected to: "+pseudoId);
+		lblStatusMsg.invalidate();
 		voicePlayer = new VoicePlayer();
 		voicePlayer.start();
 		voiceRecorder = new VoiceRecorder();
 		voiceRecorder.start();
 		
 	}
-
+	/**
+	 * Thread safe console log message print
+	 * @param s string to be printed
+	 */
 	public void safePrintln(String s) {
 		synchronized (System.out) {
 		    System.out.println(s);
 		}
+	}
+
+
+	/* (non-Javadoc)
+	 * @see edu.tum.p2p.group20.voip.voice.CallInitiatorListener#onCallDeclined(java.lang.String)
+	 */
+	@Override
+	public void onCallDeclined(String pseudoId) {
+		// TODO Auto-generated method stub
+		lblStatusMsg.setText(pseudoId+" declined your call!");
+		lblStatusMsg.invalidate();
 	}
 	
 }

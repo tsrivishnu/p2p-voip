@@ -5,6 +5,7 @@ import java.net.InetAddress;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.PublicKey;
+import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
 
 import edu.tum.p2p.group20.voip.config.ConfigParser;
@@ -55,10 +56,13 @@ public class MakeCall {
         	
         	lastReceivedMessage = dhtCommunicator.readIncomingAndHandleError();        
         	
-        	// TODO The getReply should validate the message content with its signature.
+        	//checking reply for signature
         	if (!dhtCommunicator.isValidMessage(lastReceivedMessage, GetReply.messageName, calleeId.getBytes())) {
         		throw new Exception("GET reply error");
-        	}
+        	} 
+        	byte[] publickKeyBytes = lastReceivedMessage.get("publicKey");
+        	RSAPublicKey remotePublicKey = RSA.getPublicKeyFromBytes(publickKeyBytes);
+        	
         	//check for null pointer
         	byte[] xchangePointInfoForKx = lastReceivedMessage.get("xchangePointInfoForKx");
         	
@@ -78,7 +82,7 @@ public class MakeCall {
         		sender = new Sender();
         		sender.setCallInitiatorListener(callInitiatorListener);
         		//TODO: check this id needs to be send or public key
-        		sender.initiateCall(calleeId, destinationIpv4.getHostAddress(), configParser);
+        		sender.initiateCall(calleeId, remotePublicKey,destinationIpv4.getHostAddress(), configParser);
         		//initialize sender with destination point info
         		
         	} else {

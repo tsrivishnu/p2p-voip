@@ -10,4 +10,9 @@ public interface CallInitiatorListener {
 	
 	public void onCallDisconnected(String pseudoId);
 
+	/**
+	 * @param otherPartyPseudoIdentity
+	 */
+	public void onCallDeclined(String otherPartyPseudoIdentity);
+
 }

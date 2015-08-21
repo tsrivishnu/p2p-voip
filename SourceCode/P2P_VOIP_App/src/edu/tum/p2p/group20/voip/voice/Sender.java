@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
@@ -56,11 +57,13 @@ public class Sender {
 
 	private Date lastTimestamp;
     
-    public void initiateCall(String receiverPublicKey, String destinationIP,ConfigParser parser) throws IllegalStateException, Exception {
+    public void initiateCall(String otherPartyPseudoIdentity,RSAPublicKey otherPartyPublicKey, String destinationIP,ConfigParser parser) throws IllegalStateException, Exception {
         configParser = parser;
         try {
         	//TODO: check which IP is to be used here TUN IP or Destination IP from result of OUTGOING_TUNNEL_READY
-            socket = new Socket(destinationIP, configParser.getVoipPort());
+            socket = new Socket(InetAddress.getByName(destinationIP), 
+            		configParser.getVoipPort(),
+            		InetAddress.getByName(configParser.getTunIP()),0);
         	
             out = new PrintWriter(socket.getOutputStream(), true);                   
             BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
@@ -70,13 +73,13 @@ public class Sender {
         	// get hostkey
         	//will come from cmd line or settings
         	hostKeyPair = RSA.getKeyPairFromFile(configParser.getHostKey());
-        	//hostPublicKeyEncoded = Base64.encodeBase64String(hostKeyPair.getPublic().getEncoded());
+        	hostPublicKeyEncoded = Base64.encodeBase64String(hostKeyPair.getPublic().getEncoded());
         	//TODO: check what comes from UI the public key or the pseudoID
-        	otherPartyPublicKey = RSA.getPublicKeyFromString(receiverPublicKey);
+        	this.otherPartyPublicKey = otherPartyPublicKey;
         	SHA2 sha2 = new SHA2();
-        	hostPseudoIdentity = sha2.makeSHA2Hash(receiverPublicKey);
+        	hostPseudoIdentity = sha2.makeSHA2Hash(hostPublicKeyEncoded);
         	//get this from UI
-        	this.otherPartyPseudoIdentity = sha2.makeSHA2Hash(receiverPublicKey);;
+        	this.otherPartyPseudoIdentity = otherPartyPseudoIdentity;
         	
         	messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
         	
@@ -103,6 +106,7 @@ public class Sender {
         	if("PING_BUSY".equals(pingReplyMessage.get("type"))){
         		//the remote peer is busy
         		//show this info to user and stop the call
+        		//TODO: make new method to show remote party busy
         		callInitiatorListener.onCallDisconnected("The remote user is busy");
         		return;
         		
@@ -153,16 +157,24 @@ public class Sender {
         	Message callAcceptMessage = new Message(inputLine, true, messageCrypto);
         	lastTimestamp = callAcceptMessage.timestamp();
         	if (!callAcceptMessage.isValid(lastTimestamp)) {
-        		//CALL_DECLINE
+        		//Invalid message
         		
         		throw new Exception("Message validation failed");
         	}
         	callAcceptMessage.decrypt();
-        	//TODO: check if this message is accepted or declined
-        	callInitiatorListener.onCallAccepted(otherPartyPseudoIdentity);
+        	System.out.println(callAcceptMessage.get("type"));
+        	if("CALL_ACCEPT".equals(callAcceptMessage.get("type"))){
+        		//call was accepted by remote party
+            	callInitiatorListener.onCallAccepted(otherPartyPseudoIdentity);
+        	} else if("CALL_DECLINE".equals(callAcceptMessage.get("type"))){
+        		//call was accepted by remote party
+            	callInitiatorListener.onCallDeclined(otherPartyPseudoIdentity);
+        	} else{
+        		
+        	}
         	//TODO: create a loop in new thread for continuously receiving other control messages
         	//TODO: create other methods to send messages 
-        	System.out.println(callAcceptMessage.get("type"));
+        	
         	
 
         } catch (IOException e) {
@@ -179,7 +191,7 @@ public class Sender {
 	}
 	
 	public void disconnectCall(){
-		//TODO: send disconnect message using same socket
+		
 		try {
 			// Send CALL_DISCONNECT.
         	Message disconnectMsg = new Message(messageCrypto);

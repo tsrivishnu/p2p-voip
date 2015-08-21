@@ -4,14 +4,21 @@ import java.io.IOException;
 import java.net.InetAddress;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.net.UnknownHostException;
 import java.security.InvalidKeyException;
 import java.security.KeyPair;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.security.PublicKey;
 import java.security.SignatureException;
+import java.security.interfaces.RSAPublicKey;
+
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.crypto.RSA;
+import edu.tum.p2p.group20.voip.crypto.SHA2;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Get;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Put;
@@ -56,18 +63,47 @@ public class GoOnline implements CallReceiverListener{
 			this.configParser = configParser;
 		try {
 			//Make separate communicator for DHT and KX module as they run on different host
+			try{
 			dhtCommunicator = new IntraPeerCommunicator(configParser.getDhtHost(), configParser.getDhtPort());
-			kxCommunicator = new IntraPeerCommunicator(configParser.getKxhost(), configParser.getKxPort());
+			
+			}catch(UnknownHostException e){
+				JOptionPane.showMessageDialog(new JFrame(), "Check DHT host address");
+				e.printStackTrace();
+				return false;
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(new JFrame(), "Check if DHT module is running as per config ");
+				e.printStackTrace();
+				
+				return false;
+			}
+			
+			try{
+				kxCommunicator = new IntraPeerCommunicator(configParser.getKxhost(), configParser.getKxPort());
+			
+			}catch(UnknownHostException e){
+				JOptionPane.showMessageDialog(new JFrame(), "Check KX host address");
+				e.printStackTrace();
+				return false;
+			} catch (IOException e) {
+				JOptionPane.showMessageDialog(new JFrame(), "Check if KX module is running as per config ");
+				e.printStackTrace();
+				return false;
+			}
+			
 			KeyPair hostKeyPair = RSA
 					.getKeyPairFromFile(configParser.getHostKey());
 			/*TODO: to check how to generate hostPseudoIdentity
 			 * as it should be has of host's public key so that other user's can find it in DHT
 			*/
-			String hostPseudoIdentity = "9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
+			PublicKey rsaPublicKey = hostKeyPair.getPublic();
+			SHA2 sha2 = new SHA2();
+			String hostPseudoIdentity = sha2.makeSHA2Hash(rsaPublicKey.getEncoded());
+			//For testing purpose
+			//"9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
 
-			MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-			messageDigest.update(hostPseudoIdentity.getBytes());
-			byte[] key = messageDigest.digest();
+//			MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
+//			messageDigest.update(hostPseudoIdentity.getBytes());
+			byte[] key = hostPseudoIdentity.getBytes();
 			byte[] randomPsuedoId = null;
 
 			// finding a exchange point.
@@ -77,8 +113,8 @@ public class GoOnline implements CallReceiverListener{
 			// this loop continues for ever?
 			while (!isRandomPseudoIdChosen) {
 				// Pick a random pseudo id
-				randomPsuedoId = messageDigest.digest(new java.util.Date()
-						.toString().getBytes());
+				randomPsuedoId = sha2.makeSHA2Hash(new java.util.Date()
+						.toString().getBytes()).getBytes();
 				// Do a DHT_GET to find if that id exists
 				Get dhtGet = new Get(randomPsuedoId);
 				System.out.println("Sending DHT_GET for randomID");
