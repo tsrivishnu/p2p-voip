@@ -47,7 +47,7 @@ import org.apache.commons.configuration.ConfigurationException;
  * @author anshulvij
  *
  */
-public class TestingReceiver {
+public class TestingReceiverWithVoice {
 
 	/**
 	 * @param args
@@ -74,14 +74,7 @@ public class TestingReceiver {
 				public boolean onIncomingCall(String pseudoId, byte[] sessionKey) {
 					// TODO Auto-generated method stub
 					System.out.println("onIncomingCall");
-					int dialogButton = JOptionPane.YES_NO_OPTION;
-		            int result = JOptionPane.showConfirmDialog (null, 
-		            		"Incoming call from "+pseudoId,"Warning",dialogButton);
-
-		            if(result == JOptionPane.YES_OPTION){
-		            	return true;
-		            }
-		            return false;
+					return true;
 				}
 				
 				@Override

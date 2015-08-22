@@ -22,13 +22,49 @@ import edu.tum.p2p.group20.voip.crypto.SHA2;
 
 public class VoicePlayer extends Thread {
 
-	//Destination IP
-	private static final String REMOTE_IP = "192.168.1.40";
-	//Port configured for voice data
-	private static final int PORT = 7000;
-	//TUN interface IP
-	private static final String TUN_IP = "192.168.1.5";
 	
+	//Port configured for voice data
+	private int port = 7000;
+	//TUN interface IP
+	private String tunIP = "192.168.1.5";
+	
+	public void init(String tunIP, int port){
+		this.tunIP=tunIP;
+		
+		this.port=port;
+		
+	}
+	
+	
+
+	/**
+	 * @return the destinationPort
+	 */
+	public int getPort() {
+		return port;
+	}
+
+	/**
+	 * @param destinationPort the destinationPort to set
+	 */
+	public void setPort(int port) {
+		this.port = port;
+	}
+
+	/**
+	 * @return the tunIP
+	 */
+	public String getTunIP() {
+		return tunIP;
+	}
+
+	/**
+	 * @param tunIP the tunIP to set
+	 */
+	public void setTunIP(String tunIP) {
+		this.tunIP = tunIP;
+	}
+
 	//Socket for receiving UDP voice data packet
 	private  DatagramSocket sock;
 	//Packet that will contain actual data
@@ -107,7 +143,10 @@ public class VoicePlayer extends Thread {
 	
 	private void initializeSocket(){
 		try{
-			sock = new DatagramSocket(PORT,InetAddress.getByName(TUN_IP));
+			System.out.println("initializing player socket");
+			System.out.println("port="+port);
+			System.out.println("tunIP="+tunIP);
+			sock = new DatagramSocket(port ,InetAddress.getByName(tunIP));
 			byte soundpacket[] = new byte[16000];
 			datagram = new DatagramPacket(soundpacket,
 					soundpacket.length);

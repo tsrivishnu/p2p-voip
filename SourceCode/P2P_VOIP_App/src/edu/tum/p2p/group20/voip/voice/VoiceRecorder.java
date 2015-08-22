@@ -22,16 +22,67 @@ import edu.tum.p2p.group20.voip.crypto.SHA2;
 public class VoiceRecorder extends Thread {
 
 	//Destination IP
-	private static final String REMOTE_IP = "192.168.1.40";
+	private String destinationIP = "192.168.1.40";//only for testing
 	//Port configured for voice data
-	private static final int PORT = 7000;
+	private int destinationPort = 7000;//only for testing
 	//TUN interface IP
-	private static final String TUN_IP = "192.168.1.5";
+	private String tunIP = "192.168.1.5";//only for testing
+	
 	private DatagramSocket sock;
 	private boolean stop;
 	private byte[] sessionKey;
 	private MessageCrypto encryptor;
 	private TargetDataLine targetDataLine;
+	public void init(String tunIP, String destinationIP, int destinationPort){
+		this.tunIP=tunIP;
+		this.destinationIP=destinationIP;
+		this.destinationPort=destinationPort;
+		
+	}
+	
+	/**
+	 * @return the destinationIP
+	 */
+	public String getDestinationIP() {
+		return destinationIP;
+	}
+
+	/**
+	 * @param destinationIP the destinationIP to set
+	 */
+	public void setDestinationIP(String destinationIP) {
+		this.destinationIP = destinationIP;
+	}
+
+	/**
+	 * @return the destinationPort
+	 */
+	public int getDestinationPort() {
+		return destinationPort;
+	}
+
+	/**
+	 * @param destinationPort the destinationPort to set
+	 */
+	public void setDestinationPort(int destinationPort) {
+		this.destinationPort = destinationPort;
+	}
+
+	/**
+	 * @return the tunIP
+	 */
+	public String getTunIP() {
+		return tunIP;
+	}
+
+	/**
+	 * @param tunIP the tunIP to set
+	 */
+	public void setTunIP(String tunIP) {
+		this.tunIP = tunIP;
+	}
+	
+
 	
 	/**
 	 * @param sessionkey2
@@ -109,7 +160,11 @@ public class VoiceRecorder extends Thread {
 	
 	private void initializeSocket(){
 		try {
-			sock = new DatagramSocket(8000,InetAddress.getByName(TUN_IP));
+			//can send via any port on TUN interface
+			System.out.println("initializing recorder socket");
+			System.out.println("port="+0);
+			System.out.println("tunIP="+tunIP);
+			sock = new DatagramSocket(0,InetAddress.getByName(tunIP));
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
 			System.out.println(" Unable to initialize UDP socket");
@@ -131,7 +186,7 @@ public class VoiceRecorder extends Thread {
 	public void sendThruUDP(byte soundpacket[]) {
 		try {
 			sock.send(new DatagramPacket(soundpacket, soundpacket.length,
-					InetAddress.getByName(REMOTE_IP), PORT));
+					InetAddress.getByName(destinationIP), destinationPort));
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println(" Unable to send soundpacket using UDP ");

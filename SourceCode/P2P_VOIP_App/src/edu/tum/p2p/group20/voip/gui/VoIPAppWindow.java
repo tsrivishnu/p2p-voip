@@ -311,34 +311,26 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	 * @return true if user accepted call
 	 */
 	private boolean showIncomingCallDialog(String pseudoId) {
-		final JOptionPane optionPane = new JOptionPane(
+		JOptionPane optionPane = new JOptionPane(
                 "Incoming call by\n"
                 + pseudoId +"\n"
                 +"Do you want to accept?",
                 JOptionPane.QUESTION_MESSAGE,
                 JOptionPane.YES_NO_OPTION);
 
-		final JDialog dialog = new JDialog(this, 
-                             "Incoming Call!",
-                             true);
-		dialog.setContentPane(optionPane);
-		dialog.setDefaultCloseOperation(
-		    JDialog.DO_NOTHING_ON_CLOSE);
-		dialog.addWindowListener(new WindowAdapter() {
-		    public void windowClosing(WindowEvent we) {
-		        //not allow user to close this window
-		    }
-		});
-				
-		dialog.pack();
-		dialog.setVisible(true);
+		int dialogButton = JOptionPane.YES_NO_OPTION;
+        int result = JOptionPane.showConfirmDialog (null, //parent
+        		"Incoming call from "+pseudoId+"\nDo you want to accept?",//message
+        		"Incoming call",//title
+        		JOptionPane.YES_NO_OPTION);//buttons
 
-		int value = ((Integer)optionPane.getValue()).intValue();
-		if (value == JOptionPane.YES_OPTION) {
+		if (result == JOptionPane.YES_OPTION) {
 			//call accepted
+			System.out.println("User accepted call");
 		    return true;
-		} else if (value == JOptionPane.NO_OPTION) {
+		} else if (result == JOptionPane.NO_OPTION) {
 			//call declined
+			System.out.println("User declined call");
 		    return false;
 		}
 		//for all other cases call declined

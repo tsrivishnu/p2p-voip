@@ -6,8 +6,6 @@ public interface CallInitiatorListener {
 	
 	public void onCallAccepted(String pseudoId);
 	
-	public void onCallConnected(String pseudoId);
-	
 	public void onCallDisconnected(String pseudoId);
 
 	/**
