@@ -5,6 +5,7 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
+import java.security.MessageDigest;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -15,6 +16,7 @@ import javax.sound.sampled.Port;
 import javax.sound.sampled.TargetDataLine;
 
 import edu.tum.p2p.group20.voip.com.MessageCrypto;
+import edu.tum.p2p.group20.voip.crypto.SHA2;
 
 public class VoiceRecorder extends Thread {
 
@@ -73,7 +75,14 @@ public class VoiceRecorder extends Thread {
 	 *            the command line arguments
 	 */
 	public static void main(String[] args) {
-		VoiceRecorder voiceRecorder = new VoiceRecorder("testkey".getBytes());
+		
+		// TODO Remove this testing code
+		
+		SHA2 sha2 = new SHA2();
+		
+		
+		
+		VoiceRecorder voiceRecorder = new VoiceRecorder(sha2.makeSHA2Hash("testkey").getBytes());
 		voiceRecorder.start();
 
 	

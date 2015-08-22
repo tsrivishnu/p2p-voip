@@ -16,6 +16,7 @@ import javax.sound.sampled.SourceDataLine;
 
 import edu.tum.p2p.group20.voip.com.MessageCrypto;
 import edu.tum.p2p.group20.voip.config.ConfigParser;
+import edu.tum.p2p.group20.voip.crypto.SHA2;
 
 
 public class VoicePlayer extends Thread {
@@ -85,8 +86,12 @@ public class VoicePlayer extends Thread {
 	 *            the command line arguments
 	 */
 	public static void main(String[] args) {
+		SHA2 sha2 = new SHA2();
+		
+		
+		
+		VoicePlayer voicePlayer = new VoicePlayer(sha2.makeSHA2Hash("testkey").getBytes());
 
-		VoicePlayer voicePlayer = new VoicePlayer("testkey".getBytes());
 		voicePlayer.start();
 
 	}
