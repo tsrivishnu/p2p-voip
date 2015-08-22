@@ -97,7 +97,7 @@ public class GoOnline implements CallReceiverListener{
 			*/
 			PublicKey rsaPublicKey = hostKeyPair.getPublic();
 			SHA2 sha2 = new SHA2();
-			String hostPseudoIdentity = sha2.makeSHA2Hash(rsaPublicKey.getEncoded());
+			String hostPseudoIdentity = new String(sha2.makeSHA2Hash(rsaPublicKey.getEncoded()));
 			//For testing purpose
 			//"9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
 
@@ -114,7 +114,7 @@ public class GoOnline implements CallReceiverListener{
 			while (!isRandomPseudoIdChosen) {
 				// Pick a random pseudo id
 				randomPsuedoId = sha2.makeSHA2Hash(new java.util.Date()
-						.toString().getBytes()).getBytes();
+						.toString().getBytes());
 				// Do a DHT_GET to find if that id exists
 				Get dhtGet = new Get(randomPsuedoId);
 				System.out.println("Sending DHT_GET for randomID");

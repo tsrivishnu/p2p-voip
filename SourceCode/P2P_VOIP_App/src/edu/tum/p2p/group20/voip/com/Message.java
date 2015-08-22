@@ -44,6 +44,7 @@ public class Message {
 	 * @throws ParseException
 	 */	
 	public Message(String json, Boolean encrypted, MessageCrypto messageCrypto) throws ParseException {
+		
 		fullMessage = (JSONObject) jsonParser.parse(json);
 		isEncrypted = encrypted;
 		if (isEncrypted){
@@ -154,6 +155,7 @@ public class Message {
 		if (isEncrypted) {
 			decrypt();
 		}		
+		
 		
 		if ( !((data.get("sender").equals(messageCrypto.otherPartyPseudoIdentity))
 				&&

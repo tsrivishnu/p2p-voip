@@ -59,12 +59,14 @@ public class VoicePlayer extends Thread {
 		byte plainData[] = null;
 		MessageCrypto aes = new MessageCrypto();
 		try {
-			aes.setSessionKey(sessionkey);
+			//create aes encryption manager with noPadding option
+			aes.setSessionKey(sessionkey,true);
 		} catch (NoSuchAlgorithmException | NoSuchProviderException
 				| NoSuchPaddingException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 			//Display error to user although its our problem
+			return;
 		}
 		initializeSocket();
 		try {
@@ -109,8 +111,9 @@ public class VoicePlayer extends Thread {
 			byte soundpacket[] = new byte[16000];
 			datagram = new DatagramPacket(soundpacket,
 					soundpacket.length);
-		} catch(IOException ex){
+		} catch(IOException e){
 			System.out.println("Cannot initialize UDP socket");
+			e.printStackTrace();
 		}
 	}
 	

@@ -71,11 +71,15 @@ public class MessageCrypto {
 	 * @throws NoSuchProviderException 
 	 * @throws NoSuchAlgorithmException 
 	 */
-	public void setSessionKey(byte[] sessionKey) throws NoSuchAlgorithmException,
+	public void setSessionKey(byte[] sessionKey,boolean noPadding) throws NoSuchAlgorithmException,
 					NoSuchProviderException, NoSuchPaddingException {
 		this.sessionKey = sessionKey;
 		keySpec = new SecretKeySpec(this.sessionKey, "AES");
-		cipher = Cipher.getInstance("AES/ECB/NoPadding", "BC");
+		if(noPadding){
+			cipher = Cipher.getInstance("AES/ECB/NoPadding", "BC");
+		} else {
+			cipher = Cipher.getInstance("AES/ECB/PKCS7Padding", "BC");
+		}
 	}
 	
 	/**

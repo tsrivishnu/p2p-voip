@@ -46,7 +46,7 @@ public class MakeCall {
         	
   
         	SHA2 sha2 = new SHA2();
-        	byte[] hostPseudoId = sha2.makeSHA2Hash(hostPubKey.getEncoded()).getBytes();
+        	byte[] hostPseudoId = sha2.makeSHA2Hash(hostPubKey.getEncoded());
         	
 //        	messageDigest.update("somerandomthing".getBytes());        	
 //        	byte[] pseudoIdToSearch = messageDigest.digest();

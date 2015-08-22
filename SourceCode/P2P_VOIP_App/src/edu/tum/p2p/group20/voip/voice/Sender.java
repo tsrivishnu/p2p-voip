@@ -6,6 +6,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.InetAddress;
 import java.net.Socket;
 import java.security.GeneralSecurityException;
@@ -17,8 +18,15 @@ import java.security.SignatureException;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Date;
 import java.util.Scanner;
+import java.util.Timer;
+import java.util.TimerTask;
+
+import javax.crypto.BadPaddingException;
+import javax.crypto.IllegalBlockSizeException;
+import javax.crypto.ShortBufferException;
 
 import org.apache.commons.codec.binary.Base64;
+import org.json.simple.parser.ParseException;
 
 import edu.tum.p2p.group20.voip.com.Message;
 import edu.tum.p2p.group20.voip.com.MessageCrypto;
@@ -34,6 +42,11 @@ import edu.tum.p2p.group20.voip.dh.SessionKeyManager;
 // To be more precise, it is the caller, who is to call a receiver.
 
 public class Sender {
+
+	/**
+	 * 
+	 */
+	private static final int HEARTBEAT_TIMEOUT = 15000;
 
 	private Socket socket;
 
@@ -56,30 +69,39 @@ public class Sender {
 	private MessageCrypto messageCrypto;
 
 	private Date lastTimestamp;
+	
+	private Date lastHeartBeat;
     
-    public void initiateCall(String otherPartyPseudoIdentity,RSAPublicKey otherPartyPublicKey, String destinationIP,ConfigParser parser) throws IllegalStateException, Exception {
+	private boolean stop;
+
+	private Thread readMessageThread;
+    public void initiateCall(final String otherPartyPseudoIdentity,RSAPublicKey otherPartyPublicKey, String destinationIP,ConfigParser parser) throws IllegalStateException, Exception {
         configParser = parser;
         try {
-        	//TODO: check which IP is to be used here TUN IP or Destination IP from result of OUTGOING_TUNNEL_READY
+        	//TODO: put soTimeout
             socket = new Socket(InetAddress.getByName(destinationIP), 
             		configParser.getVoipPort(),
             		InetAddress.getByName(configParser.getTunIP()),0);
-        	
+        	System.out.println("socket done");
             out = new PrintWriter(socket.getOutputStream(), true);                   
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+            final BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         	
         	String inputLine;
         	
         	// get hostkey
-        	//will come from cmd line or settings
+        	// will come from cmd line or settings
         	hostKeyPair = RSA.getKeyPairFromFile(configParser.getHostKey());
         	hostPublicKeyEncoded = Base64.encodeBase64String(hostKeyPair.getPublic().getEncoded());
+        	
         	//TODO: check what comes from UI the public key or the pseudoID
         	this.otherPartyPublicKey = otherPartyPublicKey;
+        	
         	SHA2 sha2 = new SHA2();
-        	hostPseudoIdentity = sha2.makeSHA2Hash(hostPublicKeyEncoded);
+        	hostPseudoIdentity = Base64.encodeBase64String(sha2.makeSHA2Hash(hostKeyPair.getPublic().getEncoded()));
         	//get this from UI
         	this.otherPartyPseudoIdentity = otherPartyPseudoIdentity;
+        	
+        	System.out.println(hostPseudoIdentity);
         	
         	messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
         	
@@ -131,7 +153,7 @@ public class Sender {
         	System.out.println(receivedDhMessage.get("type"));
 
         	byte[] sessionKey = receiverKeyManager.makeSessionKey(dhPublicKeyString);
-        	messageCrypto.setSessionKey(sessionKey);
+        	messageCrypto.setSessionKey(sessionKey,false);
         	System.out.println("SessionKey: "+Base64.encodeBase64String(sessionKey));        	
         	
         	// Send CALL_INIT.
@@ -146,7 +168,9 @@ public class Sender {
         	if (!receivedMessage.isValid(lastTimestamp)) {
         		throw new Exception("Message validation failed");
         	}
+        	
         	receivedMessage.decrypt();
+        	lastTimestamp = receivedMessage.timestamp();
         	System.out.println(receivedMessage.get("type"));
         	
         	// Show waiting to the user here!
@@ -155,26 +179,113 @@ public class Sender {
         	// Read CALL_ACCEPT/ CALL_DECLINE
         	inputLine = in.readLine();            	
         	Message callAcceptMessage = new Message(inputLine, true, messageCrypto);
-        	lastTimestamp = callAcceptMessage.timestamp();
+        	
         	if (!callAcceptMessage.isValid(lastTimestamp)) {
         		//Invalid message
         		
         		throw new Exception("Message validation failed");
         	}
         	callAcceptMessage.decrypt();
+        	lastTimestamp = callAcceptMessage.timestamp();
         	System.out.println(callAcceptMessage.get("type"));
         	if("CALL_ACCEPT".equals(callAcceptMessage.get("type"))){
         		//call was accepted by remote party
             	callInitiatorListener.onCallAccepted(otherPartyPseudoIdentity);
+            	//TODO: create a loop in new thread for continuously receiving other control messages
+            	//TODO: create other methods to send messages 
+            	
+            	readMessageThread = new Thread(new Runnable() {
+					
+					@Override
+					public void run() {
+						// TODO Auto-generated method stub
+						
+		            	while(!stop){
+		            		
+		            		String inputLine;
+							try {
+								inputLine = in.readLine();
+								//TODO: a null check here will also indicate broken connection
+								Message msg = new Message(inputLine, true, messageCrypto);
+			                	
+			                	if (!msg.isValid(lastTimestamp)) {
+			                		//Invalid message
+			                		System.out.println("Invalid msg");
+			                		stop=true;
+			                		callInitiatorListener.onCallDisconnected(otherPartyPseudoIdentity);
+			                		return;
+			                	}
+			                	msg.decrypt();
+			                	lastTimestamp = msg.timestamp();
+			                	System.out.println(msg.get("type"));
+			                	if("HEARTBEAT_ACK".equals(msg.get("type"))){
+			                		lastHeartBeat = lastTimestamp;
+			                		System.out.println("Received HEARTBEAT_ACK");
+			                	} else if("CALL_DISCONNECT".equals(msg.get("type"))){
+			                		System.out.println("Received CALL_DISCONNECT");
+			                		stop=true;
+			                		callInitiatorListener.onCallDisconnected(otherPartyPseudoIdentity);
+			                		return;
+			                	}
+							} catch (IOException | ParseException | 
+									InvalidKeyException | SignatureException |
+									NoSuchAlgorithmException | ShortBufferException |
+									IllegalBlockSizeException | BadPaddingException |
+									java.text.ParseException e) {
+								// TODO Auto-generated catch block
+								e.printStackTrace();
+								stop=true;
+		                		callInitiatorListener.onCallDisconnected(otherPartyPseudoIdentity);
+		                		return;
+							}
+		                	
+		            	}
+					}
+				});
+            	readMessageThread.start();
+            	lastHeartBeat =  new Date();
+            	Timer heartBeatTimer = new Timer();
+            	TimerTask heartBeatSender = new TimerTask() {
+					
+					@Override
+					public void run() {
+						
+						//check heartbeat timestamp
+						if((new Date().getTime()-lastHeartBeat.getTime())>HEARTBEAT_TIMEOUT){
+							//last heart beat too old
+							this.cancel();//stop heartbeat timer task
+							System.out.println("HEARTBEAT TIMEOUT");
+							stop=true;
+							readMessageThread=null;//cance the read msg thread
+	                		callInitiatorListener.onCallDisconnected(otherPartyPseudoIdentity);
+							return;
+						}
+						Message heartbeat = new Message(messageCrypto);
+	            		heartbeat.put("type", "HEARTBEAT");
+	            		heartbeat.encrypt();
+	                	try {
+	                		
+	                		System.out.println("Sending HEARTBEAT message");
+							out.println(heartbeat.asJSONStringForExchange());
+						} catch (InvalidKeyException | NoSuchAlgorithmException
+								| SignatureException
+								| UnsupportedEncodingException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				};
+				//schedule heartBeat sending task after 2 sec for every 10 sec
+            	heartBeatTimer.schedule(heartBeatSender, 2000, 10000);
+            		
         	} else if("CALL_DECLINE".equals(callAcceptMessage.get("type"))){
         		//call was accepted by remote party
+        		System.out.println("Received CALL_DECLINE");
             	callInitiatorListener.onCallDeclined(otherPartyPseudoIdentity);
         	} else{
-        		
+        		System.out.println("Received Unknown Message type");
         	}
-        	//TODO: create a loop in new thread for continuously receiving other control messages
-        	//TODO: create other methods to send messages 
-        	
+        
         	
 
         } catch (IOException e) {

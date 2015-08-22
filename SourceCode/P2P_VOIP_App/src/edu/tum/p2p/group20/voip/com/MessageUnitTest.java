@@ -56,8 +56,8 @@ public class MessageUnitTest {
 		messageCryptoForSender = new MessageCrypto(senderHostKeyPair, receiverPublicKey, senderPseudoIdentity, receiverPseudoIdentity);
 		messageCryptoForReceiver = new MessageCrypto(receiverHostKeyPair, senderPublicKey, receiverPseudoIdentity, senderPseudoIdentity);
 		
-		messageCryptoForSender.setSessionKey("[B@46f5f77912343".getBytes());
-		messageCryptoForReceiver.setSessionKey("[B@46f5f77912343".getBytes());
+		messageCryptoForSender.setSessionKey("[B@46f5f77912343".getBytes(),false);
+		messageCryptoForReceiver.setSessionKey("[B@46f5f77912343".getBytes(),false);
 		
 		sentMessage = new Message(messageCryptoForSender);
 		

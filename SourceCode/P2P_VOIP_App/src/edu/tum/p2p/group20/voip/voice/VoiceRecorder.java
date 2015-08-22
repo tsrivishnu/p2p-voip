@@ -44,7 +44,7 @@ public class VoiceRecorder extends Thread {
 	public void run() {
 		try {
 			MessageCrypto aes = new MessageCrypto();
-			aes.setSessionKey(sessionKey);
+			aes.setSessionKey(sessionKey,true);
 			DataLine.Info dataLineInfo = new DataLine.Info(
 					TargetDataLine.class, getAudioFormat());
 			targetDataLine = (TargetDataLine) AudioSystem
@@ -67,8 +67,7 @@ public class VoiceRecorder extends Thread {
 
 		} catch (Exception e) {
 			e.printStackTrace();
-			System.out.println(" not correct ");
-			System.exit(0);
+			this.interrupt();
 		}
 	}
 

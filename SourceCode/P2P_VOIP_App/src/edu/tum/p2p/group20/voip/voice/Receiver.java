@@ -6,6 +6,8 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.util.Date;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.*;
@@ -13,7 +15,6 @@ import java.io.*;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.ShortBufferException;
-import javax.swing.Timer;
 
 import org.apache.commons.codec.binary.Base64;
 import org.json.simple.parser.ParseException;
@@ -39,12 +40,15 @@ public class Receiver extends Thread {
 	private int portNumber;
 	private InetAddress bindAddress;
 	private boolean stop;//flag to quit the thread loop
-	private static int status;//status of the receiver
+	private static int status=1;//status of the receiver
 	private final static int IDLE=1;//no incoming call
 	private final static int BUSY=2;//establishing incoming call
 	private final static int WAIT=3;//incoming call is already existing
-	private ConfigParser configParser;
+	protected static final long HEARTBEAT_TIMEOUT = 15000;
 	
+	private ConfigParser configParser;
+	private Date lastHeartBeat;
+	private String otherPartyPseudoIdentity;
 	
 	/**
 	 * @param clientSocket2
@@ -70,12 +74,14 @@ public class Receiver extends Thread {
             
             KeyPair hostKeyPair = RSA.getKeyPairFromFile(configParser.getHostKey());
             PublicKey otherPartyPublicKey = null; // We get to know this from PING message.
-        	String otherPartyPseudoIdentity = null; // We get to know this from PING message.
+        	otherPartyPseudoIdentity = null; // We get to know this from PING message.
         	//TODO: hash the public key of hostKeyPair to get hostPseudoIdentity
         	PublicKey hostPublicKey = hostKeyPair.getPublic();
+        	
+        	
         	SHA2 sha2 = new SHA2();
         	//TODO: check how to get this host public key as a string
-        	String hostPseudoIdentity = sha2.makeSHA2Hash(new String(hostPublicKey.getEncoded())); 
+        	String hostPseudoIdentity = Base64.encodeBase64String(sha2.makeSHA2Hash(hostPublicKey.getEncoded())); 
         	
         	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
         	
@@ -103,9 +109,14 @@ public class Receiver extends Thread {
             	// 		caller is who he says he is. Probably, make pseudo-identity some 
             	//      kind of hash of public key? 
             	otherPartyPseudoIdentity = (String) receivedPingMessage.get("sender");
+            	System.out.println(otherPartyPseudoIdentity);
+            	
+            	
             	messageCrypto.otherPartyPseudoIdentity = otherPartyPseudoIdentity; 
             	messageCrypto.otherPartyPublicKey = RSA.getPublicKeyFromString((String) receivedPingMessage.get("senderPublicKey"));
             	lastTimestamp = receivedPingMessage.timestamp();
+            	
+            	
             	if(status==IDLE){
 	            	// Send PING_REPLY with module verification            	
 	            	moduleValidator = new ModuleValidator();
@@ -133,7 +144,7 @@ public class Receiver extends Thread {
 	            	
 	            	System.out.println("SessionKey: "+Base64.encodeBase64String(sessionKey));
 	            	            	
-	            	messageCrypto.setSessionKey(sessionKey);
+	            	messageCrypto.setSessionKey(sessionKey,false);
 	            	
 	            	// Send your dh params to the other party.
 	            	Message dhPublicMessage = new Message(messageCrypto);
@@ -173,10 +184,37 @@ public class Receiver extends Thread {
 	                	callAcceptMessage.put("type", "CALL_ACCEPT");
 	                	callAcceptMessage.encrypt();
 	                	out.println(callAcceptMessage.asJSONStringForExchange());
-	                	//TODO:
+	                	//TODO: create a timertask to check heartbeat timestamps
+	                	lastHeartBeat =  new Date();
+	                	Timer heartBeatTimer = new Timer();
+	                	TimerTask heartBeatSender = new TimerTask() {
+	    					
+	    					@Override
+	    					public void run() {
+	    						
+	    						//check heartbeat timestamp
+	    						if((new Date().getTime()-lastHeartBeat.getTime())>HEARTBEAT_TIMEOUT){
+	    							//last heart beat too old
+	    							this.cancel();//stop heartbeat timer task
+	    							System.out.println("HEARTBEAT TIMEOUT");
+	    							stop=true;
+	    	                		callReceiverListener.onCallDisconnected(otherPartyPseudoIdentity);
+	    							return;
+	    						}
+	    						
+	    					}
+	    				};
+	    				//schedule heartBeat checking timer after 4 sec for every 10 sec
+	                	heartBeatTimer.schedule(heartBeatSender, 4000, 10000);
 	                	while(!stop){
 	                		// Read disconnect or Heartbeat message
-	    	            	inputLine = in.readLine(); 
+	    	            	inputLine = in.readLine();
+	    	            	//connection is broken
+	    	            	if(inputLine==null){
+	    	            		stop=true;
+	    	            		callReceiverListener.onCallDisconnected("Invalid message received from client!");
+	    	            		return;
+	    	            	}
 	    	            	Message newMessage = new Message(inputLine, true, messageCrypto);
 	    	            	if (!newMessage.isValid(lastTimestamp)) {
 	    	            		//TODO: Disconnect call as invalid message arrived
@@ -188,6 +226,8 @@ public class Receiver extends Thread {
 	    	            		lastTimestamp = newMessage.timestamp();
 	    		            	System.out.println(newMessage.get("type"));
 	    		            	if("HEARTBEAT".equals(newMessage.get("type"))){
+	    		            		//update last sheartbeat timestamp
+	    		            		lastHeartBeat= lastTimestamp;
 	    		            		//send heartbeat acknowledgement
 	    		            		Message heartbeatAck = new Message(messageCrypto);
 	    		            		heartbeatAck.put("type", "HEARTBEAT_ACK");
@@ -218,22 +258,11 @@ public class Receiver extends Thread {
 	            	pingReply.put("verificationTimestamp", moduleValidator.timestampString);
 	            	out.println(pingReply.asJSONStringForExchange());
 	            	stop=true;
-	            	//close connection after 2 sec
-	            	new Timer(2000, new ActionListener() {
-						
-						@Override
-						public void actionPerformed(ActionEvent e) {
-							try {
-								if(clientSocket!=null){
-									clientSocket.close();
-								}
-							} catch (IOException e1) {
-								// TODO log4j here not so serious
-								e1.printStackTrace();
-							}
-							
-						}
-					}).start();
+	            	//close connection
+	            	if(clientSocket!=null){
+						clientSocket.close();
+					}
+	            	
 	            	return;
             	} else {
             		//TODO: Implement waiting status and further flow
@@ -288,6 +317,7 @@ public class Receiver extends Thread {
 				e.printStackTrace();
 			}
     	}
+    	
     }
     
   
