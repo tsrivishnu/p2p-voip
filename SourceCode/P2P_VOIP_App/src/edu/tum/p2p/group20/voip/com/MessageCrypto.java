@@ -75,7 +75,7 @@ public class MessageCrypto {
 					NoSuchProviderException, NoSuchPaddingException {
 		this.sessionKey = sessionKey;
 		keySpec = new SecretKeySpec(this.sessionKey, "AES");
-		cipher = Cipher.getInstance("AES/ECB/PKCS7Padding", "BC");
+		cipher = Cipher.getInstance("AES/ECB/NoPadding", "BC");
 	}
 	
 	/**

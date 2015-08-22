@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.security.NoSuchProviderException;
 
@@ -22,11 +23,11 @@ import edu.tum.p2p.group20.voip.crypto.SHA2;
 public class VoicePlayer extends Thread {
 
 	//Destination IP
-	private static final String REMOTE_IP = "192.168.1.5";
+	private static final String REMOTE_IP = "192.168.1.40";
 	//Port configured for voice data
 	private static final int PORT = 7000;
 	//TUN interface IP
-	private static final String TUN_IP = "localhost";
+	private static final String TUN_IP = "192.168.1.5";
 	
 	//Socket for receiving UDP voice data packet
 	private  DatagramSocket sock;
@@ -88,10 +89,16 @@ public class VoicePlayer extends Thread {
 	public static void main(String[] args) {
 		SHA2 sha2 = new SHA2();
 		
+		MessageDigest md = null;
 		
+		try {
+			md = MessageDigest.getInstance("SHA-256");
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
-		VoicePlayer voicePlayer = new VoicePlayer(sha2.makeSHA2Hash("testkey").getBytes());
-
+		VoicePlayer voicePlayer = new VoicePlayer(md.digest("testkey".getBytes()));
 		voicePlayer.start();
 
 	}
@@ -117,7 +124,9 @@ public class VoicePlayer extends Thread {
 
 	private  byte[] receiveThruUDP() {
 		try {
+			System.out.println("Trying to receive a packet");
 			sock.receive(datagram);
+			System.out.println("Received packet");
 			return datagram.getData(); // soundpacket ;
 		} catch (Exception e) {
 			System.out.println(" Unable to receive using UDP ");

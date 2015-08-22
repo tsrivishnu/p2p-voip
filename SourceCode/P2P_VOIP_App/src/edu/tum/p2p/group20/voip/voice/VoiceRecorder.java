@@ -22,11 +22,11 @@ import edu.tum.p2p.group20.voip.crypto.SHA2;
 public class VoiceRecorder extends Thread {
 
 	//Destination IP
-	private static final String REMOTE_IP = "192.168.1.5";
+	private static final String REMOTE_IP = "192.168.1.40";
 	//Port configured for voice data
 	private static final int PORT = 7000;
 	//TUN interface IP
-	private static final String TUN_IP = "localhost";
+	private static final String TUN_IP = "192.168.1.5";
 	private DatagramSocket sock;
 	private boolean stop;
 	private byte[] sessionKey;
@@ -110,7 +110,7 @@ public class VoiceRecorder extends Thread {
 	
 	private void initializeSocket(){
 		try {
-			sock = new DatagramSocket(0,InetAddress.getByName(TUN_IP));
+			sock = new DatagramSocket(8000,InetAddress.getByName(TUN_IP));
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
 			System.out.println(" Unable to initialize UDP socket");
