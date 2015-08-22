@@ -57,7 +57,6 @@ public class GoOnline implements CallReceiverListener{
 		}
 
 		goOnline.goOnline(ConfigParser.getInstance(args[1]));
-
 	}
 	
 	
@@ -100,14 +99,16 @@ public class GoOnline implements CallReceiverListener{
 			*/
 			PublicKey rsaPublicKey = hostKeyPair.getPublic();
 			SHA2 sha2 = new SHA2();
-			String hostPseudoIdentity = Base64.encodeBase64String(rsaPublicKey.getEncoded());
+			String hostPseudoIdentity = Base64.encodeBase64String(
+				sha2.makeSHA2Hash(rsaPublicKey.getEncoded())
+			);
 
 			System.out.println("Give this id to the other user: " + hostPseudoIdentity);
 			
 			// KX and DHT will always save SHA-256 hashed bytes of the peduoIdentity 
 			// 	which is base64 encoded rsapublickey
 			//	When we give the use, we give him the Base64 encoded RsaPublicKey
-			byte[] key = sha2.makeSHA2Hash(hostPseudoIdentity.getBytes());
+			byte[] pseduoIdBytes = sha2.makeSHA2Hash(rsaPublicKey.getEncoded());
 			byte[] randomPsuedoId = null;
 
 			// finding a exchange point.
@@ -141,14 +142,14 @@ public class GoOnline implements CallReceiverListener{
 
 			// Send request to KX to build tunnel
 
-			sendKxBuildIncomingTunnel(key, xChangePointInfoForKx);
+			sendKxBuildIncomingTunnel(pseduoIdBytes, xChangePointInfoForKx);
 			lastReceivedMessage = kxCommunicator.readIncomingAndHandleError();
 
 			System.out.println(kxCommunicator.isValidMessage(lastReceivedMessage,
-					TnReady.messageName, key));
+					TnReady.messageName, pseduoIdBytes));
 			
 			if (kxCommunicator.isValidMessage(lastReceivedMessage,
-					TnReady.messageName, key)) {			
+					TnReady.messageName, pseduoIdBytes)) {			
 				
 				//get this ip from the config file
 				String inTunnelIP = configParser.getTunIP();
@@ -191,7 +192,7 @@ public class GoOnline implements CallReceiverListener{
 				
 
 				
-				sendDhtPutMessage(key, hostKeyPair, xChangePointInfoForKx);
+				sendDhtPutMessage(pseduoIdBytes, hostKeyPair, xChangePointInfoForKx);
 				//lastReceivedMessage = dhtCommunicator.readIncomingAndHandleError(); 
 				// This is just to see if you would get any error
 				

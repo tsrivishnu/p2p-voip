@@ -8,6 +8,8 @@ import java.security.PublicKey;
 import java.security.interfaces.RSAPublicKey;
 import java.util.Arrays;
 
+import org.apache.commons.codec.binary.Base64;
+
 import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.crypto.SHA2;
@@ -41,23 +43,19 @@ public class MakeCall {
         	
         	KeyPair hostKeyPair = RSA.getKeyPairFromFile(configParser.getHostKey());
         	PublicKey hostPubKey = hostKeyPair.getPublic();
-//        	String hostPseudoIdentity = "9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
-            
-        	
   
         	SHA2 sha2 = new SHA2();
         	byte[] hostPseudoId = sha2.makeSHA2Hash(hostPubKey.getEncoded());
         	
-//        	messageDigest.update("somerandomthing".getBytes());        	
-//        	byte[] pseudoIdToSearch = messageDigest.digest();
+        	byte[] calledPseudoIdByte = Base64.decodeBase64(calleeId); 
         	
-        	Get getMessage = new Get(calleeId.getBytes());
+        	Get getMessage = new Get(calledPseudoIdByte);
         	dhtCommunicator.sendMessage(getMessage);
         	
         	lastReceivedMessage = dhtCommunicator.readIncomingAndHandleError();        
         	
         	//checking reply for signature
-        	if (!dhtCommunicator.isValidMessage(lastReceivedMessage, GetReply.messageName, calleeId.getBytes())) {
+        	if (!dhtCommunicator.isValidMessage(lastReceivedMessage, GetReply.messageName, calledPseudoIdByte)) {
         		throw new Exception("GET reply error");
         	} 
         	byte[] publickKeyBytes = lastReceivedMessage.get("publicKey");

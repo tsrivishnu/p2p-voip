@@ -215,7 +215,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 				
 			case "Call" :
 				String pseudoId = recepientName.getText();
-				if(pseudoId!=null && pseudoId.getBytes().length==256 &&makeCallModule ==null){
+				if(makeCallModule ==null){
 					makeCallModule = new MakeCall();
 				}
 				try {
