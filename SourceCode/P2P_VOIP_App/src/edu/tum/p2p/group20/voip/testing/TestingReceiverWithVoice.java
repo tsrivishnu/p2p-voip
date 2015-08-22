@@ -62,24 +62,15 @@ public class TestingReceiverWithVoice {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		
-		
-		
-		
-		ConfigParser parser;
+
+		final ConfigParser parser;
 		try {
-			parser = ConfigParser.getInstance("lib/test_sample_app_config1.ini");
+			parser = ConfigParser.getInstance("lib/test_app_config_receiver.ini");
 			ServerSocket ss = new ServerSocket(parser.getVoipPort());
 			
 			Socket clientSocket = ss.accept();
-//			KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
-//	    	RSAPublicKey remotePublicKey = (RSAPublicKey) hostKeyPair.getPublic();
-//	    	MessageDigest md = MessageDigest.getInstance("SHA-256");
-//	    	String calleeId = new String(Base64.encodeBase64(md.digest(remotePublicKey.getEncoded())));
+
 	    	CallReceiverListener listener = new CallReceiverListener() {
-				
-				
 
 				@Override
 				public boolean onIncomingCall(String pseudoId, byte[] sessionKey) {
@@ -111,10 +102,10 @@ public class TestingReceiverWithVoice {
 					System.out.println("sessionKey="+Base64.encodeBase64String(sessionKey));
 					
 				    voicePlayer = new VoicePlayer(TestingReceiverWithVoice.sessionKey);
-				    voicePlayer.init("localhost", 7000);
+				    voicePlayer.init(parser.getTunIP(), 7000);
 					voicePlayer.start();
 					voiceRecorder = new VoiceRecorder(TestingReceiverWithVoice.sessionKey);
-					voiceRecorder.init("localhost","192.168.1.4", 7000);
+					voiceRecorder.init(parser.getTunIP(), parser.getTestDestinatonIp(), 7000);
 					voiceRecorder.start();
 				}
 			};
@@ -127,7 +118,4 @@ public class TestingReceiverWithVoice {
 		}
 		
 	}
-
-
-
 }

@@ -20,6 +20,7 @@ public class ConfigParser {
 	private List<Object> kxOverlayHost;
 	
 	private String tunIP;
+	private String testDestinationIP; // This is used only during test!
 	private String hostlistAddress;
 	private List<String> hostList;
 	
@@ -52,6 +53,7 @@ public class ConfigParser {
 			configParser.kxOverlayHost=configParser.configIni.getSection("KX").getList("OVERLAY_HOSTNAME");
 			configParser.tunIP=configParser.configIni.getSection("KX").getString("TUN_IP",null);
 			
+			configParser.testDestinationIP=configParser.configIni.getSection("VOIP").getString("TEST_DESTINATION_IP",null);
 			configParser.voipPort = configParser.configIni.getSection("VOIP").getInt("PORT");
 		}
 		
@@ -203,6 +205,14 @@ public class ConfigParser {
 	public void setTunIP(String tunIP) {
 		this.tunIP = tunIP;
 	}
+	
+	/**
+	 * @return
+	 */
+	public String getTestDestinatonIp() {
+		// TODO Auto-generated method stub
+		return testDestinationIP;
+	}
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
@@ -217,5 +227,7 @@ public class ConfigParser {
 				+ hostList + ", voipPort=" + voipPort + ", configIni="
 				+ configIni + "]";
 	}
+
+	
 
 }
