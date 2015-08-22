@@ -60,7 +60,7 @@ public class MessageCrypto {
 	 * 
 	 */
 	public MessageCrypto() {
-		
+		Security.addProvider(new org.bouncycastle.jce.provider.BouncyCastleProvider());
 	}
 
 	/**

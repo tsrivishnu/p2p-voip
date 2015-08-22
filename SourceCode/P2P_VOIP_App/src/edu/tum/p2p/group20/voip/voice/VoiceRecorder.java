@@ -6,6 +6,7 @@ import java.net.InetAddress;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
@@ -21,7 +22,7 @@ import edu.tum.p2p.group20.voip.crypto.SHA2;
 public class VoiceRecorder extends Thread {
 
 	//Destination IP
-	private static final String REMOTE_IP = "192.168.1.40";
+	private static final String REMOTE_IP = "192.168.1.5";
 	//Port configured for voice data
 	private static final int PORT = 7000;
 	//TUN interface IP
@@ -65,6 +66,7 @@ public class VoiceRecorder extends Thread {
 			}
 
 		} catch (Exception e) {
+			e.printStackTrace();
 			System.out.println(" not correct ");
 			System.exit(0);
 		}
@@ -78,16 +80,17 @@ public class VoiceRecorder extends Thread {
 		
 		// TODO Remove this testing code
 		
-		SHA2 sha2 = new SHA2();
+		MessageDigest md = null;
 		
+		try {
+			md = MessageDigest.getInstance("SHA-256");
+		} catch (NoSuchAlgorithmException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		
-		
-		VoiceRecorder voiceRecorder = new VoiceRecorder(sha2.makeSHA2Hash("testkey").getBytes());
+		VoiceRecorder voiceRecorder = new VoiceRecorder(md.digest("testkey".getBytes()));
 		voiceRecorder.start();
-
-	
-		
-
 	}
 
 	private AudioFormat getAudioFormat() {

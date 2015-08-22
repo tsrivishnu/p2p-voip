@@ -22,7 +22,7 @@ import edu.tum.p2p.group20.voip.crypto.SHA2;
 public class VoicePlayer extends Thread {
 
 	//Destination IP
-	private static final String REMOTE_IP = "192.168.1.40";
+	private static final String REMOTE_IP = "192.168.1.5";
 	//Port configured for voice data
 	private static final int PORT = 7000;
 	//TUN interface IP
