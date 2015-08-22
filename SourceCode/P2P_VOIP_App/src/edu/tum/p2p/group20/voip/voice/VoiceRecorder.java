@@ -185,6 +185,8 @@ public class VoiceRecorder extends Thread {
 
 	public void sendThruUDP(byte soundpacket[]) {
 		try {
+			System.out.println("destinationIP"+destinationIP);
+			System.out.println("destinationPort"+destinationPort);
 			sock.send(new DatagramPacket(soundpacket, soundpacket.length,
 					InetAddress.getByName(destinationIP), destinationPort));
 		} catch (Exception e) {
