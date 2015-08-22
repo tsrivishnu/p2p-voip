@@ -62,33 +62,23 @@ public class TestingReceiverWithVoice {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		
-		
-		
-		
-		ConfigParser parser;
+
+		final ConfigParser parser;
 		try {
-			parser = ConfigParser.getInstance("lib/test_sample_app_config1.ini");
+			parser = ConfigParser.getInstance("lib/test_app_config_receiver.ini");
 			ServerSocket ss = new ServerSocket(parser.getVoipPort());
 			
 			Socket clientSocket = ss.accept();
-//			KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
-//	    	RSAPublicKey remotePublicKey = (RSAPublicKey) hostKeyPair.getPublic();
-//	    	MessageDigest md = MessageDigest.getInstance("SHA-256");
-//	    	String calleeId = new String(Base64.encodeBase64(md.digest(remotePublicKey.getEncoded())));
+
 	    	CallReceiverListener listener = new CallReceiverListener() {
-				
-				
 
 				@Override
 				public boolean onIncomingCall(String pseudoId, byte[] sessionKey) {
 					// TODO Auto-generated method stub
 					System.out.println("onIncomingCall");
-
-		            int result = JOptionPane.showConfirmDialog (new JFrame(), "Incoming call from "+pseudoId,
-		            		"Incoming Call",
-		            		JOptionPane.YES_NO_OPTION);
+					int dialogButton = JOptionPane.YES_NO_OPTION;
+		            int result = JOptionPane.showConfirmDialog (null, 
+		            		"Incoming call from "+pseudoId,"Question",dialogButton);
 
 		            if(result == JOptionPane.YES_OPTION){
 		            	TestingReceiverWithVoice.sessionKey = sessionKey;
@@ -112,11 +102,10 @@ public class TestingReceiverWithVoice {
 					System.out.println("sessionKey="+Base64.encodeBase64String(sessionKey));
 					
 				    voicePlayer = new VoicePlayer(TestingReceiverWithVoice.sessionKey);
-				    voicePlayer.init("192.168.1.4", 7000);
+				    voicePlayer.init(parser.getTunIP(), 7000);
 					voicePlayer.start();
 					voiceRecorder = new VoiceRecorder(TestingReceiverWithVoice.sessionKey);
-					//Todo: get this IP from Makecall/sender
-					voiceRecorder.init("192.168.1.4","192.168.1.5", 7000);
+					voiceRecorder.init(parser.getTunIP(), parser.getTestDestinatonIp(), 7000);
 					voiceRecorder.start();
 				}
 			};
@@ -129,7 +118,4 @@ public class TestingReceiverWithVoice {
 		}
 		
 	}
-
-
-
 }

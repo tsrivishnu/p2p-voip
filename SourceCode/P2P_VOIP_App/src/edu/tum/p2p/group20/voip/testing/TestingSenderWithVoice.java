@@ -39,11 +39,20 @@ public class TestingSenderWithVoice {
 	protected static VoiceRecorder voiceRecorder;
 	protected static VoicePlayer voicePlayer;
 	private static Sender sender;
+	private static ConfigParser parser = null;
 
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
+		
+		try {
+			parser = ConfigParser.getInstance("lib/test_app_config_sender.ini");
+		} catch (ConfigurationException e1) {
+			e1.printStackTrace();
+		}
+		
 		sender = new Sender();
 		sender.setCallInitiatorListener(new CallInitiatorListener() {
 			
@@ -79,25 +88,23 @@ public class TestingSenderWithVoice {
 
 				System.out.println("sessionKey="+Base64.encodeBase64String(sessionKey));
 				voicePlayer = new VoicePlayer(sessionKey);
-				voicePlayer.init("192.168.1.5", 7000);
+				voicePlayer.init(parser.getTunIP(), 7000);
 				voicePlayer.start();
 				
 				voiceRecorder = new VoiceRecorder(sessionKey);
-				voiceRecorder.init("192.168.1.5", "192.168.1.4", 7000);
+				voiceRecorder.init(parser.getTunIP(), parser.getTestDestinatonIp(), 7000);
 				voiceRecorder.start();
 	
 			}
 		});
 		
-		ConfigParser parser;
 		try {
-			parser = ConfigParser.getInstance("lib/test_sample_app_config2.ini");
 			KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
 	    	RSAPublicKey remotePublicKey = (RSAPublicKey) hostKeyPair.getPublic();
 	    	MessageDigest md = MessageDigest.getInstance("SHA-256");
 	    	String receiverPseudoId = Base64.encodeBase64String(md.digest(remotePublicKey.getEncoded()));
 	    	//TOOD: get this IP from TUN_READY destination IP
-			sender.initiateCall(receiverPseudoId, remotePublicKey,"192.168.1.4", parser);
+			sender.initiateCall(receiverPseudoId, remotePublicKey,parser.getTestDestinatonIp(), parser);
 		} catch ( Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
