@@ -24,9 +24,9 @@ public class VoicePlayer extends Thread {
 
 	
 	//Port configured for voice data
-	private int port = 7000;
+	private int port;
 	//TUN interface IP
-	private String tunIP = "192.168.1.5";
+	private String tunIP;
 	
 	public void init(String tunIP, int port){
 		this.tunIP=tunIP;

@@ -78,14 +78,14 @@ public class TestingSenderWithVoice {
 				System.out.println("onCallAccepted");
 
 				System.out.println("sessionKey="+Base64.encodeBase64String(sessionKey));
-				
+				voicePlayer = new VoicePlayer(sessionKey);
+				voicePlayer.init("192.168.1.5", 7000);
+				voicePlayer.start();
 				
 				voiceRecorder = new VoiceRecorder(sessionKey);
-				voiceRecorder.init("localhost", "198.168.1.4", 7000);
+				voiceRecorder.init("192.168.1.5", "192.168.1.4", 7000);
 				voiceRecorder.start();
-				voicePlayer = new VoicePlayer(sessionKey);
-				voicePlayer.init("198.168.1.4", 7000);
-				voicePlayer.start();
+	
 			}
 		});
 		
