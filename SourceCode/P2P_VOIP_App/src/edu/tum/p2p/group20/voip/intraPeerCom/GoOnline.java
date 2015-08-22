@@ -138,9 +138,7 @@ public class GoOnline implements CallReceiverListener{
 					.trasnformXChangePointInfoFromDhtToKx(xchangePointInfoFromTrace);
 
 			// Send request to KX to build tunnel
-			
-			System.out.println(Arrays.toString(key));
-			System.out.println(key.length);
+
 			sendKxBuildIncomingTunnel(key, xChangePointInfoForKx);
 			lastReceivedMessage = kxCommunicator.readIncomingAndHandleError();
 

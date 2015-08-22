@@ -237,8 +237,7 @@ public class KXSimulator {
 	 */
 	private static void sendTunnelReady(byte[] destinationIpv4, byte[] destinationIpv6) throws IOException {		
 		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 8, 40);
-		System.out.println(Arrays.toString(key));
-		System.out.println(key.length);
+
 		byte[] messageCode = Helper.networkOrderedBytesFromShort(
 				(short) MessagesLegend.codeForName("MSG_KX_TN_READY")
 			);
