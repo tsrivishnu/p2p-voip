@@ -19,6 +19,7 @@ import java.security.interfaces.RSAPublicKey;
 
 
 
+
 import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.voice.CallInitiatorListener;
@@ -72,23 +73,18 @@ public class TestingSenderWithVoice {
 			
 			
 			@Override
-			public void onCallAccepted(String pseudoId) {
+			public void onCallAccepted(String pseudoId, byte[] sessionKey) {
 				// TODO Auto-generated method stub
 				System.out.println("onCallAccepted");
-				MessageDigest md = null;
+
+				System.out.println("sessionKey="+Base64.encodeBase64String(sessionKey));
 				
-				try {
-					md = MessageDigest.getInstance("SHA-256");
-				} catch (NoSuchAlgorithmException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
 				
-				voiceRecorder = new VoiceRecorder(md.digest("testkey".getBytes()));
-				voiceRecorder.init("198.168.1.5", "198.168.1.5", 7000);
+				voiceRecorder = new VoiceRecorder(sessionKey);
+				voiceRecorder.init("localhost", "198.168.1.4", 7000);
 				voiceRecorder.start();
-				voicePlayer = new VoicePlayer(md.digest("testkey".getBytes()));
-				voicePlayer.init("198.168.1.5", 7000);
+				voicePlayer = new VoicePlayer(sessionKey);
+				voicePlayer.init("198.168.1.4", 7000);
 				voicePlayer.start();
 			}
 		});
@@ -101,7 +97,7 @@ public class TestingSenderWithVoice {
 	    	MessageDigest md = MessageDigest.getInstance("SHA-256");
 	    	String receiverPseudoId = Base64.encodeBase64String(md.digest(remotePublicKey.getEncoded()));
 	    	//TOOD: get this IP from TUN_READY destination IP
-			sender.initiateCall(receiverPseudoId, remotePublicKey,"192.168.1.5", parser);
+			sender.initiateCall(receiverPseudoId, remotePublicKey,"192.168.1.4", parser);
 		} catch ( Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();

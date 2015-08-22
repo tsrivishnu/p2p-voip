@@ -338,7 +338,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	}
 
 	@Override
-	public void onCallConnected(String pseudoId) {
+	public void onCallConnected(String pseudoId, byte[]sessionKey) {
 		// TODO Auto-generated method stub
 		voicePlayer = new VoicePlayer(sessionkey);
 		voicePlayer.start();
@@ -371,9 +371,10 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	}
 
 	@Override
-	public void onCallAccepted(String pseudoId) {
+	public void onCallAccepted(String pseudoId, byte[] sessionKey) {
 		lblStatusMsg.setText("Connected to: "+pseudoId);
 		lblStatusMsg.invalidate();
+		this.sessionkey=sessionKey;
 		voicePlayer = new VoicePlayer(sessionkey);
 		voicePlayer.start();
 		voiceRecorder = new VoiceRecorder(sessionkey);
@@ -400,5 +401,8 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		lblStatusMsg.setText(pseudoId+" declined your call!");
 		lblStatusMsg.invalidate();
 	}
+
+
+	
 	
 }

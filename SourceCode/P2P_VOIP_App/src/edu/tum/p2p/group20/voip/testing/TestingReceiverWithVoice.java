@@ -29,6 +29,9 @@ import java.security.interfaces.RSAPublicKey;
 
 
 
+
+
+
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -39,6 +42,8 @@ import edu.tum.p2p.group20.voip.voice.CallInitiatorListener;
 import edu.tum.p2p.group20.voip.voice.CallReceiverListener;
 import edu.tum.p2p.group20.voip.voice.Receiver;
 import edu.tum.p2p.group20.voip.voice.Sender;
+import edu.tum.p2p.group20.voip.voice.VoicePlayer;
+import edu.tum.p2p.group20.voip.voice.VoiceRecorder;
 
 import org.apache.commons.codec.binary.Base64;
 import org.apache.commons.configuration.ConfigurationException;
@@ -49,13 +54,17 @@ import org.apache.commons.configuration.ConfigurationException;
  */
 public class TestingReceiverWithVoice {
 
+	
+	private static VoicePlayer voicePlayer;
+	private static byte[] sessionKey;
+	protected static VoiceRecorder voiceRecorder;
 	/**
 	 * @param args
 	 */
 	public static void main(String[] args) {
 		// TODO Auto-generated method stub
 		
-				
+		
 		
 		
 		ConfigParser parser;
@@ -70,11 +79,23 @@ public class TestingReceiverWithVoice {
 //	    	String calleeId = new String(Base64.encodeBase64(md.digest(remotePublicKey.getEncoded())));
 	    	CallReceiverListener listener = new CallReceiverListener() {
 				
+				
+
 				@Override
 				public boolean onIncomingCall(String pseudoId, byte[] sessionKey) {
 					// TODO Auto-generated method stub
 					System.out.println("onIncomingCall");
-					return true;
+					int dialogButton = JOptionPane.YES_NO_OPTION;
+		            int result = JOptionPane.showConfirmDialog (null, 
+		            		"Incoming call from "+pseudoId,"Question",dialogButton);
+
+		            if(result == JOptionPane.YES_OPTION){
+		            	TestingReceiverWithVoice.sessionKey = sessionKey;
+		            	return true;
+		            	
+		            	
+		            }
+		            return false;
 				}
 				
 				@Override
@@ -84,9 +105,17 @@ public class TestingReceiverWithVoice {
 				}
 				
 				@Override
-				public void onCallConnected(String pseudoId) {
+				public void onCallConnected(String pseudoId, byte[] sessionKey) {
 					// TODO Auto-generated method stub
 					System.out.println("onCallConnected");
+					System.out.println("sessionKey="+Base64.encodeBase64String(sessionKey));
+					
+				    voicePlayer = new VoicePlayer(TestingReceiverWithVoice.sessionKey);
+				    voicePlayer.init("localhost", 7000);
+					voicePlayer.start();
+					voiceRecorder = new VoiceRecorder(TestingReceiverWithVoice.sessionKey);
+					voiceRecorder.init("localhost","192.168.1.4", 7000);
+					voiceRecorder.start();
 				}
 			};
 			Receiver receiver = new Receiver(clientSocket,parser,listener);

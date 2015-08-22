@@ -184,7 +184,11 @@ public class Receiver extends Thread {
 	                	callAcceptMessage.put("type", "CALL_ACCEPT");
 	                	callAcceptMessage.encrypt();
 	                	out.println(callAcceptMessage.asJSONStringForExchange());
-	                	//TODO: create a timertask to check heartbeat timestamps
+	                	//send call connected callback
+	                	
+	                	callReceiverListener.onCallConnected(otherPartyPseudoIdentity,sessionKey);
+	                	
+	                	// create a timertask to check heartbeat timestamps
 	                	lastHeartBeat =  new Date();
 	                	Timer heartBeatTimer = new Timer();
 	                	TimerTask heartBeatSender = new TimerTask() {

@@ -4,13 +4,12 @@ public interface CallInitiatorListener {
 	
 	public void onCallInitiated(String pseudoId);
 	
-	public void onCallAccepted(String pseudoId);
+	public void onCallAccepted(String pseudoId, byte[] sessionKey);
 	
 	public void onCallDisconnected(String pseudoId);
 
-	/**
-	 * @param otherPartyPseudoIdentity
-	 */
-	public void onCallDeclined(String otherPartyPseudoIdentity);
+	public void onCallDeclined(String pseudoId);
+
+	
 
 }

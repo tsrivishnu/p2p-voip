@@ -4,7 +4,7 @@ public interface CallReceiverListener {
 	
 	public boolean onIncomingCall(String pseudoId, byte[] sessionKey);
 	
-	public void onCallConnected(String pseudoId);
+	public void onCallConnected(String pseudoId, byte[] sessionKey);
 	
 	public void onCallDisconnected(String psudoId);
 

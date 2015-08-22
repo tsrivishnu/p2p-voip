@@ -91,9 +91,10 @@ public class TestingReceiver {
 				}
 				
 				@Override
-				public void onCallConnected(String pseudoId) {
+				public void onCallConnected(String pseudoId, byte[] sessionKey) {
 					// TODO Auto-generated method stub
 					System.out.println("onCallConnected");
+					System.out.println("sessionKey="+Base64.encodeBase64String(sessionKey));
 				}
 			};
 			Receiver receiver = new Receiver(clientSocket,parser,listener);

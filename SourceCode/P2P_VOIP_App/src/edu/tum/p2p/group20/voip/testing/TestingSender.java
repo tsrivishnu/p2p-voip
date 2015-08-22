@@ -5,13 +5,12 @@ package edu.tum.p2p.group20.voip.testing;
 
 import java.security.KeyPair;
 import java.security.MessageDigest;
-
 import java.security.interfaces.RSAPublicKey;
+
 import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.voice.CallInitiatorListener;
 import edu.tum.p2p.group20.voip.voice.Sender;
-
 
 import org.apache.commons.codec.binary.Base64;
 
@@ -50,10 +49,10 @@ public class TestingSender {
 			
 			
 			@Override
-			public void onCallAccepted(String pseudoId) {
+			public void onCallAccepted(String pseudoId,byte[] sessionKey) {
 				// TODO Auto-generated method stub
 				System.out.println("onCallAccepted");
-				
+				System.out.println("sessionKey="+Base64.encodeBase64String(sessionKey));
 			}
 		});
 		
@@ -65,7 +64,7 @@ public class TestingSender {
 	    	MessageDigest md = MessageDigest.getInstance("SHA-256");
 	    	String receiverPseudoId = Base64.encodeBase64String(md.digest(remotePublicKey.getEncoded()));
 	    	//TOOD: get this IP from TUN_READY destination IP
-			sender.initiateCall(receiverPseudoId, remotePublicKey,"192.168.1.5", parser);
+			sender.initiateCall(receiverPseudoId, remotePublicKey,"192.168.1.4", parser);
 		} catch ( Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
