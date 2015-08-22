@@ -275,9 +275,8 @@ public class GoOnline implements CallReceiverListener{
 
 
 	@Override
-	public boolean onIncomingCall(String pseudoId) {
-		// TODO Auto-generated method stub
-		return true;
+	public boolean onIncomingCall(String pseudoId, byte[] sessionKey) {
+		return callReceiverListener.onIncomingCall(pseudoId, sessionKey);
 	}
 
 
@@ -285,7 +284,7 @@ public class GoOnline implements CallReceiverListener{
 	@Override
 	public void onCallConnected(String pseudoId) {
 		// TODO Auto-generated method stub
-		
+		callReceiverListener.onCallConnected(pseudoId);
 	}
 
 
@@ -296,7 +295,7 @@ public class GoOnline implements CallReceiverListener{
 	@Override
 	public void onCallDisconnected(String psudoId) {
 		// TODO Auto-generated method stub
-		
+		callReceiverListener.onCallDisconnected(psudoId);
 	}
 
 

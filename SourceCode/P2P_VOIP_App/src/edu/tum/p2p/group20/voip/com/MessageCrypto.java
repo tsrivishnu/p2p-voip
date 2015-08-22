@@ -57,6 +57,13 @@ public class MessageCrypto {
 	}
 	
 	/**
+	 * 
+	 */
+	public MessageCrypto() {
+		
+	}
+
+	/**
 	 * Sets the sessionKey for further encryption and decryption.
 	 * 
 	 * @param sessionKey
@@ -67,7 +74,7 @@ public class MessageCrypto {
 	public void setSessionKey(byte[] sessionKey) throws NoSuchAlgorithmException,
 					NoSuchProviderException, NoSuchPaddingException {
 		this.sessionKey = sessionKey;
-		keySpec = new SecretKeySpec(sessionKey, "AES");
+		keySpec = new SecretKeySpec(this.sessionKey, "AES");
 		cipher = Cipher.getInstance("AES/ECB/PKCS7Padding", "BC");
 	}
 	
@@ -88,8 +95,20 @@ public class MessageCrypto {
 		cipher.init(Cipher.ENCRYPT_MODE, keySpec);
 		
         byte[] toEncryptBytes = toEncrypt.getBytes();
+        
+        // TODO Use the encryptWithSessionKey(byte[] toEncryptBytes) here 
 
         byte[] cipherText = new byte[cipher.getOutputSize(toEncryptBytes.length)];
+        int ctLength = cipher.update(toEncryptBytes, 0, toEncryptBytes.length, cipherText, 0);
+        ctLength += cipher.doFinal(cipherText, ctLength);
+        
+        return cipherText;
+	}
+	
+	public byte[] encryptWithSessionKey(byte[] toEncryptBytes) throws InvalidKeyException, IllegalBlockSizeException, ShortBufferException, BadPaddingException {
+		cipher.init(Cipher.ENCRYPT_MODE, keySpec);
+		
+		byte[] cipherText = new byte[cipher.getOutputSize(toEncryptBytes.length)];
         int ctLength = cipher.update(toEncryptBytes, 0, toEncryptBytes.length, cipherText, 0);
         ctLength += cipher.doFinal(cipherText, ctLength);
         
@@ -110,12 +129,29 @@ public class MessageCrypto {
 					ShortBufferException, IllegalBlockSizeException,
 					BadPaddingException {
 		
+		// TODO use the decryptToBytesWithSessionKey(byte[] cipherText) method
+		
 		cipher.init(Cipher.DECRYPT_MODE, keySpec);
         byte[] plainText = new byte[cipher.getOutputSize(cipherText.length)];
         int ptLength = cipher.update(cipherText, 0, cipherText.length, plainText, 0);
         ptLength += cipher.doFinal(plainText, ptLength);
         
         return new String(plainText).trim(); // trim because the length of the string from byte array is wrong.
+	}
+	
+	public byte[] decryptToBytesWithSessionKey(byte[] cipherText) {
+		byte[] plainText = null;
+		try {
+			cipher.init(Cipher.DECRYPT_MODE, keySpec);
+			plainText = new byte[cipher.getOutputSize(cipherText.length)];
+	        int ptLength = cipher.update(cipherText, 0, cipherText.length, plainText, 0);
+	        ptLength += cipher.doFinal(plainText, ptLength);
+		} catch (InvalidKeyException | ShortBufferException | IllegalBlockSizeException | BadPaddingException e){
+			e.printStackTrace();
+		}
+        
+        
+        return plainText;
 	}
 	
 	/**

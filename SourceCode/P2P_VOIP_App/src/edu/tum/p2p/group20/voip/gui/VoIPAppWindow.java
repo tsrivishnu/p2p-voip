@@ -70,6 +70,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	
 	//Parser to read the config file given via cli arg
 	private ConfigParser configParser;
+	private byte[] sessionkey;
 	
 	public VoIPAppWindow(String confiFileName) {
 		try {
@@ -300,7 +301,8 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	}
 
 	@Override
-	public boolean onIncomingCall(String pseudoId) {
+	public boolean onIncomingCall(String pseudoId,byte[] sessionkey) {
+		this.sessionkey=sessionkey;
 		return showIncomingCallDialog(pseudoId);
 	}
 	/**
@@ -346,9 +348,9 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	@Override
 	public void onCallConnected(String pseudoId) {
 		// TODO Auto-generated method stub
-		voicePlayer = new VoicePlayer();
+		voicePlayer = new VoicePlayer(sessionkey);
 		voicePlayer.start();
-		voiceRecorder = new VoiceRecorder();
+		voiceRecorder = new VoiceRecorder(sessionkey);
 		voiceRecorder.start();
 	}
 
@@ -380,9 +382,9 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	public void onCallAccepted(String pseudoId) {
 		lblStatusMsg.setText("Connected to: "+pseudoId);
 		lblStatusMsg.invalidate();
-		voicePlayer = new VoicePlayer();
+		voicePlayer = new VoicePlayer(sessionkey);
 		voicePlayer.start();
-		voiceRecorder = new VoiceRecorder();
+		voiceRecorder = new VoiceRecorder(sessionkey);
 		voiceRecorder.start();
 		
 	}

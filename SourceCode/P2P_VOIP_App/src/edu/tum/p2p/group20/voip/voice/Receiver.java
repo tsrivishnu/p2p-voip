@@ -165,7 +165,7 @@ public class Receiver extends Thread {
 	            	
 	            	// Show incoming call to the user and ask him to accept the call!
 	            
-	            	boolean accept = callReceiverListener.onIncomingCall(otherPartyPseudoIdentity);
+	            	boolean accept = callReceiverListener.onIncomingCall(otherPartyPseudoIdentity,sessionKey);
 
 	            	if (accept) {
 	            		// Send CALL_ACCEPT

@@ -23,13 +23,22 @@ public class VoiceRecorder extends Thread {
 	private static final int PORT = 7000;
 	private DatagramSocket sock;
 	private boolean stop;
-	private String sessionKey;
+	private byte[] sessionKey;
 	private MessageCrypto encryptor;
 	private TargetDataLine targetDataLine;
 	
+	/**
+	 * @param sessionkey2
+	 */
+	public VoiceRecorder(byte[] sessionkey) {
+		// TODO Auto-generated constructor stub
+		sessionKey=sessionkey;
+	}
+
 	public void run() {
 		try {
-
+			MessageCrypto aes = new MessageCrypto();
+			aes.setSessionKey(sessionKey);
 			DataLine.Info dataLineInfo = new DataLine.Info(
 					TargetDataLine.class, getAudioFormat());
 			targetDataLine = (TargetDataLine) AudioSystem
@@ -45,8 +54,7 @@ public class VoiceRecorder extends Thread {
 			while (!stop) {
 				targetDataLine.read(tempBuffer, 0, tempBuffer.length);
 				if(!stop){
-					//TODO:encrypt the packet with session key
-					//TODO:what about signing
+					tempBuffer = aes.encryptWithSessionKey(tempBuffer);
 					sendThruUDP(tempBuffer);
 				}
 			}
@@ -62,7 +70,7 @@ public class VoiceRecorder extends Thread {
 	 *            the command line arguments
 	 */
 	public static void main(String[] args) {
-		VoiceRecorder voiceRecorder = new VoiceRecorder();
+		VoiceRecorder voiceRecorder = new VoiceRecorder("testkey".getBytes());
 		voiceRecorder.start();
 
 	
@@ -126,12 +134,5 @@ public class VoiceRecorder extends Thread {
 		closeSocket();
 	}
 
-	public String getSessionKey() {
-		return sessionKey;
-	}
-
-	public void setSessionKey(String sessionKey) {
-		this.sessionKey = sessionKey;
-	}
-
+	
 }

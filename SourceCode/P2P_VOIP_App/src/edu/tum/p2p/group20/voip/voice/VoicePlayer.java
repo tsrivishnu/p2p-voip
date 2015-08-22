@@ -4,12 +4,18 @@ import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.security.NoSuchAlgorithmException;
+import java.security.NoSuchProviderException;
 
+import javax.crypto.NoSuchPaddingException;
 import javax.sound.sampled.AudioFormat;
 import javax.sound.sampled.AudioSystem;
 import javax.sound.sampled.DataLine;
 import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
+
+import edu.tum.p2p.group20.voip.com.MessageCrypto;
+import edu.tum.p2p.group20.voip.crypto.AES;
 
 public class VoicePlayer extends Thread {
 
@@ -28,20 +34,37 @@ public class VoicePlayer extends Thread {
 	
 	//Flag to stop this thread
 	private boolean stop;
+	private byte[] sessionkey;
 	
+	/**
+	 * @param sessionkey
+	 */
+	public VoicePlayer(byte[] sessionkey) {
+		this.sessionkey = sessionkey;
+	}
+
 	@Override
 	/**
 	 * Overridden method that is called when this start() method is invoked for this thread
 	 */
 	public void run() {
-		byte b[] = null;
+		byte plainData[] = null;
+		MessageCrypto aes = new MessageCrypto();
+		try {
+			aes.setSessionKey(sessionkey);
+		} catch (NoSuchAlgorithmException | NoSuchProviderException
+				| NoSuchPaddingException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+			//Display error to user although its our problem
+		}
 		initializeSocket();
 		try {
 			initializeSound();
 			while (!stop) {
-				b = receiveThruUDP();
-				//TODO: decrypt b with session key
-				toSpeaker(b);
+				plainData = receiveThruUDP();
+				
+				toSpeaker(aes.decryptToBytesWithSessionKey(plainData));
 			}
 		} catch (LineUnavailableException e) {
 			// TODO Auto-generated catch block
@@ -57,7 +80,7 @@ public class VoicePlayer extends Thread {
 	 */
 	public static void main(String[] args) {
 
-		VoicePlayer voicePlayer = new VoicePlayer();
+		VoicePlayer voicePlayer = new VoicePlayer("testkey".getBytes());
 		voicePlayer.start();
 
 	}
