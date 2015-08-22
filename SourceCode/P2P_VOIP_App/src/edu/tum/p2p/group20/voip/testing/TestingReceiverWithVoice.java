@@ -85,9 +85,10 @@ public class TestingReceiverWithVoice {
 				public boolean onIncomingCall(String pseudoId, byte[] sessionKey) {
 					// TODO Auto-generated method stub
 					System.out.println("onIncomingCall");
-					int dialogButton = JOptionPane.YES_NO_OPTION;
-		            int result = JOptionPane.showConfirmDialog (null, 
-		            		"Incoming call from "+pseudoId,"Question",dialogButton);
+
+		            int result = JOptionPane.showConfirmDialog (new JFrame(), "Incoming call from "+pseudoId,
+		            		"Incoming Call",
+		            		JOptionPane.YES_NO_OPTION);
 
 		            if(result == JOptionPane.YES_OPTION){
 		            	TestingReceiverWithVoice.sessionKey = sessionKey;
@@ -111,10 +112,11 @@ public class TestingReceiverWithVoice {
 					System.out.println("sessionKey="+Base64.encodeBase64String(sessionKey));
 					
 				    voicePlayer = new VoicePlayer(TestingReceiverWithVoice.sessionKey);
-				    voicePlayer.init("localhost", 7000);
+				    voicePlayer.init("192.168.1.4", 7000);
 					voicePlayer.start();
 					voiceRecorder = new VoiceRecorder(TestingReceiverWithVoice.sessionKey);
-					voiceRecorder.init("localhost","192.168.1.4", 7000);
+					//Todo: get this IP from Makecall/sender
+					voiceRecorder.init("192.168.1.4","192.168.1.5", 7000);
 					voiceRecorder.start();
 				}
 			};

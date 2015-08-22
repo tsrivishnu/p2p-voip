@@ -76,7 +76,7 @@ public class TestingReceiver {
 					System.out.println("onIncomingCall");
 					int dialogButton = JOptionPane.YES_NO_OPTION;
 		            int result = JOptionPane.showConfirmDialog (null, 
-		            		"Incoming call from "+pseudoId,"Warning",dialogButton);
+		            		"Incoming call from "+pseudoId,"Incoming Call",dialogButton);
 
 		            if(result == JOptionPane.YES_OPTION){
 		            	return true;
