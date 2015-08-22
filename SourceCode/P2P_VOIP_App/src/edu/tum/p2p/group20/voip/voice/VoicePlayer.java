@@ -108,8 +108,7 @@ public class VoicePlayer extends Thread {
 			sock = new DatagramSocket(PORT,InetAddress.getByName(TUN_IP));
 			byte soundpacket[] = new byte[16000];
 			datagram = new DatagramPacket(soundpacket,
-					soundpacket.length, InetAddress.getByName(REMOTE_IP),
-					PORT);
+					soundpacket.length);
 		} catch(IOException ex){
 			System.out.println("Cannot initialize UDP socket");
 		}
