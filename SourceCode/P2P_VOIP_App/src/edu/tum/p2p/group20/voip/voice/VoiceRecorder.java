@@ -18,9 +18,12 @@ import edu.tum.p2p.group20.voip.com.MessageCrypto;
 
 public class VoiceRecorder extends Thread {
 
-	private static final String TUN_IP = "localhost";
-	private static final String DESTINATION_IP = "localhost";
+	//Destination IP
+	private static final String REMOTE_IP = "192.168.1.40";
+	//Port configured for voice data
 	private static final int PORT = 7000;
+	//TUN interface IP
+	private static final String TUN_IP = "localhost";
 	private DatagramSocket sock;
 	private boolean stop;
 	private byte[] sessionKey;
@@ -95,7 +98,7 @@ public class VoiceRecorder extends Thread {
 	
 	private void initializeSocket(){
 		try {
-			sock = new DatagramSocket(7000,InetAddress.getByName(TUN_IP));
+			sock = new DatagramSocket(0,InetAddress.getByName(TUN_IP));
 		} catch (SocketException e) {
 			// TODO Auto-generated catch block
 			System.out.println(" Unable to initialize UDP socket");
@@ -117,7 +120,7 @@ public class VoiceRecorder extends Thread {
 	public void sendThruUDP(byte soundpacket[]) {
 		try {
 			sock.send(new DatagramPacket(soundpacket, soundpacket.length,
-					InetAddress.getByName(DESTINATION_IP), PORT));
+					InetAddress.getByName(REMOTE_IP), PORT));
 		} catch (Exception e) {
 			e.printStackTrace();
 			System.out.println(" Unable to send soundpacket using UDP ");

@@ -15,14 +15,17 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
 import edu.tum.p2p.group20.voip.com.MessageCrypto;
-import edu.tum.p2p.group20.voip.crypto.AES;
+import edu.tum.p2p.group20.voip.config.ConfigParser;
+
 
 public class VoicePlayer extends Thread {
 
-	//TUN interface IP
-	private static final String REMOTE_IP = "localhost";
+	//Destination IP
+	private static final String REMOTE_IP = "192.168.1.40";
 	//Port configured for voice data
-	private static final int PORT = 8000;
+	private static final int PORT = 7000;
+	//TUN interface IP
+	private static final String TUN_IP = "localhost";
 	
 	//Socket for receiving UDP voice data packet
 	private  DatagramSocket sock;
@@ -35,12 +38,15 @@ public class VoicePlayer extends Thread {
 	//Flag to stop this thread
 	private boolean stop;
 	private byte[] sessionkey;
+//	private ConfigParser configParser;
 	
 	/**
 	 * @param sessionkey
 	 */
-	public VoicePlayer(byte[] sessionkey) {
+	public VoicePlayer(byte[] sessionkey/*,ConfigParser parser*/) {
 		this.sessionkey = sessionkey;
+//		configParser = parser;
+		
 	}
 
 	@Override
@@ -87,7 +93,7 @@ public class VoicePlayer extends Thread {
 	
 	private void initializeSocket(){
 		try{
-			sock = new DatagramSocket(PORT);
+			sock = new DatagramSocket(PORT,InetAddress.getByName(TUN_IP));
 			byte soundpacket[] = new byte[16000];
 			datagram = new DatagramPacket(soundpacket,
 					soundpacket.length, InetAddress.getByName(REMOTE_IP),
