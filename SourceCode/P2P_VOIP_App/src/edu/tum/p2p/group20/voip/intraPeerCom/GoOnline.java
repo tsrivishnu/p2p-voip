@@ -102,6 +102,8 @@ public class GoOnline implements CallReceiverListener{
 			SHA2 sha2 = new SHA2();
 			String hostPseudoIdentity = Base64.encodeBase64String(rsaPublicKey.getEncoded());
 
+			System.out.println("Give this id to the other user: " + hostPseudoIdentity);
+			
 			// KX and DHT will always save SHA-256 hashed bytes of the peduoIdentity 
 			// 	which is base64 encoded rsapublickey
 			//	When we give the use, we give him the Base64 encoded RsaPublicKey
