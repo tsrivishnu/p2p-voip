@@ -12,9 +12,12 @@ import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SignatureException;
 import java.security.interfaces.RSAPublicKey;
+import java.util.Arrays;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
+
+import org.apache.commons.codec.binary.Base64;
 
 import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.crypto.RSA;
@@ -97,13 +100,12 @@ public class GoOnline implements CallReceiverListener{
 			*/
 			PublicKey rsaPublicKey = hostKeyPair.getPublic();
 			SHA2 sha2 = new SHA2();
-			String hostPseudoIdentity = new String(sha2.makeSHA2Hash(rsaPublicKey.getEncoded()));
-			//For testing purpose
-			//"9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
+			String hostPseudoIdentity = Base64.encodeBase64String(rsaPublicKey.getEncoded());
 
-//			MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
-//			messageDigest.update(hostPseudoIdentity.getBytes());
-			byte[] key = hostPseudoIdentity.getBytes();
+			// KX and DHT will always save SHA-256 hashed bytes of the peduoIdentity 
+			// 	which is base64 encoded rsapublickey
+			//	When we give the use, we give him the Base64 encoded RsaPublicKey
+			byte[] key = sha2.makeSHA2Hash(hostPseudoIdentity.getBytes());
 			byte[] randomPsuedoId = null;
 
 			// finding a exchange point.
@@ -136,9 +138,15 @@ public class GoOnline implements CallReceiverListener{
 					.trasnformXChangePointInfoFromDhtToKx(xchangePointInfoFromTrace);
 
 			// Send request to KX to build tunnel
+			
+			System.out.println(Arrays.toString(key));
+			System.out.println(key.length);
 			sendKxBuildIncomingTunnel(key, xChangePointInfoForKx);
 			lastReceivedMessage = kxCommunicator.readIncomingAndHandleError();
 
+			System.out.println(kxCommunicator.isValidMessage(lastReceivedMessage,
+					TnReady.messageName, key));
+			
 			if (kxCommunicator.isValidMessage(lastReceivedMessage,
 					TnReady.messageName, key)) {			
 				
@@ -269,6 +277,7 @@ public class GoOnline implements CallReceiverListener{
 			byte[] xchangePointInfo) throws IOException {
 		BuildTNIncoming buildTnMessage = new BuildTNIncoming(3, pseudoId,
 				xchangePointInfo);
+		System.out.println("sendKxBuildIncomingTunnel:");
 		kxCommunicator.sendMessage(buildTnMessage);
 	}
 

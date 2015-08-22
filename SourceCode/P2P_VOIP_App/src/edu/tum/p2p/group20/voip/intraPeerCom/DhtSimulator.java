@@ -21,9 +21,11 @@ import java.util.Scanner;
 
 import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.crypto.RSA;
+import edu.tum.p2p.group20.voip.intraPeerCom.Helper;
+import edu.tum.p2p.group20.voip.intraPeerCom.MessagesLegend;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Put;
 
-public class KXSimulator {
+public class DhtSimulator {
 	
 	private static ServerSocket serverSocket;
 	public static Socket socket;
@@ -42,7 +44,7 @@ public class KXSimulator {
         	parser = ConfigParser.getInstance("lib/test_app_config.ini");
         	
         	// Make sure for testing, the DHT and KX port are same in the config file!
-        	portNumber = parser.getKxPort();
+        	portNumber = parser.getDhtPort();
         	
         	serverSocket = new ServerSocket(portNumber);
 
@@ -56,26 +58,23 @@ public class KXSimulator {
 	        	receiveMessagesLoop: while(readIncomingMessage() != null) {
 	        		String userMessage = "What do you want to do?";
 	        		userMessage += "\n1.Receive next message";
-	        		userMessage += "\n2.Send IN Tunnel Ready";
-	        		userMessage += "\n3.Send OUT Tunnel Ready";
-	        		userMessage += "\n4.Send KX_ERROR";
+	        		userMessage += "\n2.Send DHT_TRACE_REPLY";
+	        		userMessage += "\n3.Send DHT_GET_REPLY";
+	        		userMessage += "\n4.Send DHT_ERROR";
 	        		userMessage += "\n5.Send nothing";
 	        		userMessage += "\n6.BREAK";
 	                System.out.println(userMessage);
 	                switch (userIn.nextLine()) {
-					case "2":
-						sendTunnelReady(new byte[4], new byte[16]);
+					case "2":						
+						sendDhtTraceReply();
 						break;
-					case "3":			
-						sendTunnelReady(
-							InetAddress.getByName(parser.getTestDestinatonIp()).getAddress(),
-							InetAddress.getByName("3ffe:2a00:100:7031::1").getAddress()
-						);
+					case "3":
+						sendDhtDummyGetReply();
 						break;					
 					case "4":
-						sendErrorReply("MSG_KX_ERROR");
-						break;
-					case "6":
+						sendErrorReply("MSG_DHT_ERROR");
+						break;					
+					case "6":						
 						break receiveMessagesLoop;
 					default:
 						break;
@@ -237,8 +236,7 @@ public class KXSimulator {
 	 */
 	private static void sendTunnelReady(byte[] destinationIpv4, byte[] destinationIpv6) throws IOException {		
 		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 8, 40);
-		System.out.println(Arrays.toString(key));
-		System.out.println(key.length);
+		
 		byte[] messageCode = Helper.networkOrderedBytesFromShort(
 				(short) MessagesLegend.codeForName("MSG_KX_TN_READY")
 			);

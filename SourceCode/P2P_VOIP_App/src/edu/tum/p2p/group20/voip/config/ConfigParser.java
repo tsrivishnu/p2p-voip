@@ -20,11 +20,14 @@ public class ConfigParser {
 	private List<Object> kxOverlayHost;
 	
 	private String tunIP;
-	private String testDestinationIP; // This is used only during test!
 	private String hostlistAddress;
 	private List<String> hostList;
 	
 	private int voipPort;
+	
+	// These are used only during test!
+	private String testDestinationIP; 
+	private String testReceiverRsaKeyPair;
 	
 	private HierarchicalINIConfiguration configIni;
 	/**
@@ -54,6 +57,8 @@ public class ConfigParser {
 			configParser.tunIP=configParser.configIni.getSection("KX").getString("TUN_IP",null);
 			
 			configParser.testDestinationIP=configParser.configIni.getSection("VOIP").getString("TEST_DESTINATION_IP",null);
+			configParser.testReceiverRsaKeyPair=configParser.configIni.getSection("VOIP").getString("TEST_RECEIVER_RSA_KEYPAIR",null);
+
 			configParser.voipPort = configParser.configIni.getSection("VOIP").getInt("PORT");
 		}
 		
@@ -214,6 +219,16 @@ public class ConfigParser {
 		return testDestinationIP;
 	}
 
+	
+
+	/**
+	 * @return
+	 */
+	public String getTestReceiverRsaKeyPair() {
+		// TODO Auto-generated method stub
+		return testReceiverRsaKeyPair;
+	}
+
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
 	 */
@@ -224,8 +239,9 @@ public class ConfigParser {
 				+ ", kxPort=" + kxPort + ", kxhost=" + kxhost
 				+ ", kxOverlayHost=" + kxOverlayHost + ", tunIP=" + tunIP
 				+ ", hostlistAddress=" + hostlistAddress + ", hostList="
-				+ hostList + ", voipPort=" + voipPort + ", configIni="
-				+ configIni + "]";
+				+ hostList + ", voipPort=" + voipPort + ", testDestinationIP="
+				+ testDestinationIP + ", testReceiverRsaKeyPair="
+				+ testReceiverRsaKeyPair + ", configIni=" + configIni + "]";
 	}
 
 	
