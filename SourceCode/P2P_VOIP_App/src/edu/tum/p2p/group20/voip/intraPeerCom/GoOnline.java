@@ -62,7 +62,7 @@ public class GoOnline implements CallReceiverListener {
 		goOnline.goOnline(ConfigParser.getInstance(args[1]));
 	}
 
-	public boolean goOnline(final ConfigParser configParser) throws Exception {
+	public void goOnline(final ConfigParser configParser) throws Exception {
 
 		this.configParser = configParser;
 
@@ -85,7 +85,7 @@ public class GoOnline implements CallReceiverListener {
 					);
 				e.printStackTrace();
 
-				return false;
+				return;
 			} catch (IOException e) {
 
 				JOptionPane.showMessageDialog(
@@ -94,7 +94,7 @@ public class GoOnline implements CallReceiverListener {
 					);
 				e.printStackTrace();
 
-				return false;
+				return;
 			}
 
 			// Communicator for KX
@@ -110,14 +110,14 @@ public class GoOnline implements CallReceiverListener {
 					"Check KX host address");
 				e.printStackTrace();
 
-				return false;
+				return;
 			} catch (IOException e) {
 
 				JOptionPane.showMessageDialog(new JFrame(),
 					"Check if KX module is running as per config ");
 				e.printStackTrace();
 
-				return false;
+				return;
 			}
 
 			KeyPair hostKeyPair = RSA.getKeyPairFromFile(
@@ -242,7 +242,7 @@ public class GoOnline implements CallReceiverListener {
 				if (eventListener != null) {
 					eventListener.onOnline();
 				}
-				return true;
+				return;
 			}
 			else {
 
@@ -250,20 +250,23 @@ public class GoOnline implements CallReceiverListener {
 				if (eventListener != null) {
 					eventListener.onOffline();
 				}
-				return false;
+				return;
 
 			}
 		} catch (IOException e) {
 
-			System.out
+			if(!stop) {
+				System.out
 				.println("Exception caught when trying to connect on port "
 					+ configParser);
-			System.out.println(e.getMessage());
-			e.printStackTrace();
-			if (eventListener != null) {
-				eventListener.onException(e);
+				System.out.println(e.getMessage());
+				e.printStackTrace();
+				if (eventListener != null) {
+					eventListener.onException(e);
+				}	
 			}
-			return false;
+			
+			return;
 		} catch (Exception e) {
 
 			System.err
@@ -276,7 +279,7 @@ public class GoOnline implements CallReceiverListener {
 				eventListener.onException(e);
 			}
 
-			return false;
+			return;
 		}
 	}
 
@@ -414,5 +417,25 @@ public class GoOnline implements CallReceiverListener {
 		CallReceiverListener callReceiverListener) {
 
 		this.callReceiverListener = callReceiverListener;
+	}
+	
+	/**
+	 * Terminate the incoming tunnel
+	 */
+	
+	public void goOffline(){
+		stop=true;
+		if(serverSocket!=null){
+			try {
+				serverSocket.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			serverSocket=null;
+			
+			//TODO:send kx destroy tunnel
+			//TODO: and then dht put  nothing to clear our info from dht
+		}
 	}
 }

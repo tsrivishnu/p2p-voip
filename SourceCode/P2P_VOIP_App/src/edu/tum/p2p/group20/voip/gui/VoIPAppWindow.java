@@ -5,14 +5,13 @@ package edu.tum.p2p.group20.voip.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import java.awt.BorderLayout;
 import java.util.HashMap;
+import java.util.Map.Entry;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -26,15 +25,13 @@ import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.intraPeerCom.GoOnline;
 import edu.tum.p2p.group20.voip.intraPeerCom.GoOnlineEventListener;
 import edu.tum.p2p.group20.voip.intraPeerCom.MakeCall;
-import edu.tum.p2p.group20.voip.testing.TestingReceiverWithVoice;
+
 import edu.tum.p2p.group20.voip.voice.CallInitiatorListener;
 import edu.tum.p2p.group20.voip.voice.CallReceiverListener;
 import edu.tum.p2p.group20.voip.voice.Receiver;
-import edu.tum.p2p.group20.voip.voice.Sender;
 import edu.tum.p2p.group20.voip.voice.VoicePlayer;
 import edu.tum.p2p.group20.voip.voice.VoiceRecorder;
 
-import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.JMenuBar;
@@ -73,11 +70,8 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	private ConfigParser configParser;
 	private byte[] sessionkey;
 	private JTextField txtFieldHostPseudoId;
-	private String destinationIP;
 	private String callerPseudoId;
-	
 
-	
 	public VoIPAppWindow(String confiFileName) {
 		try {
 			configParser = ConfigParser.getInstance(confiFileName);
@@ -85,8 +79,8 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 			receiverMap = new HashMap<String, Receiver>();
 		} catch (ConfigurationException e) {
 			//the config File was not found
+			showErrorDialog("Config file not found : "+confiFileName);
 			e.printStackTrace();
-			
 			System.exit(-1);
 			return;
 		}
@@ -95,21 +89,15 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		JPanel panel = new JPanel();
 		getContentPane().add(panel, BorderLayout.CENTER);
 		panel.setLayout(new FormLayout(new ColumnSpec[] {
-				ColumnSpec.decode("116px"),
-				ColumnSpec.decode("31px"),
+				ColumnSpec.decode("160px"),
+				ColumnSpec.decode("40px"),
 				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
-				ColumnSpec.decode("79px:grow"),
+				ColumnSpec.decode("250px"),
 				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
-				ColumnSpec.decode("81px"),},
+				ColumnSpec.decode("100px")},
 			new RowSpec[] {
 				FormFactory.RELATED_GAP_ROWSPEC,
 				RowSpec.decode("23px"),
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
-				FormFactory.RELATED_GAP_ROWSPEC,
-				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
@@ -126,7 +114,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		JLabel lblStatus = new JLabel("Status");
 		panel.add(lblStatus, "1, 2, left, center");
 		
-		lblStatusMsg = new JLabel("Status Message");
+		lblStatusMsg = new JLabel("Offline");
 		panel.add(lblStatusMsg, "4, 2");
 		
 		JLabel lblCalleeName = new JLabel("Call To");
@@ -197,45 +185,52 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 			case "Go Online":
 				if(goOnlineModule==null){
 					goOnlineModule = new GoOnline();
-					goOnlineModule.setEventListener(this);
-					try {
-						boolean result = goOnlineModule.goOnline(configParser);
-					} catch (Exception e) {
-						System.err.println(e.getMessage());
-						e.printStackTrace();
-						lblStatusMsg.setText("Error occured while trying to go online!");
-						lblStatusMsg.invalidate();
-					}
+				}
+				goOnlineModule.setEventListener(this);
+				try {
+					//applying threading to prevent GUI from hanging
+					new Thread(){
+					    public void run() {
+					        
+					        try {
+					        	goOnlineModule.goOnline(configParser);
+					        } catch (Exception e) {
+					        	
+					            e.printStackTrace();
+					        }
+
+					    }}.start();
+				} catch (Exception e) {
+					System.err.println(e.getMessage());
+					e.printStackTrace();
+					lblStatusMsg.setText("Error occured while trying to go online!");
+					lblStatusMsg.invalidate();
 				}
 				
 				break;
-			case "Go Offline":
-				//TODO:disconnect any calls
-				//TODO: offline
 				
+			case "Go Offline":
+				goOffline();
 				break;
+				
 			case "Quit":
-				//TODO:disconnect any calls
-				//TODO:go offline
+				shutdown();
 				System.exit(0);
 				break;
-			case "Network Settings":
-				//TODO: Create a network setting screen
-				break;
 
-				
 			case "Call" :
 				String pseudoId = recepientName.getText();
 				if( (!"".equals(pseudoId)) && makeCallModule == null){
 					makeCallModule = new MakeCall();
+					try {
+						makeCallModule.setCallInitiatorListener(this);
+						makeCallModule.makeCall( pseudoId,configParser);
+					} catch (Exception e) {
+						// TODO Show dialog to user about the error
+						e.printStackTrace();
+					}
 				}
-				try {
-					makeCallModule.setCallInitiatorListener(this);
-					makeCallModule.makeCall( pseudoId,configParser);
-				} catch (Exception e) {
-					// TODO Show dialog to user about the error
-					e.printStackTrace();
-				}
+			
 				break;
 				
 			case "Disconnect" :
@@ -244,7 +239,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 					makeCallModule.disconnectCall();
 					makeCallModule=null;
 				}
-				//disconnect the received connected call
+				//disconnect the received ongoing call and remove the receiver thread from map
 				if(callerPseudoId!=null && receiverMap!=null && receiverMap.size()>0){
 					Receiver receiver = receiverMap.get(callerPseudoId);
 					if(receiver!=null){
@@ -280,22 +275,23 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 			}
 			appWindow.setVisible(true);
 		} else {
-			System.err.println("Usage: java -jar VoIPAppWindow -c <ConfigFilePath>");
+			VoIPAppWindow.showErrorDialog("Usage: java -jar VoIP_App_Group20.jar -c <ConfigFilePath>");
+			System.err.println("Usage: java -jar VoIP_App_Group20.jar -c <ConfigFilePath>");
 			System.exit(1);
 		}
 	}
 
 	@Override
 	public void onError(String error) {
-
+		showErrorDialog("Error in GoOnline -"+error);
 		lblStatusMsg.setText("Error in GoOnline -"+error);
 		lblStatusMsg.invalidate();
 	}
 
 	@Override
 	public void onException(Exception e) {
-
-		lblStatusMsg.setText("Unhandled Exception in GoOnline");
+		showErrorDialog("Unable to go online");
+		lblStatusMsg.setText("Unable to go online");
 		lblStatusMsg.invalidate();
 	}
 
@@ -413,7 +409,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	 * Thread safe console log message print
 	 * @param s string to be printed
 	 */
-	public void safePrintln(String s) {
+	private void safePrintln(String s) {
 		synchronized (System.out) {
 		    System.out.println(s);
 		}
@@ -447,7 +443,6 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	public void onDestinationIPReady(String destinationIP) {
 		//Callee received first UDP packet from Caller
 		//now start transmitting using the source IP
-		this.destinationIP = destinationIP;
 		voiceRecorder = new VoiceRecorder(sessionkey);
 		voiceRecorder.init(configParser.getTunIP(), destinationIP, configParser.getVoipPort());
 		voiceRecorder.start();
@@ -461,5 +456,58 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	public void onCallFailed(String calleeId) {
 		lblStatusMsg.setText("Unable to call "+ calleeId);
 		lblStatusMsg.invalidate();
+	}
+	
+	private static void showErrorDialog(String str){
+		JOptionPane.showMessageDialog(new JFrame(), str,"Error",JOptionPane.ERROR_MESSAGE);
+	}
+	
+	private static void showMessageDialog(String str){
+		JOptionPane.showMessageDialog(new JFrame(), str,"Message",JOptionPane.INFORMATION_MESSAGE);
+	}
+	
+	private void shutdown(){
+		if(makeCallModule !=null){
+			makeCallModule.disconnectCall();
+			makeCallModule=null;
+		}
+		//disconnect the received ongoing call and remove the receiver thread from map
+		for(Entry entry : receiverMap.entrySet()){
+			Receiver receiver = (Receiver) entry.getValue();
+			String id = (String) entry.getKey();
+			receiver.disconnectCall();
+			receiverMap.remove(id);
+		}
+		if(voicePlayer!=null){
+			voicePlayer.stopSound();
+			voicePlayer =null;
+		}
+		
+		if(voiceRecorder!=null){
+			voiceRecorder.stopRecording();
+			voiceRecorder=null;
+		}
+	}
+	
+	private void goOffline(){
+		
+		//disconnect the received ongoing call and remove the receiver thread from map
+		for(Entry<String, Receiver> entry : receiverMap.entrySet()){
+			Receiver receiver = (Receiver) entry.getValue();
+			String id = (String) entry.getKey();
+			receiver.disconnectCall();
+			receiverMap.remove(id);
+			if(voicePlayer!=null){
+				voicePlayer.stopSound();
+				voicePlayer =null;
+			}
+			
+			if(voiceRecorder!=null){
+				voiceRecorder.stopRecording();
+				voiceRecorder=null;
+			}
+		}
+		goOnlineModule.goOffline();
+		
 	}
 }
