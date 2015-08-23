@@ -138,7 +138,7 @@ public class Message {
 				return false;
 			}
 			
-			if (!prevTimestamp.before(timestamp())) {
+			if (prevTimestamp != null && !prevTimestamp.before(timestamp())) {
 				System.out.println("Timestamp fail");
 				// Message is valid only if the prevTimestamp is before this message's timestamp.
 				return false;

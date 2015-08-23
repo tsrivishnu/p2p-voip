@@ -141,7 +141,6 @@ public class Receiver extends Thread {
 			if (status == IDLE) {
 				// If there are no active calls
 				
-				Thread.sleep(10);
 				// Send PING_REPLY with module verification					
 				moduleValidator = new ModuleValidator();
 				Message pingReply = new Message(messageCrypto);

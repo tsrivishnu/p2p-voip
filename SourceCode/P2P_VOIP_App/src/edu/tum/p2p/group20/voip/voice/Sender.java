@@ -103,8 +103,6 @@ public class Sender {
         	
         	messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
         	
-        	lastTimestamp = new Date();
-        	
         	// Send initial ping to check module.
         	ModuleValidator moduleValidator = new ModuleValidator();
         	Message initialModuleCheck = new Message(messageCrypto);
@@ -118,9 +116,10 @@ public class Sender {
         	//Receive ping reply
         	inputLine = in.readLine();            	
         	Message pingReplyMessage = new Message(inputLine, false, messageCrypto);
-        	if (!pingReplyMessage.isValid(lastTimestamp, null)) {
+        	if (!pingReplyMessage.isValid(null, "PING_REPLY")) {
         		throw new Exception("Message validation failed");
         	}
+        	
         	lastTimestamp = pingReplyMessage.timestamp();
         	System.out.println(pingReplyMessage.get("type"));
         	if("PING_BUSY".equals(pingReplyMessage.get("type"))){
