@@ -191,7 +191,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 					    public void run() {
 					        
 					        try {
-					        	goOnlineModule.goOnline(configParser);
+					        	goOnlineModule.goOnline(configParser,false);
 					        } catch (Exception e) {
 					        	
 					            e.printStackTrace();
@@ -227,7 +227,8 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 					try {
 						makeCallModule.setErrorListener(this);
 						makeCallModule.setCallInitiatorListener(this);
-						makeCallModule.makeCall( pseudoId,configParser);
+						//set fake call as false
+						makeCallModule.makeCall( pseudoId,configParser,false);
 					} catch (Exception e) {
 						showErrorDialog("Could not make call due to "+e.getLocalizedMessage());
 						e.printStackTrace();
@@ -384,7 +385,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 
 	@Override
 	public void onCallDisconnected(String pseudoId) {
-		lblCallStatus.setText("Disconnected from: "+pseudoId);
+		lblCallStatus.setText("Call disconnected!");
 		lblCallStatus.invalidate();
 		
 		if(voicePlayer!=null){
@@ -400,7 +401,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 
 	@Override
 	public void onCallInitiated(String pseudoId) {
-		lblCallStatus.setText("Connecting to: "+pseudoId);
+		lblCallStatus.setText("Connecting...");
 		lblCallStatus.invalidate();	
 	}
 	/**
@@ -408,7 +409,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	 */
 	@Override
 	public void onCallAccepted(String pseudoId, byte[] sessionKey,String destinationIP) {
-		lblCallStatus.setText("Connected to: "+pseudoId);
+		lblCallStatus.setText("Connected");
 		lblCallStatus.invalidate();
 		this.sessionkey=sessionKey;
 		
@@ -435,7 +436,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	 */
 	@Override
 	public void onCallDeclined(String pseudoId) {
-		lblCallStatus.setText(pseudoId+" declined your call!");
+		lblCallStatus.setText("Call declined!");
 		lblCallStatus.invalidate();
 	}
 

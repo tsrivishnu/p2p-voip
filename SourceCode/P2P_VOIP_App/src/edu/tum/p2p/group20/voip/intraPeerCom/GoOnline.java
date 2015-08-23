@@ -60,10 +60,10 @@ public class GoOnline implements CallReceiverListener {
 			return;
 		}
 
-		goOnline.goOnline(ConfigParser.getInstance(args[1]));
+		goOnline.goOnline(ConfigParser.getInstance(args[1]), false);
 	}
 
-	public void goOnline(final ConfigParser configParser) throws Exception {
+	public void goOnline(final ConfigParser configParser, boolean isFakeCall) throws Exception {
 
 		this.configParser = configParser;
 
@@ -79,13 +79,13 @@ public class GoOnline implements CallReceiverListener {
 					configParser.getDhtPort()
 					);
 			} catch (UnknownHostException e) {
-
-				JOptionPane.showMessageDialog(
-					new JFrame(),
-					"Check DHT host address"
-					);
+				if(!isFakeCall){
+					JOptionPane.showMessageDialog(
+						new JFrame(),
+						"Check DHT host address"
+						);
+				}
 				e.printStackTrace();
-
 				return;
 			} catch (IOException e) {
 
@@ -195,6 +195,9 @@ public class GoOnline implements CallReceiverListener {
 				String inTunnelIP = configParser.getTunIP();
 				// We choose this port from config file
 				int inTunnelPort = configParser.getVoipPort();
+				if(isFakeCall){
+					inTunnelPort = configParser.getFakeCallPort();
+				}
 				try {
 
 					serverSocket = new ServerSocket(

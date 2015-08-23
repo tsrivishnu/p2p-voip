@@ -30,6 +30,8 @@ public class ConfigParser {
 	private String testRemoteRsaKeyPair;
 	
 	private HierarchicalINIConfiguration configIni;
+
+	private int fakeCallPort;
 	/**
 	 * to make class singleton
 	 */
@@ -60,6 +62,7 @@ public class ConfigParser {
 			configParser.testRemoteRsaKeyPair=configParser.configIni.getSection("VOIP").getString("TEST_REMOTE_RSA_KEYPAIR",null);
 
 			configParser.voipPort = configParser.configIni.getSection("VOIP").getInt("PORT");
+			configParser.fakeCallPort = configParser.configIni.getSection("VOIP").getInt("FAKE_CALL_PORT");
 		}
 		
 		return configParser;
@@ -165,5 +168,13 @@ public class ConfigParser {
 				+ hostList + ", voipPort=" + voipPort + ", testDestinationIP="
 				+ testDestinationIP + ", testReceiverRsaKeyPair="
 				+ testRemoteRsaKeyPair + ", configIni=" + configIni + "]";
+	}
+
+	/**
+	 * @return
+	 */
+	public int getFakeCallPort() {
+		// TODO Auto-generated method stub
+		return fakeCallPort;
 	}
 }

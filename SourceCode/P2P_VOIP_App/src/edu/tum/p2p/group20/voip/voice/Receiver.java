@@ -55,6 +55,7 @@ public class Receiver extends Thread {
 	private PrintWriter out;
 	private Timer heartBeatTimer;
 	private TimerTask heartBeatSender;
+	private static boolean callRunning;
 
 	/**
 	 * @param clientSocket2
@@ -136,7 +137,9 @@ public class Receiver extends Thread {
 			
 			lastTimestamp = receivedPingMessage.timestamp();			
 
-			if (status == IDLE) {
+//			if (status == IDLE) {
+			if (!callRunning ) {	
+				callRunning=true;
 				// If there are no active calls
 				
 				// Send PING_REPLY with module verification					
@@ -201,6 +204,7 @@ public class Receiver extends Thread {
 				if (!receivedMessage.isValid(lastTimestamp, "CALL_INIT")) {
 					// quiting this thread
 					clientSocket.close();
+					callRunning=false;
 					return;
 				}
 				receivedMessage.decrypt();
@@ -217,7 +221,6 @@ public class Receiver extends Thread {
 				);
 
 				if (accept) {
-
 					sendCallAccept();	
 					// send call connected callback with this thread's
 					// instance
@@ -235,13 +238,6 @@ public class Receiver extends Thread {
 						// Read disconnect or Heartbeat message
 						inputLine = in.readLine();
 						
-						// When connection is broken, Disconnect call
-						if (inputLine == null) {
-							handleCallDisconnection("Connection broken");
-							shutdown();
-							return;
-						}
-						
 						// Receive a message
 						Message newMessage = new Message(
 							inputLine,
@@ -250,7 +246,7 @@ public class Receiver extends Thread {
 						);
 						
 						if (!newMessage.isValid(lastTimestamp, null)) {
-							
+							callRunning=false;
 							handleCallDisconnection("Invalid message received from client!");	
 							shutdown();
 							return;
@@ -266,23 +262,25 @@ public class Receiver extends Thread {
 									break;
 								
 								case "CALL_DISCONNECT":
+									callRunning=false;
 									handleCallDisconnection("Remote disconnected");
 									return;
 								
 								default:
+									callRunning=false;
 									handleCallDisconnection("Unexpected Message");
 									return;
 							}
 						}
 					}
 				} else {
-
+					callRunning=false;
 					sendCallDecline();
 					stop = true;
 					return;
 				}
 			}
-			else if (status == BUSY) {
+			else if (callRunning) {
 				// Send busy message and let remote user close the socket
 				sendPingBusyReply();
 				stop = true;
@@ -294,14 +292,15 @@ public class Receiver extends Thread {
 				return;
 			}
 		} catch (IOException e) {
-			
+			callRunning=false;
 			if (stop) {			
-				callReceiverListener.onCallDisconnected("Call disconnected");	
+				callReceiverListener.onCallDisconnected(otherPartyPseudoIdentity);	
 			} else {
 				handleCallDisconnection("Something went wrong!");
 				e.printStackTrace();
 			}
 		} catch (Exception e) {
+			callRunning=false;
 			handleCallDisconnection("Something went wrong!");
 			e.printStackTrace();
 		}
@@ -414,6 +413,7 @@ public class Receiver extends Thread {
 					this.cancel();// stop heartbeat timer task
 					System.out.println("HEARTBEAT TIMEOUT");
 					stop = true;
+					callRunning=false;
 					callReceiverListener
 						.onCallDisconnected(otherPartyPseudoIdentity);
 					shutdown();
@@ -435,7 +435,7 @@ public class Receiver extends Thread {
 		disconnectMsg.encrypt();
 		out.println(disconnectMsg.asJSONStringForExchange());
 		out.flush();
-
+		callRunning=false;
 		stop = true;
 		shutdown();
 	}
@@ -462,4 +462,5 @@ public class Receiver extends Thread {
 			clientSocket = null;
 		}
 	}
+	
 }

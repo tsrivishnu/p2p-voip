@@ -82,7 +82,7 @@ public class Sender {
 	public void initiateCall(final String otherPartyPseudoIdentity,
 		RSAPublicKey otherPartyPublicKey,
 		String destinationIP,
-		ConfigParser parser) throws IllegalStateException, Exception {
+		ConfigParser parser, boolean isFakeCall) throws IllegalStateException, Exception {
 
 		configParser = parser;
 		try {
@@ -95,9 +95,14 @@ public class Sender {
 				);
 
 			// TODO: put soTimeout
+			int inTunnelPort = configParser.getVoipPort();
+					
+			if(isFakeCall){
+				inTunnelPort = configParser.getFakeCallPort();
+			}
 			socket = new Socket(
 				InetAddress.getByName(destinationIP),
-				configParser.getVoipPort(),
+				inTunnelPort,
 				InetAddress.getByName(configParser.getTunIP()),
 				0
 				);

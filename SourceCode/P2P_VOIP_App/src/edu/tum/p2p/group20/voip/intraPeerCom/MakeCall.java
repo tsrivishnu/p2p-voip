@@ -27,7 +27,7 @@ public class MakeCall {
 	private ConfigParser configParser;
 	private byte[] hostPseudoId;
 	private MakeCallEventListener errorListener;
-	public void makeCall(String calleeId, ConfigParser configParser)
+	public void makeCall(String calleeId, ConfigParser configParser, boolean isFakeCall)
 			throws Exception {
 
 		this.configParser = configParser;
@@ -110,7 +110,7 @@ public class MakeCall {
 				sender.setCallInitiatorListener(callInitiatorListener);
 				// initiate sender with destination point info
 				sender.initiateCall(calleeId, remotePublicKey,
-						destinationIpv4.getHostAddress(), configParser);
+						destinationIpv4.getHostAddress(), configParser, isFakeCall);
 			}
 			else {
 				errorListener.onMakeCallError("Cannot create Outgoing Tunnel"

@@ -102,7 +102,7 @@ public class TestingSenderWithVoice {
 					.digest(remotePublicKey.getEncoded()));
 			// TOOD: get this IP from TUN_READY destination IP
 			sender.initiateCall(receiverPseudoId, remotePublicKey,
-					parser.getTestDestinatonIp(), parser);
+					parser.getTestDestinatonIp(), parser,false);
 		} catch (Exception e) {
 			e.printStackTrace();
 		}

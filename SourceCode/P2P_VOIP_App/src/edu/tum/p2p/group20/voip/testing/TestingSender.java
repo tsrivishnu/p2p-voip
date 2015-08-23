@@ -69,7 +69,7 @@ public class TestingSender {
 	    	MessageDigest md = MessageDigest.getInstance("SHA-256");
 	    	String receiverPseudoId = Base64.encodeBase64String(md.digest(remotePublicKey.getEncoded()));
 	    	//TOOD: get this IP from TUN_READY destination IP
-			sender.initiateCall(receiverPseudoId, remotePublicKey,parser.getTestDestinatonIp(), parser);
+			sender.initiateCall(receiverPseudoId, remotePublicKey,parser.getTestDestinatonIp(), parser,false);
 		} catch ( Exception e) {
 
 			e.printStackTrace();
