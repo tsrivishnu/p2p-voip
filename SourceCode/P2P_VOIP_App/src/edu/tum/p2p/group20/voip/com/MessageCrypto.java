@@ -8,6 +8,7 @@ import java.security.NoSuchProviderException;
 import java.security.PublicKey;
 import java.security.Security;
 import java.security.SignatureException;
+import java.util.Arrays;
 
 import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
@@ -171,7 +172,7 @@ public class MessageCrypto {
 	public String getSignature(String toBeSignedString) throws InvalidKeyException,
 					NoSuchAlgorithmException, SignatureException,
 					UnsupportedEncodingException {
-
+		System.out.println(Arrays.toString(hostKeyPair.getPublic().getEncoded()));
 		return RSA.sign(hostKeyPair.getPrivate(), toBeSignedString);
 	}
 	

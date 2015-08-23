@@ -48,7 +48,7 @@ public class TestingSenderWithVoice {
 		
 		
 		try {
-			parser = ConfigParser.getInstance("lib/test_app_config_sender.ini");
+			parser = ConfigParser.getInstance("lib/test_app_config.ini");
 		} catch (ConfigurationException e1) {
 			e1.printStackTrace();
 		}
@@ -99,7 +99,7 @@ public class TestingSenderWithVoice {
 		});
 		
 		try {
-			KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
+			KeyPair hostKeyPair = RSA.getKeyPairFromFile(parser.getHostKey());
 	    	RSAPublicKey remotePublicKey = (RSAPublicKey) hostKeyPair.getPublic();
 	    	MessageDigest md = MessageDigest.getInstance("SHA-256");
 	    	String receiverPseudoId = Base64.encodeBase64String(md.digest(remotePublicKey.getEncoded()));

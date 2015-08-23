@@ -292,6 +292,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		// TODO Auto-generated method stub
 		lblStatusMsg.setText("Online");
 		lblStatusMsg.invalidate();
+		goOnlineModule.setCallReceiverListener(this);
 	}
 	
 	@Override
@@ -341,8 +342,11 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	public void onCallConnected(String pseudoId, byte[]sessionKey) {
 		// TODO Auto-generated method stub
 		voicePlayer = new VoicePlayer(sessionkey);
+		voicePlayer.init(configParser.getTunIP(), configParser.getVoipPort());
 		voicePlayer.start();
+		
 		voiceRecorder = new VoiceRecorder(sessionkey);
+		voiceRecorder.init(configParser.getTunIP(), configParser.getTestDestinatonIp(), configParser.getVoipPort());
 		voiceRecorder.start();
 	}
 
@@ -375,11 +379,14 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		lblStatusMsg.setText("Connected to: "+pseudoId);
 		lblStatusMsg.invalidate();
 		this.sessionkey=sessionKey;
-		voicePlayer = new VoicePlayer(sessionkey);
-		voicePlayer.start();
-		voiceRecorder = new VoiceRecorder(sessionkey);
-		voiceRecorder.start();
 		
+		voicePlayer = new VoicePlayer(sessionkey);		
+		voicePlayer.init(configParser.getTunIP(), configParser.getVoipPort());
+		voicePlayer.start();
+		
+		voiceRecorder = new VoiceRecorder(sessionkey);
+		voiceRecorder.init(configParser.getTunIP(), configParser.getTestDestinatonIp(), configParser.getVoipPort());
+		voiceRecorder.start();
 	}
 	/**
 	 * Thread safe console log message print

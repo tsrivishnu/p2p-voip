@@ -68,7 +68,7 @@ public class KXSimulator {
 						break;
 					case "3":			
 						sendTunnelReady(
-							InetAddress.getByName(parser.getTestDestinatonIp()).getAddress(),
+							InetAddress.getByName(parser.getTunIP()).getAddress(),
 							InetAddress.getByName("3ffe:2a00:100:7031::1").getAddress()
 						);
 						break;					

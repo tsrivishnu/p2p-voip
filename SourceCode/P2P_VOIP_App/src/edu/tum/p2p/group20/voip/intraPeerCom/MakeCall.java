@@ -80,7 +80,7 @@ public class MakeCall {
         		sender = new Sender();
         		sender.setCallInitiatorListener(callInitiatorListener);
         		//TODO: check this id needs to be send or public key
-        		sender.initiateCall(calleeId, remotePublicKey,destinationIpv4.getHostAddress(), configParser);
+        		sender.initiateCall(calleeId, remotePublicKey, destinationIpv4.getHostAddress(), configParser);
         		//initialize sender with destination point info
         		
         	} else {

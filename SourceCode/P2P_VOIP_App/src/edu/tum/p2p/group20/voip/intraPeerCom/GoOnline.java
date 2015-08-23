@@ -293,7 +293,7 @@ public class GoOnline implements CallReceiverListener{
 
 	@Override
 	public void onCallConnected(String pseudoId, byte[] sessionKey) {
-		// TODO Auto-generated method stub
+		// TODO Auto-generated method stub		
 		callReceiverListener.onCallConnected(pseudoId,sessionKey);
 	}
 

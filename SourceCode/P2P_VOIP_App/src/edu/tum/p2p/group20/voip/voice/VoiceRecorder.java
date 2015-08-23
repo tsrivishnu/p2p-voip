@@ -22,11 +22,11 @@ import edu.tum.p2p.group20.voip.crypto.SHA2;
 public class VoiceRecorder extends Thread {
 
 	//Destination IP
-	private String destinationIP = "192.168.1.40";//only for testing
+	private String destinationIP;
 	//Port configured for voice data
-	private int destinationPort = 7000;//only for testing
+	private int destinationPort;
 	//TUN interface IP
-	private String tunIP = "192.168.1.5";//only for testing
+	private String tunIP;
 	
 	private DatagramSocket sock;
 	private boolean stop;
