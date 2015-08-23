@@ -287,11 +287,15 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	@Override
 	public void onMakeCallError(String error) {
 		showErrorDialog("Error while making call - "+error);
+		lblCallStatus.setText("Unable to connect.");
+		lblCallStatus.invalidate();
 	}
 
 	@Override
 	public void onMakeCallException(Exception e) {
 		showErrorDialog("Error while making call - "+e.getLocalizedMessage());
+		lblCallStatus.setText("Unable to connect.");
+		lblCallStatus.invalidate();
 	}
 	
 	@Override
@@ -524,6 +528,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 			}
 		}
 		goOnlineModule.goOffline();
-		
+		lblStatusMsg.setText("Offline");
+		lblStatusMsg.invalidate();
 	}
 }
