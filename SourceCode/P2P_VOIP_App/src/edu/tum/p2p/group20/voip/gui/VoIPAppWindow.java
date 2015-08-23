@@ -10,6 +10,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import java.awt.BorderLayout;
+import java.awt.Component;
 import java.util.HashMap;
 import java.util.Map.Entry;
 
@@ -25,7 +26,7 @@ import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.intraPeerCom.GoOnline;
 import edu.tum.p2p.group20.voip.intraPeerCom.GoOnlineEventListener;
 import edu.tum.p2p.group20.voip.intraPeerCom.MakeCall;
-
+import edu.tum.p2p.group20.voip.intraPeerCom.MakeCallEventListener;
 import edu.tum.p2p.group20.voip.voice.CallInitiatorListener;
 import edu.tum.p2p.group20.voip.voice.CallReceiverListener;
 import edu.tum.p2p.group20.voip.voice.Receiver;
@@ -48,7 +49,7 @@ import org.apache.commons.configuration.ConfigurationException;
  *
  */
 public class VoIPAppWindow extends JFrame implements ActionListener,
-		GoOnlineEventListener, CallReceiverListener, CallInitiatorListener {
+		GoOnlineEventListener, CallReceiverListener, CallInitiatorListener, MakeCallEventListener {
 	/**
 	 * 
 	 */
@@ -71,6 +72,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	private byte[] sessionkey;
 	private JTextField txtFieldHostPseudoId;
 	private String callerPseudoId;
+	private JLabel lblCallStatus;
 
 	public VoIPAppWindow(String confiFileName) {
 		try {
@@ -89,15 +91,15 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		JPanel panel = new JPanel();
 		getContentPane().add(panel, BorderLayout.CENTER);
 		panel.setLayout(new FormLayout(new ColumnSpec[] {
-				ColumnSpec.decode("160px"),
 				ColumnSpec.decode("40px"),
+				ColumnSpec.decode("160px"),
 				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
 				ColumnSpec.decode("250px"),
 				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
 				ColumnSpec.decode("100px")},
 			new RowSpec[] {
 				FormFactory.RELATED_GAP_ROWSPEC,
-				RowSpec.decode("23px"),
+				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
 				FormFactory.RELATED_GAP_ROWSPEC,
@@ -112,35 +114,38 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 				FormFactory.DEFAULT_ROWSPEC,}));
 		
 		JLabel lblStatus = new JLabel("Status");
-		panel.add(lblStatus, "1, 2, left, center");
+		panel.add(lblStatus, "2, 2, left, center");
 		
 		lblStatusMsg = new JLabel("Offline");
 		panel.add(lblStatusMsg, "4, 2");
 		
 		JLabel lblCalleeName = new JLabel("Call To");
-		panel.add(lblCalleeName, "1, 6");
+		panel.add(lblCalleeName, "2, 4");
 		
 		recepientName = new JTextField();
-		panel.add(recepientName, "4, 6, fill, default");
+		panel.add(recepientName, "4, 4, fill, default");
 		recepientName.setColumns(10);
+		
 		
 		JButton btnCall = new JButton("Call");
 		btnCall.setActionCommand("Call");
 		btnCall.addActionListener(this);
-		panel.add(btnCall, "6, 6");
+		panel.add(btnCall, "6, 4");
+		
+		lblCallStatus = new JLabel();
+		panel.add(lblCallStatus, "4, 6, left, center");
 		
 		JButton btnDisconnect = new JButton("Disconnect");
 		btnDisconnect.setActionCommand("Disconnect");
 		btnDisconnect.addActionListener(this);
-		
-		panel.add(btnDisconnect, "6, 8");
+		panel.add(btnDisconnect, "6, 6");
 		
 		JLabel lblNewLabel = new JLabel("Your Pseudo ID");
-		panel.add(lblNewLabel, "1, 10");
+		panel.add(lblNewLabel, "2, 8");
 		
 		txtFieldHostPseudoId = new JTextField();
 		txtFieldHostPseudoId.setEditable(false);
-		panel.add(txtFieldHostPseudoId, "4, 10, fill, default");
+		panel.add(txtFieldHostPseudoId, "4, 8, fill, default");
 		txtFieldHostPseudoId.setColumns(10);
 		
 		
@@ -165,15 +170,8 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		mntmQuit.setActionCommand("Quit");
 		mntmQuit.addActionListener(this);
 		mnFile.add(mntmQuit);
-		
-		JMenu mnSettings = new JMenu("Settings");
-		menuBar.add(mnSettings);
-		
-		JMenuItem mntmSettings = new JMenuItem("Network Settings");
-		mntmSettings.setActionCommand("Network Settings");
-		mntmSettings.addActionListener(this);
-		mnSettings.add(mntmSettings);
-		setBounds(0, 0, 640, 480);
+		//sets the default window dimensions
+		setBounds(100, 100, 640, 480);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 	}
 
@@ -203,7 +201,9 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 				} catch (Exception e) {
 					System.err.println(e.getMessage());
 					e.printStackTrace();
-					lblStatusMsg.setText("Error occured while trying to go online!");
+					showErrorDialog("Exception occured while trying to go online."
+							+"\n"+e.getLocalizedMessage());
+					lblStatusMsg.setText("Offline");
 					lblStatusMsg.invalidate();
 				}
 				
@@ -225,6 +225,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 						makeCallModule = new MakeCall();
 					}
 					try {
+						makeCallModule.setErrorListener(this);
 						makeCallModule.setCallInitiatorListener(this);
 						makeCallModule.makeCall( pseudoId,configParser);
 					} catch (Exception e) {
@@ -283,18 +284,31 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	}
 
 	@Override
-	public void onError(String error) {
-		showErrorDialog("Error in GoOnline -"+error);
-		lblStatusMsg.setText("Error in GoOnline -"+error);
-		lblStatusMsg.invalidate();
+	public void onMakeCallError(String error) {
+		showErrorDialog("Error while making call - "+error);
 	}
 
 	@Override
+	public void onMakeCallException(Exception e) {
+		showErrorDialog("Error while making call - "+e.getLocalizedMessage());
+	}
+	
+	@Override
 	public void onException(Exception e) {
-		showErrorDialog("Unable to go online");
-		lblStatusMsg.setText("Unable to go online");
+		showErrorDialog("Unable to go online due to : "+e.getLocalizedMessage());
+		e.printStackTrace();
+		lblStatusMsg.setText("Offline");
 		lblStatusMsg.invalidate();
 	}
+	
+	@Override
+	public void onError(String error) {
+		showErrorDialog("Error in while trying to go online : "+error);
+		lblStatusMsg.setText("Offline");
+		lblStatusMsg.invalidate();
+	}
+
+	
 
 	@Override
 	public void onOnline() {
@@ -356,8 +370,8 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		//save the new session key
 		this.sessionkey = sessionKey;
 		//display status to user
-		lblStatusMsg.setText("Connected to: "+pseudoId);
-		lblStatusMsg.invalidate();
+		lblCallStatus.setText("Connected to: "+pseudoId);
+		lblCallStatus.invalidate();
 		
 		// start listening to voice data
 		voicePlayer = new VoicePlayer(sessionkey);
@@ -370,8 +384,8 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 
 	@Override
 	public void onCallDisconnected(String pseudoId) {
-		lblStatusMsg.setText("Disconnected from: "+pseudoId);
-		lblStatusMsg.invalidate();
+		lblCallStatus.setText("Disconnected from: "+pseudoId);
+		lblCallStatus.invalidate();
 		
 		if(voicePlayer!=null){
 			voicePlayer.stopSound();
@@ -386,16 +400,16 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 
 	@Override
 	public void onCallInitiated(String pseudoId) {
-		lblStatusMsg.setText("Connecting to: "+pseudoId);
-		lblStatusMsg.invalidate();	
+		lblCallStatus.setText("Connecting to: "+pseudoId);
+		lblCallStatus.invalidate();	
 	}
 	/**
 	 * callback for caller when remote peer accepts the call
 	 */
 	@Override
 	public void onCallAccepted(String pseudoId, byte[] sessionKey,String destinationIP) {
-		lblStatusMsg.setText("Connected to: "+pseudoId);
-		lblStatusMsg.invalidate();
+		lblCallStatus.setText("Connected to: "+pseudoId);
+		lblCallStatus.invalidate();
 		this.sessionkey=sessionKey;
 		
 		voicePlayer = new VoicePlayer(sessionkey);		
@@ -421,8 +435,8 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	 */
 	@Override
 	public void onCallDeclined(String pseudoId) {
-		lblStatusMsg.setText(pseudoId+" declined your call!");
-		lblStatusMsg.invalidate();
+		lblCallStatus.setText(pseudoId+" declined your call!");
+		lblCallStatus.invalidate();
 	}
 
 
@@ -455,8 +469,8 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	 */
 	@Override
 	public void onCallFailed(String calleeId) {
-		lblStatusMsg.setText("Unable to call "+ calleeId);
-		lblStatusMsg.invalidate();
+		lblCallStatus.setText("Unable to call "+ calleeId);
+		lblCallStatus.invalidate();
 	}
 	
 	private static void showErrorDialog(String str){

@@ -26,7 +26,7 @@ public class MakeCall {
 	private CallInitiatorListener callInitiatorListener;
 	private ConfigParser configParser;
 	private byte[] hostPseudoId;
-
+	private MakeCallEventListener errorListener;
 	public void makeCall(String calleeId, ConfigParser configParser)
 			throws Exception {
 
@@ -35,13 +35,34 @@ public class MakeCall {
 		try {
 			//showing status update to user
 			callInitiatorListener.onCallInitiated(calleeId);
-			dhtCommunicator = new IntraPeerCommunicator(
+			try{
+				dhtCommunicator = new IntraPeerCommunicator(
 					configParser.getDhtHost(), configParser.getDhtPort());
+			} catch(IOException e){
+				errorListener.onMakeCallError("Cannot connect to DHT module."
+						+"\nPlease check if DHT running as per config file.");
+				e.printStackTrace();
+				return;
+			}
+			try{
 			kxCommunicator = new IntraPeerCommunicator(
 					configParser.getKxhost(), configParser.getKxPort());
-
-			KeyPair hostKeyPair = RSA.getKeyPairFromFile(configParser
+			} catch(IOException e){
+				errorListener.onMakeCallError("Cannot connect to KX modulde."
+						+"\nPlease check if KX module running as per config file.");
+				e.printStackTrace();
+				return;
+			}
+			KeyPair hostKeyPair=null;
+			try{
+				hostKeyPair = RSA.getKeyPairFromFile(configParser
 					.getUserHostKey());
+			} catch(IOException e) {
+				errorListener.onMakeCallError("Error with reading user key file."
+						+"\nPlease check if path is correct in config file.");
+				e.printStackTrace();
+				return;
+			}
 			PublicKey hostPubKey = hostKeyPair.getPublic();
 			
 			SHA2 sha2 = new SHA2();
@@ -92,11 +113,14 @@ public class MakeCall {
 						destinationIpv4.getHostAddress(), configParser);
 			}
 			else {
-				System.out.println("Cannot connect");
+				errorListener.onMakeCallError("Cannot create Outgoing Tunnel"
+						+"\nInvalid message was returned from KX");
+				System.out.println("Cannot create Outgoing Tunnel"
+						+"\nInvalid message was returned from KX");
 			}
 
 		} catch (IOException e) {
-			callInitiatorListener.onCallFailed("Call failed");
+			callInitiatorListener.onCallFailed(calleeId);
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
@@ -125,6 +149,7 @@ public class MakeCall {
 
 		if (sender != null) {
 			sender.disconnectCall();
+			sender=null;
 		}
 
 		if (dhtCommunicator != null) {
@@ -143,5 +168,13 @@ public class MakeCall {
 			kxCommunicator = null;
 		}
 
+	}
+
+	/**
+	 * Set the error listener callback to propagate error to listener
+	 * @param errorListener
+	 */
+	public void setErrorListener(MakeCallEventListener errorListener) {
+		this.errorListener = errorListener;
 	}
 }
