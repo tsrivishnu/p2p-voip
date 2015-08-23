@@ -20,6 +20,9 @@ import edu.tum.p2p.group20.voip.voice.CallReceiverListener;
 import edu.tum.p2p.group20.voip.voice.Receiver;
 
 /**
+ * Fake call works now! Will link it to the main thread if there is enough time
+ * 
+ * 
  * @author anshulvij
  *
  */
