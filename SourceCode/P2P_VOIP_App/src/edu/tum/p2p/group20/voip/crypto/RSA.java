@@ -91,11 +91,21 @@ public class RSA {
 				.generatePublic(new X509EncodedKeySpec(publickKeyBytes));
 	}
 	
-	public static String sign(PrivateKey privateKey, String message) throws NoSuchAlgorithmException, InvalidKeyException, SignatureException, UnsupportedEncodingException {
-	    Signature sign = Signature.getInstance("SHA1withRSA");
-	    sign.initSign(privateKey);
-	    sign.update(message.getBytes("UTF-8"));
-	    return new String(Base64.encodeBase64(sign.sign()), "UTF-8");
+	public static String sign(PrivateKey privateKey, String message) throws InvalidKeyException, SignatureException {
+	    
+	    
+	    try {
+	    	Signature sign = Signature.getInstance("SHA1withRSA");
+		    sign.initSign(privateKey);
+			sign.update(message.getBytes("UTF-8"));
+			
+			return new String(Base64.encodeBase64(sign.sign()), "UTF-8");			
+		} catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
+			
+			e.printStackTrace();
+		}
+	    
+	    return null;
 	}
 	
 	public static byte[] sign(PrivateKey privateKey, byte[] messageBytes) throws SignatureException, NoSuchAlgorithmException, InvalidKeyException {

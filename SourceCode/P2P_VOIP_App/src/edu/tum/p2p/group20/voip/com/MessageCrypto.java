@@ -144,16 +144,18 @@ public class MessageCrypto {
 	 * 
 	 * @param toBeSignedString: String that has to be signed.
 	 * @return Signature for the string passed.
-	 * @throws InvalidKeyException
-	 * @throws NoSuchAlgorithmException
 	 * @throws SignatureException
-	 * @throws UnsupportedEncodingException
 	 */
-	public String getSignature(String toBeSignedString) throws InvalidKeyException,
-					NoSuchAlgorithmException, SignatureException,
-					UnsupportedEncodingException {
+	public String getSignature(String toBeSignedString) throws SignatureException {
 		System.out.println(Arrays.toString(hostKeyPair.getPublic().getEncoded()));
-		return RSA.sign(hostKeyPair.getPrivate(), toBeSignedString);
+		
+		try {
+			return RSA.sign(hostKeyPair.getPrivate(), toBeSignedString);
+		} catch (InvalidKeyException e) {
+			e.printStackTrace();
+		}
+		
+		return null;
 	}
 	
 	/**

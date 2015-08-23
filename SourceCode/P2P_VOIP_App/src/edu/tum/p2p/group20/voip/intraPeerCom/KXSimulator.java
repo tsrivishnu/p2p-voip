@@ -12,6 +12,12 @@ import java.util.Scanner;
 
 import edu.tum.p2p.group20.voip.config.ConfigParser;
 
+/**
+ * Simulates the KX module. Used for testing
+ * 
+ * @author Sri Vishnu Totakura <srivishnu@totakura.in>
+ *
+ */
 public class KXSimulator {
 
 	private static ServerSocket serverSocket;
