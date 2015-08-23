@@ -115,7 +115,7 @@ public class Sender {
         	//Receive ping reply
         	inputLine = in.readLine();            	
         	Message pingReplyMessage = new Message(inputLine, false, messageCrypto);
-        	if (!pingReplyMessage.isValid(lastTimestamp)) {
+        	if (!pingReplyMessage.isValid(lastTimestamp, null)) {
         		throw new Exception("Message validation failed");
         	}
         	lastTimestamp = pingReplyMessage.timestamp();
@@ -140,7 +140,7 @@ public class Sender {
         	// Receive other parties DHpublickey 
         	inputLine = in.readLine();        	
         	Message receivedDhMessage = new Message(inputLine, false, messageCrypto);
-        	if (!receivedDhMessage.isValid(lastTimestamp)) {
+        	if (!receivedDhMessage.isValid(lastTimestamp, "DH_REPLY")) {
         		throw new Exception("Message validation failed");
         	}        	
         	String dhPublicKeyString = (String) receivedDhMessage.get("DHPublicKey");
@@ -160,7 +160,7 @@ public class Sender {
         	// Read CALL_INIT_ACK
         	inputLine = in.readLine();
         	Message receivedMessage = new Message(inputLine, true, messageCrypto);
-        	if (!receivedMessage.isValid(lastTimestamp)) {
+        	if (!receivedMessage.isValid(lastTimestamp, "CALL_INIT_ACK")) {
         		throw new Exception("Message validation failed");
         	}
         	
@@ -175,7 +175,7 @@ public class Sender {
         	inputLine = in.readLine();            	
         	Message callAcceptMessage = new Message(inputLine, true, messageCrypto);
         	
-        	if (!callAcceptMessage.isValid(lastTimestamp)) {
+        	if (!callAcceptMessage.isValid(lastTimestamp, null)) {
         		//Invalid message
         		
         		throw new Exception("Message validation failed");
@@ -202,7 +202,7 @@ public class Sender {
 								//TODO: a null check here will also indicate broken connection
 								Message msg = new Message(inputLine, true, messageCrypto);
 			                	
-			                	if (!msg.isValid(lastTimestamp)) {
+			                	if (!msg.isValid(lastTimestamp, null)) {
 			                		//Invalid message
 			                		System.out.println("Invalid msg");
 			                		stop=true;
@@ -222,8 +222,7 @@ public class Sender {
 			                		return;
 			                	}
 							} catch (IOException | ParseException | 
-									InvalidKeyException | SignatureException |
-									NoSuchAlgorithmException | ShortBufferException |
+									InvalidKeyException | ShortBufferException |
 									IllegalBlockSizeException | BadPaddingException |
 									java.text.ParseException e) {
 								
@@ -257,16 +256,8 @@ public class Sender {
 						Message heartbeat = new Message(messageCrypto);
 	            		heartbeat.put("type", "HEARTBEAT");
 	            		heartbeat.encrypt();
-	                	try {
-	                		
-	                		System.out.println("Sending HEARTBEAT message");
-							out.println(heartbeat.asJSONStringForExchange());
-						} catch (InvalidKeyException | NoSuchAlgorithmException
-								| SignatureException
-								| UnsupportedEncodingException e) {
-
-							e.printStackTrace();
-						}
+	                	System.out.println("Sending HEARTBEAT message");
+						out.println(heartbeat.asJSONStringForExchange());
 					}
 				};
 				//schedule heartBeat sending task after 2 sec for every 10 sec
@@ -297,26 +288,19 @@ public class Sender {
 	
 	public void disconnectCall(){
 		
-		try {
-			// Send CALL_DISCONNECT.
-        	Message disconnectMsg = new Message(messageCrypto);
-        	disconnectMsg.put("type", "CALL_DISCONNECT");
-        	disconnectMsg.encrypt();
-        	out.println(disconnectMsg.asJSONStringForExchange());
-			
-		} catch (IOException | InvalidKeyException |
-				NoSuchAlgorithmException | SignatureException e) {
-
-			e.printStackTrace();
-		} finally{
-			if(socket!=null){
-				try {
-					socket.close();
-				} catch (IOException e) {
-					e.printStackTrace();
-				}
-				socket=null;
+		// Send CALL_DISCONNECT.
+    	Message disconnectMsg = new Message(messageCrypto);
+    	disconnectMsg.put("type", "CALL_DISCONNECT");
+    	disconnectMsg.encrypt();
+    	out.println(disconnectMsg.asJSONStringForExchange());
+	
+		if(socket!=null){
+			try {
+				socket.close();
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
+			socket=null;
 		}
 	}
 }

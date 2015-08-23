@@ -79,44 +79,40 @@ public class MessageUnitTest {
 		// When data is tampered with
 		receivedMessage.encryptedData = new StringBuilder(originalMessage).reverse().toString();
 		// should return false
-		assertFalse(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705")));		
+		assertFalse(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705"), null));		
 		
 		// Put back the original message;
 		receivedMessage.encryptedData = (String) originalMessage;
 		
-		assertTrue(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705")));
+		assertTrue(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705"), null));
 	}
 	
 	private void testTimestampRelated() throws InvalidKeyException, SignatureException, NoSuchAlgorithmException, UnsupportedEncodingException, java.text.ParseException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, ParseException {
 		// Passing a past timestamp should return true
-		assertTrue(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705")));
+		assertTrue(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705"), null));
 		
 		//Passing the same timestamp should return false
-		assertFalse(receivedMessage.isValid(receivedMessage.timestamp()));
+		assertFalse(receivedMessage.isValid(receivedMessage.timestamp(), null));
 		
 		// Passing a later timestamp should return false
-		assertFalse(receivedMessage.isValid(new java.util.Date()));
+		assertFalse(receivedMessage.isValid(new java.util.Date(), null));
 	}
 	
 	public void testPseudoIdentitiesRelated() throws InvalidKeyException, SignatureException, NoSuchAlgorithmException, UnsupportedEncodingException, java.text.ParseException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, ParseException {		
 		Object senderOriginal = receivedMessage.data.get("sender");
 		Object receiverOriginal = receivedMessage.data.get("receiver");
 		
-		assertTrue(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705")));
+		assertTrue(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705"), null));
 		
 //		change the pseudoIdentity of sender in the message.
 		receivedMessage.data.put("sender", "sdafasdfasd");
-		assertFalse(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705")));
+		assertFalse(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705"), null));
 		receivedMessage.data.put("sender", senderOriginal);		
 		
 //		change the pseudoIdentity of receiver in the message.
 		receivedMessage.data.put("receiver", "sdafasdfasd");
-		assertFalse(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705")));
-		receivedMessage.data.put("receiver", receiverOriginal);		
-		
-		
-		
-		
+		assertFalse(receivedMessage.isValid(sdf.parse("2015-07-25 15:39:28.705"), null));
+		receivedMessage.data.put("receiver", receiverOriginal);				
 	}
 
 }
