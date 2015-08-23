@@ -74,7 +74,7 @@ public class TestingReceiverWithVoice {
 
 				@Override
 				public boolean onIncomingCall(String pseudoId, byte[] sessionKey) {
-					// TODO Auto-generated method stub
+					
 					System.out.println("onIncomingCall");
 					int dialogButton = JOptionPane.YES_NO_OPTION;
 		            int result = JOptionPane.showConfirmDialog (null, 
@@ -91,13 +91,11 @@ public class TestingReceiverWithVoice {
 				
 				@Override
 				public void onCallDisconnected(String psudoId) {
-					// TODO Auto-generated method stub
 					System.out.println("onCallDisconnected");
 				}
 				
 				@Override
 				public void onCallConnected(String pseudoId, byte[] sessionKey) {
-					// TODO Auto-generated method stub
 					System.out.println("onCallConnected");
 					System.out.println("sessionKey="+Base64.encodeBase64String(sessionKey));
 					
@@ -113,7 +111,7 @@ public class TestingReceiverWithVoice {
 			receiver.start();
 	    	
 		} catch ( Exception e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		}
 		

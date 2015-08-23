@@ -261,7 +261,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 
 
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
+
 		final String[] params = args;
 		if(params.length==2 && params[0].equals("-c")){
 			appWindow = new VoIPAppWindow(params[1]);
@@ -269,7 +269,6 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 				UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
 			} catch (ClassNotFoundException | InstantiationException
 					| IllegalAccessException | UnsupportedLookAndFeelException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			appWindow.setVisible(true);
@@ -277,44 +276,25 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 			System.err.println("Usage: java -jar VoIPAppWindow -c <ConfigFilePath>");
 			System.exit(1);
 		}
-//		EventQueue.invokeLater(new Runnable() {
-//			public void run() {
-//
-//				try {
-//					
-//					if(params.length==2 && params[0].equals("-c")){
-//						appWindow = new VoIPAppWindow(params[1]);
-//						UIManager.setLookAndFeel(UIManager.getSystemLookAndFeelClassName());
-//						appWindow.setVisible(true);
-//					} else {
-//						System.err.println("Usage: java -jar VoIPAppWindow -c <ConfigFilePath>");
-//						System.exit(1);
-//					}
-//					
-//					
-//				} catch (Exception e) {
-//					e.printStackTrace();
-//				}
-//			}
-//		});
-
 	}
 
 	@Override
 	public void onError(String error) {
-		// TODO Auto-generated method stub
+
 		lblStatusMsg.setText("Error in GoOnline -"+error);
 		lblStatusMsg.invalidate();
 	}
 
 	@Override
 	public void onException(Exception e) {
+
 		lblStatusMsg.setText("Unhandled Exception in GoOnline");
 		lblStatusMsg.invalidate();
 	}
 
 	@Override
 	public void onOnline() {
+	
 		lblStatusMsg.setText("Online");
 		lblStatusMsg.invalidate();
 		goOnlineModule.setCallReceiverListener(this);
@@ -365,16 +345,19 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 
 	@Override
 	public void onCallConnected(String pseudoId, byte[]sessionKey) {
+	
 		//save the new session key
-		this.sessionkey= sessionKey;
+		this.sessionkey = sessionKey;
 		//display status to user
 		lblStatusMsg.setText("Connected to: "+pseudoId);
 		lblStatusMsg.invalidate();
-		//start listening to voice data
+		
+		// start listening to voice data
 		voicePlayer = new VoicePlayer(sessionkey);
 		voicePlayer.init(configParser.getTunIP(), configParser.getVoipPort());
 		voicePlayer.start();
-		//start transmitting voice data
+		
+		// start transmitting voice data
 		voiceRecorder = new VoiceRecorder(sessionkey);
 		voiceRecorder.init(configParser.getTunIP(), configParser.getTestDestinatonIp(), configParser.getVoipPort());
 		voiceRecorder.start();
@@ -386,22 +369,22 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	public void onCallDisconnected(String pseudoId) {
 		lblStatusMsg.setText("Disconnected from: "+pseudoId);
 		lblStatusMsg.invalidate();
+		
 		if(voicePlayer!=null){
 			voicePlayer.stopSound();
 			voicePlayer =null;
 		}
+		
 		if(voiceRecorder!=null){
 			voiceRecorder.stopRecording();
 			voiceRecorder=null;
 		}
-		
 	}
 
 	@Override
 	public void onCallInitiated(String pseudoId) {
 		lblStatusMsg.setText("Connecting to: "+pseudoId);
-		lblStatusMsg.invalidate();
-		
+		lblStatusMsg.invalidate();	
 	}
 
 	@Override
@@ -428,13 +411,11 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		}
 	}
 
-
 	/* (non-Javadoc)
 	 * @see edu.tum.p2p.group20.voip.voice.CallInitiatorListener#onCallDeclined(java.lang.String)
 	 */
 	@Override
 	public void onCallDeclined(String pseudoId) {
-		// TODO Auto-generated method stub
 		lblStatusMsg.setText(pseudoId+" declined your call!");
 		lblStatusMsg.invalidate();
 	}
@@ -444,7 +425,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	 * @see edu.tum.p2p.group20.voip.intraPeerCom.GoOnlineEventListener#showPseudoID(java.lang.String)
 	 */
 	@Override
-	public void onPseudoIdReady(String hostPseudoIdentity) {
+	public void onPseudoIdReady(String hostPseudoIdentity) {		
 
 		txtFieldHostPseudoId.setText(hostPseudoIdentity);
 		txtFieldHostPseudoId.invalidate();

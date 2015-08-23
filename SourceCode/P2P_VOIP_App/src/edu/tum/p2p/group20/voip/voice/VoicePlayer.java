@@ -99,9 +99,8 @@ public class VoicePlayer extends Thread {
 			aes.setSessionKey(sessionkey,true);
 		} catch (NoSuchAlgorithmException | NoSuchProviderException
 				| NoSuchPaddingException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
-			//Display error to user although its our problem
+			// Display error to user although its our problem
 			return;
 		}
 		initializeSocket();
@@ -113,7 +112,6 @@ public class VoicePlayer extends Thread {
 				toSpeaker(aes.decryptToBytesWithSessionKey(plainData));
 			}
 		} catch (LineUnavailableException e) {
-			// TODO Auto-generated catch block
 			System.err.println("Cannot initialize line");
 			e.printStackTrace();
 		}
@@ -132,7 +130,6 @@ public class VoicePlayer extends Thread {
 		try {
 			md = MessageDigest.getInstance("SHA-256");
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		

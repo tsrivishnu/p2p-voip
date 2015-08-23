@@ -215,17 +215,13 @@ public class ConfigParser {
 	 * @return
 	 */
 	public String getTestDestinatonIp() {
-		// TODO Auto-generated method stub
 		return testDestinationIP;
 	}
-
-	
 
 	/**
 	 * @return
 	 */
 	public String getTestReceiverRsaKeyPair() {
-		// TODO Auto-generated method stub
 		return testReceiverRsaKeyPair;
 	}
 

@@ -66,9 +66,17 @@ public class KXSimulator {
 					case "2":
 						sendTunnelReady(new byte[4], new byte[16]);
 						break;
-					case "3":			
+					case "3":
+						// This is the destination Ip the caller uses to reach callee,
+						//	Since we are simulating this app, there is no real tunnel. So, the 
+						//	destination Ip for the caller should be the ip of the receiver in our case.
+						// 	As this is running in a local environment, you must have set the
+						//	TUN_IP on the callee's machine to callee's ip address. 
+						//	So, that becomes the destinationIP.
+						byte[] destinationIp = InetAddress.getByName(parser.getTunIP()).getAddress();
+						
 						sendTunnelReady(
-							InetAddress.getByName(parser.getTunIP()).getAddress(),
+							destinationIp, 
 							InetAddress.getByName("3ffe:2a00:100:7031::1").getAddress()
 						);
 						break;					

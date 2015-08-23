@@ -98,16 +98,9 @@ public class MessageCrypto {
 					BadPaddingException {
 		
 		cipher.init(Cipher.ENCRYPT_MODE, keySpec);
-		
-        byte[] toEncryptBytes = toEncrypt.getBytes();
+		byte[] toEncryptBytes = toEncrypt.getBytes();
         
-        // TODO Use the encryptWithSessionKey(byte[] toEncryptBytes) here 
-
-        byte[] cipherText = new byte[cipher.getOutputSize(toEncryptBytes.length)];
-        int ctLength = cipher.update(toEncryptBytes, 0, toEncryptBytes.length, cipherText, 0);
-        ctLength += cipher.doFinal(cipherText, ctLength);
-        
-        return cipherText;
+        return encryptWithSessionKey(toEncryptBytes);
 	}
 	
 	public byte[] encryptWithSessionKey(byte[] toEncryptBytes) throws InvalidKeyException, IllegalBlockSizeException, ShortBufferException, BadPaddingException {
@@ -119,28 +112,16 @@ public class MessageCrypto {
         
         return cipherText;
 	}
-	
+
 	/**
 	 * Decrypts a given cipher text using the session key and return plain text as a string.
 	 * 
 	 * @param cipherText
 	 * @return Plain text for the corresponding cipher text as string
-	 * @throws InvalidKeyException
-	 * @throws ShortBufferException
-	 * @throws IllegalBlockSizeException
-	 * @throws BadPaddingException
 	 */
-	public String decryptWithSessionKey(byte[] cipherText) throws InvalidKeyException,
-					ShortBufferException, IllegalBlockSizeException,
-					BadPaddingException {
-		
-		// TODO use the decryptToBytesWithSessionKey(byte[] cipherText) method
-		
-		cipher.init(Cipher.DECRYPT_MODE, keySpec);
-        byte[] plainText = new byte[cipher.getOutputSize(cipherText.length)];
-        int ptLength = cipher.update(cipherText, 0, cipherText.length, plainText, 0);
-        ptLength += cipher.doFinal(plainText, ptLength);
-        
+	public String decryptWithSessionKey(byte[] cipherText) {
+		        
+        byte[] plainText = decryptToBytesWithSessionKey(cipherText);
         return new String(plainText).trim(); // trim because the length of the string from byte array is wrong.
 	}
 	
@@ -154,8 +135,7 @@ public class MessageCrypto {
 		} catch (InvalidKeyException | ShortBufferException | IllegalBlockSizeException | BadPaddingException e){
 			e.printStackTrace();
 		}
-        
-        
+       
         return plainText;
 	}
 	

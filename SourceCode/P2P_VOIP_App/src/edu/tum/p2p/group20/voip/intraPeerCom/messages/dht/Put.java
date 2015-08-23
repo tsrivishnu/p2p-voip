@@ -30,8 +30,6 @@ public class Put extends RequestMessage {
 		};
 	}
 	
-	
-	// TODO Probably, take hostKeyPair, it can perform signing and etc., as needed.
 	public Put (byte[] pseudoId, short ttl, int replication, KeyPair rsaKeyPair, byte[] xchangePointInfo) throws IOException, InvalidKeyException, SignatureException, NoSuchAlgorithmException {
 		super();
 		byteValues.put("pseudoId", pseudoId);

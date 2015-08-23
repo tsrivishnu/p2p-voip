@@ -88,7 +88,6 @@ public class VoiceRecorder extends Thread {
 	 * @param sessionkey2
 	 */
 	public VoiceRecorder(byte[] sessionkey) {
-		// TODO Auto-generated constructor stub
 		sessionKey=sessionkey;
 	}
 
@@ -128,14 +127,13 @@ public class VoiceRecorder extends Thread {
 	 */
 	public static void main(String[] args) {
 		
-		// TODO Remove this testing code
-		
+		// This main method is used only to test.
+		//	Don't bother about it
 		MessageDigest md = null;
 		
 		try {
 			md = MessageDigest.getInstance("SHA-256");
 		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		
@@ -166,7 +164,6 @@ public class VoiceRecorder extends Thread {
 			System.out.println("tunIP="+tunIP);
 			sock = new DatagramSocket(0,InetAddress.getByName(tunIP));
 		} catch (SocketException e) {
-			// TODO Auto-generated catch block
 			System.out.println(" Unable to initialize UDP socket");
 			e.printStackTrace();
 		} catch (UnknownHostException e) {

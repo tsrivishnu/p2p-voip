@@ -99,23 +99,22 @@ public class GoOnline implements CallReceiverListener{
 			*/
 			PublicKey rsaPublicKey = hostKeyPair.getPublic();
 			SHA2 sha2 = new SHA2();
-			String hostPseudoIdentity = Base64.encodeBase64String(
-				sha2.makeSHA2Hash(rsaPublicKey.getEncoded())
-			);
-
-			System.out.println("Give this id to the other user: " + hostPseudoIdentity);
-			eventListener.onPseudoIdReady(hostPseudoIdentity);
-			// KX and DHT will always save SHA-256 hashed bytes of the peduoIdentity 
-			// 	which is base64 encoded rsapublickey
-			//	When we give the use, we give him the Base64 encoded RsaPublicKey
+			// PseudoID is the hash of the publickey. 
 			byte[] pseduoIdBytes = sha2.makeSHA2Hash(rsaPublicKey.getEncoded());
+
+			// To user we give the Base64 encoded string of the pseudoId so that he
+			//	can copy it as a string and send to whomever he wants
+			String hostPseudoIdentity = Base64.encodeBase64String(pseduoIdBytes);
+
+			eventListener.onPseudoIdReady(hostPseudoIdentity);			
+			
 			byte[] randomPsuedoId = null;
 
 			// finding a exchange point.
 			boolean isRandomPseudoIdChosen = false;
-			// TODO what if you are never able to find a random non existing
-			// pseudo id?
-			// this loop continues for ever?
+
+			// Find a randomPseudoId and check if it exists, if is doesn't
+			//	that is the id we need
 			while (!isRandomPseudoIdChosen) {
 				// Pick a random pseudo id
 				randomPsuedoId = sha2.makeSHA2Hash(new java.util.Date()
@@ -180,18 +179,12 @@ public class GoOnline implements CallReceiverListener{
 						}
 					}).start();
 				}catch(IOException e){
-					//TODO: show error to user and use log4j here
-					
+					//TODO: show error to user and use log4j here					
 					e.printStackTrace();
 				}
 				//TODO: loop serverSocket.accept() to handle more connection
 	        	//TODO: create a thread to handle a single client socket
-				
-				
-				
-				
 
-				
 				sendDhtPutMessage(pseduoIdBytes, hostKeyPair, xChangePointInfoForKx);
 				//lastReceivedMessage = dhtCommunicator.readIncomingAndHandleError(); 
 				// This is just to see if you would get any error
@@ -210,9 +203,7 @@ public class GoOnline implements CallReceiverListener{
 
 			}
 		} catch (IOException e) {
-			System.out
-					.println("Exception caught when trying to connect on port "
-							+ configParser);
+			System.out.println("Exception caught when trying to connect on port " + configParser);
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 			if(eventListener!=null){
@@ -220,9 +211,7 @@ public class GoOnline implements CallReceiverListener{
 			}
 			return false;
 		} catch (Exception e) {
-			System.err
-					.println("Exception caught when trying to connect on port "
-							+ configParser);
+			System.err.println("Exception caught when trying to connect on port " + configParser);
 			System.err.println(e.getMessage());
 			e.printStackTrace();
 			if(eventListener!=null){
@@ -236,12 +225,9 @@ public class GoOnline implements CallReceiverListener{
 		return eventListener;
 	}
 
-
-
 	public void setEventListener(GoOnlineEventListener eventListener) {
 		this.eventListener = eventListener;
 	}
-
 
 	private static byte[] doDhtTraceForRandomExchangePoint(byte[] key)
 			throws Exception {
@@ -282,34 +268,24 @@ public class GoOnline implements CallReceiverListener{
 		kxCommunicator.sendMessage(buildTnMessage);
 	}
 
-
-
 	@Override
 	public boolean onIncomingCall(String pseudoId, byte[] sessionKey) {
 		return callReceiverListener.onIncomingCall(pseudoId, sessionKey);
 	}
 
-
-
 	@Override
 	public void onCallConnected(String pseudoId, byte[] sessionKey) {
-		// TODO Auto-generated method stub		
 		callReceiverListener.onCallConnected(pseudoId,sessionKey);
 	}
 
-
 	@Override
 	public void onCallDisconnected(String psudoId) {
-		// TODO Auto-generated method stub
 		callReceiverListener.onCallDisconnected(psudoId);
 	}
-
-
 
 	public CallReceiverListener getCallReceiverListener() {
 		return callReceiverListener;
 	}
-
 
 	/**
 	 * Register a CallReceiverListern to handle call notifications

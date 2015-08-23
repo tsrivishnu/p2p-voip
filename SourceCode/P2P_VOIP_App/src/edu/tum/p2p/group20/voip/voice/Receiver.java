@@ -75,13 +75,13 @@ public class Receiver extends Thread {
             KeyPair hostKeyPair = RSA.getKeyPairFromFile(configParser.getHostKey());
             PublicKey otherPartyPublicKey = null; // We get to know this from PING message.
         	otherPartyPseudoIdentity = null; // We get to know this from PING message.
-        	//TODO: hash the public key of hostKeyPair to get hostPseudoIdentity
-        	PublicKey hostPublicKey = hostKeyPair.getPublic();
-        	
-        	
+
+        	// Hash the public key of hostKeyPair to get hostPseudoIdentity
+        	PublicKey hostPublicKey = hostKeyPair.getPublic();        
         	SHA2 sha2 = new SHA2();
-        	//TODO: check how to get this host public key as a string
-        	String hostPseudoIdentity = Base64.encodeBase64String(sha2.makeSHA2Hash(hostPublicKey.getEncoded())); 
+        	String hostPseudoIdentity = Base64.encodeBase64String(
+        		sha2.makeSHA2Hash(hostPublicKey.getEncoded())
+        	); 
         	
         	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
         	
@@ -105,9 +105,6 @@ public class Receiver extends Thread {
             	System.out.println(receivedPingMessage.get("type"));
             	
             	// Learn caller's public key and pseudoIdentity
-            	// TODO These details need to be verified somehow! We now don't know if the
-            	// 		caller is who he says he is. Probably, make pseudo-identity some 
-            	//      kind of hash of public key? 
             	otherPartyPseudoIdentity = (String) receivedPingMessage.get("sender");
             	System.out.println(otherPartyPseudoIdentity);
             	
@@ -280,34 +277,9 @@ public class Receiver extends Thread {
             System.out.println("Exception caught when trying to listen on port "
                 + portNumber + " or listening for a connection");
             System.out.println(e.getMessage());
-        } catch (ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (java.text.ParseException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SignatureException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (ShortBufferException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (IllegalBlockSizeException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (BadPaddingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (Exception e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+        } catch (Exception e) {
+        	e.printStackTrace();
+        }
     }
     
     public void disconnectCall(){
@@ -317,7 +289,6 @@ public class Receiver extends Thread {
 				clientSocket.close();
 				clientSocket=null;
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
     	}

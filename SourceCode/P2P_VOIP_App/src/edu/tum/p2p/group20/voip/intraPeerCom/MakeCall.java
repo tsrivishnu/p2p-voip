@@ -80,10 +80,8 @@ public class MakeCall {
         		//create the object for sender module
         		sender = new Sender();
         		sender.setCallInitiatorListener(callInitiatorListener);
-        		//TODO: check this id needs to be send or public key
+        		// initiate sender with destination point info
         		sender.initiateCall(calleeId, remotePublicKey, destinationIpv4.getHostAddress(), configParser);
-        		//initialize sender with destination point info
-        		
         	} else {
         		System.out.println("Cannot connect");
         	}

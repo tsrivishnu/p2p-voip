@@ -50,7 +50,6 @@ public class TestingSender {
 			
 			@Override
 			public void onCallAccepted(String pseudoId,byte[] sessionKey) {
-				// TODO Auto-generated method stub
 				System.out.println("onCallAccepted");
 				System.out.println("sessionKey="+Base64.encodeBase64String(sessionKey));
 			}
@@ -66,7 +65,7 @@ public class TestingSender {
 	    	//TOOD: get this IP from TUN_READY destination IP
 			sender.initiateCall(receiverPseudoId, remotePublicKey,"192.168.1.4", parser);
 		} catch ( Exception e) {
-			// TODO Auto-generated catch block
+
 			e.printStackTrace();
 		}
 		

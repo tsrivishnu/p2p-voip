@@ -88,20 +88,15 @@ public class Sender {
         	
         	String inputLine;
         	
-        	// get hostkey
-        	// will come from cmd line or settings
         	hostKeyPair = RSA.getKeyPairFromFile(configParser.getHostKey());
         	hostPublicKeyEncoded = Base64.encodeBase64String(hostKeyPair.getPublic().getEncoded());
         	
-        	//TODO: check what comes from UI the public key or the pseudoID
         	this.otherPartyPublicKey = otherPartyPublicKey;
         	
         	SHA2 sha2 = new SHA2();
         	hostPseudoIdentity = Base64.encodeBase64String(sha2.makeSHA2Hash(hostKeyPair.getPublic().getEncoded()));
-        	//get this from UI
+        	// We get this from UI
         	this.otherPartyPseudoIdentity = otherPartyPseudoIdentity;
-        	
-        	System.out.println(hostPseudoIdentity);
         	
         	messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
         	
@@ -198,7 +193,6 @@ public class Sender {
 					
 					@Override
 					public void run() {
-						// TODO Auto-generated method stub
 						
 		            	while(!stop){
 		            		
@@ -232,7 +226,7 @@ public class Sender {
 									NoSuchAlgorithmException | ShortBufferException |
 									IllegalBlockSizeException | BadPaddingException |
 									java.text.ParseException e) {
-								// TODO Auto-generated catch block
+								
 								e.printStackTrace();
 								stop=true;
 		                		callInitiatorListener.onCallDisconnected(otherPartyPseudoIdentity);
@@ -270,7 +264,7 @@ public class Sender {
 						} catch (InvalidKeyException | NoSuchAlgorithmException
 								| SignatureException
 								| UnsupportedEncodingException e) {
-							// TODO Auto-generated catch block
+
 							e.printStackTrace();
 						}
 					}
@@ -296,7 +290,7 @@ public class Sender {
 
 	public void setCallInitiatorListener(
 			CallInitiatorListener callInitiatorListener) {
-		// TODO Auto-generated method stub
+
 		this.callInitiatorListener=callInitiatorListener;
 		
 	}
@@ -310,24 +304,15 @@ public class Sender {
         	disconnectMsg.encrypt();
         	out.println(disconnectMsg.asJSONStringForExchange());
 			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (InvalidKeyException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (NoSuchAlgorithmException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		} catch (SignatureException e) {
-			// TODO Auto-generated catch block
+		} catch (IOException | InvalidKeyException |
+				NoSuchAlgorithmException | SignatureException e) {
+
 			e.printStackTrace();
 		} finally{
 			if(socket!=null){
 				try {
 					socket.close();
 				} catch (IOException e) {
-					// TODO Auto-generated catch block
 					e.printStackTrace();
 				}
 				socket=null;

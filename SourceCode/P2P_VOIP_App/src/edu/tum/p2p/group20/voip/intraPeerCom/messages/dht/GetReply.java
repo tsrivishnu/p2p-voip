@@ -24,6 +24,7 @@ public class GetReply extends ReceivedMessage {
 		byteValues.put("size", Arrays.copyOfRange(fullMessageBytes, 0, 2));
 		byteValues.put("messageCode", Arrays.copyOfRange(fullMessageBytes, 2, 4));
 		byteValues.put("pseudoId", Arrays.copyOfRange(fullMessageBytes, 4, 36));
+
 		// TODO Find out if public key is always gonna be 550 bytes
 		byteValues.put("publicKey", Arrays.copyOfRange(fullMessageBytes, 36, 586));
 		byteValues.put("pseudoIdToBeSigned", Arrays.copyOfRange(fullMessageBytes, 586, 618)); // 32 bytes

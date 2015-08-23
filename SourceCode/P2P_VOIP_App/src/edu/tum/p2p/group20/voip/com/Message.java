@@ -188,7 +188,6 @@ public class Message {
 			isEncrypted = true;
 		} catch (InvalidKeyException | ShortBufferException
 				| IllegalBlockSizeException | BadPaddingException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 		

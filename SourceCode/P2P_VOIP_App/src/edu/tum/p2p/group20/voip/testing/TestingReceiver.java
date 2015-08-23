@@ -53,10 +53,6 @@ public class TestingReceiver {
 	 * @param args
 	 */
 	public static void main(String[] args) {
-		// TODO Auto-generated method stub
-		
-				
-		
 		
 		ConfigParser parser;
 		try {
@@ -64,15 +60,12 @@ public class TestingReceiver {
 			ServerSocket ss = new ServerSocket(parser.getVoipPort());
 			
 			Socket clientSocket = ss.accept();
-//			KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
-//	    	RSAPublicKey remotePublicKey = (RSAPublicKey) hostKeyPair.getPublic();
-//	    	MessageDigest md = MessageDigest.getInstance("SHA-256");
-//	    	String calleeId = new String(Base64.encodeBase64(md.digest(remotePublicKey.getEncoded())));
+
 	    	CallReceiverListener listener = new CallReceiverListener() {
 				
 				@Override
 				public boolean onIncomingCall(String pseudoId, byte[] sessionKey) {
-					// TODO Auto-generated method stub
+
 					System.out.println("onIncomingCall");
 					int dialogButton = JOptionPane.YES_NO_OPTION;
 		            int result = JOptionPane.showConfirmDialog (null, 
@@ -86,27 +79,20 @@ public class TestingReceiver {
 				
 				@Override
 				public void onCallDisconnected(String psudoId) {
-					// TODO Auto-generated method stub
 					System.out.println("onCallDisconnected");
 				}
 				
 				@Override
 				public void onCallConnected(String pseudoId, byte[] sessionKey) {
-					// TODO Auto-generated method stub
 					System.out.println("onCallConnected");
-					System.out.println("sessionKey="+Base64.encodeBase64String(sessionKey));
+					System.out.println("sessionKey = "+Base64.encodeBase64String(sessionKey));
 				}
 			};
 			Receiver receiver = new Receiver(clientSocket,parser,listener);
 			receiver.start();
 	    	
 		} catch ( Exception e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	}
-
-
-
 }
