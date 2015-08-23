@@ -187,9 +187,6 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		mnSettings.add(mntmSettings);
 		setBounds(0, 0, 640, 480);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
-		
-		
 	}
 
 
@@ -201,15 +198,8 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 				if(goOnlineModule==null){
 					goOnlineModule = new GoOnline();
 					goOnlineModule.setEventListener(this);
-					//Todo: get this port number from settings
 					try {
 						boolean result = goOnlineModule.goOnline(configParser);
-//						if(result){
-//							lblStatusMsg.setText("You are Online now!");
-//						} else {
-//							lblStatusMsg.setText("Offline!");
-//						}
-//						lblStatusMsg.invalidate();
 					} catch (Exception e) {
 						System.err.println(e.getMessage());
 						e.printStackTrace();
@@ -236,7 +226,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 				
 			case "Call" :
 				String pseudoId = recepientName.getText();
-				if(makeCallModule ==null){
+				if( (!"".equals(pseudoId)) && makeCallModule == null){
 					makeCallModule = new MakeCall();
 				}
 				try {
@@ -377,11 +367,6 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		voicePlayer.setCallReceiverListener(this);
 		voicePlayer.init(configParser.getTunIP(), configParser.getVoipPort());
 		voicePlayer.start();
-//		
-//		// start transmitting voice data
-//		voiceRecorder = new VoiceRecorder(sessionkey);
-//		voiceRecorder.init(configParser.getTunIP(), configParser.getTestDestinatonIp(), configParser.getVoipPort());
-//		voiceRecorder.start();
 	}
 
 
@@ -476,10 +461,5 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	public void onCallFailed(String calleeId) {
 		lblStatusMsg.setText("Unable to call "+ calleeId);
 		lblStatusMsg.invalidate();
-		
 	}
-
-
-	
-	
 }
