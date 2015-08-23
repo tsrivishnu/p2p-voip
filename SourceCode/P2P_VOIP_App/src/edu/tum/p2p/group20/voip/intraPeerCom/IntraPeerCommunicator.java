@@ -33,7 +33,7 @@ public class IntraPeerCommunicator {
 	 * @throws IOException
 	 */
 	public IntraPeerCommunicator(String ip, int portNumber)
-			throws UnknownHostException, IOException {
+		throws UnknownHostException, IOException {
 
 		clientSocket = new Socket(ip, portNumber);
 		clientSocket.setSoTimeout(10000); // 10 Seconds timeout
@@ -81,11 +81,11 @@ public class IntraPeerCommunicator {
 	 * @throws Exception
 	 */
 	private void raiseExceptionIfError(ReceivedMessage lastReceivedMessage)
-			throws Exception {
+		throws Exception {
 
 		if (lastReceivedMessage != null && lastReceivedMessage.isErrorType()) {
 			throw new Exception("Error message Received: "
-					+ lastReceivedMessage.name());
+				+ lastReceivedMessage.name());
 		}
 	}
 
@@ -115,16 +115,16 @@ public class IntraPeerCommunicator {
 			byteStream.write(incomingBytes);
 
 			ReceivedMessage lastReceivedMessage = ReceivedMessageFactory
-					.getReceivedMessageFor(byteStream.toByteArray());
+				.getReceivedMessageFor(byteStream.toByteArray());
 
 			System.out.println("Received message: "
-					+ lastReceivedMessage.name());
+				+ lastReceivedMessage.name());
 
 			return lastReceivedMessage;
 
 		} catch (IOException e) {
 			System.out
-					.println("Exception caught while trying to read network message");
+				.println("Exception caught while trying to read network message");
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 			return null;
@@ -142,10 +142,10 @@ public class IntraPeerCommunicator {
 	 * @throws Exception
 	 */
 	protected boolean isValidMessage(ReceivedMessage receivedMessage,
-			String expectedName, byte[] pseudoId) throws Exception {
+		String expectedName, byte[] pseudoId) throws Exception {
 
 		return (receivedMessage != null
-				&& receivedMessage.name().equals(expectedName) && receivedMessage
-					.isValid(pseudoId));
+			&& receivedMessage.name().equals(expectedName) && receivedMessage
+				.isValid(pseudoId));
 	}
 }

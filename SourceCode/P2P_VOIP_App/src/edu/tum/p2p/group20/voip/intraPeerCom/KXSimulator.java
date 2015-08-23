@@ -56,7 +56,7 @@ public class KXSimulator {
 				userMessage += "\n5.Send nothing";
 				userMessage += "\n6.BREAK";
 				System.out.println(userMessage);
-				
+
 				switch (userIn.nextLine()) {
 					case "2":
 						// For IN tunnel ready, destination ips can be empty
@@ -64,24 +64,23 @@ public class KXSimulator {
 						break;
 					case "3":
 						// This is the destination Ip the caller uses to reach
-						// callee, Since we are simulating this app, there is 
+						// callee, Since we are simulating this app, there is
 						// no real tunnel. So, the destination Ip for the
 						// caller should be the ip of the receiver in our case.
-						// As this is  running in a local environment, you
+						// As this is running in a local environment, you
 						// must have set the TUN_IP on the callee's machine to
 						// callee's ip address. So, that becomes the
 						// destinationIP.
-						
+
 						byte[] destinationIp = InetAddress.getByName(
 							parser.getTunIP()
-						).getAddress();
+							).getAddress();
 
 						sendTunnelReady(
 							destinationIp,
 							InetAddress.getByName("3ffe:2a00:100:7031::1")
-								.getAddress()
-						);
-						
+								.getAddress());
+
 						break;
 					case "4":
 						sendErrorReply("MSG_KX_ERROR");
@@ -95,8 +94,8 @@ public class KXSimulator {
 
 		} catch (IOException e) {
 			System.out
-					.println("Exception caught when trying to connect on port "
-							+ portNumber);
+				.println("Exception caught when trying to connect on port "
+					+ portNumber);
 			System.out.println(e.getMessage());
 		}
 	}
@@ -118,10 +117,10 @@ public class KXSimulator {
 		byteStream.write(incomingBytes);
 
 		short messageCode = Helper.shortFromNetworkOrderedBytes(Arrays
-				.copyOfRange(byteStream.toByteArray(), 2, 4));
+			.copyOfRange(byteStream.toByteArray(), 2, 4));
 
 		System.out.println("Received Message: "
-				+ MessagesLegend.nameForCode(messageCode));
+			+ MessagesLegend.nameForCode(messageCode));
 		lastReceivedMessageName = MessagesLegend.nameForCode(messageCode);
 		lastReceivedMessage = byteStream.toByteArray();
 
@@ -137,17 +136,17 @@ public class KXSimulator {
 	 * @throws IOException
 	 */
 	private static byte[] prependSizeForMessage(byte[] message)
-			throws IOException {
-		
+		throws IOException {
+
 		byte[] size = Helper.networkOrderedBytesFromShort(
 			(short) (message.length + 2)
-		); // +2 for the size of the Size field
-		
+			); // +2 for the size of the Size field
+
 		ByteArrayOutputStream outputStream2 = new ByteArrayOutputStream();
 		outputStream2.write(size);
 		outputStream2.write(message);
 		byte[] fullMessage = outputStream2.toByteArray();
-		
+
 		return fullMessage;
 	}
 
@@ -159,15 +158,15 @@ public class KXSimulator {
 	 * @throws IOException
 	 */
 	private static void sendTunnelReady(byte[] destinationIpv4,
-			byte[] destinationIpv6) throws IOException {
+		byte[] destinationIpv6) throws IOException {
 
 		byte[] key = Arrays.copyOfRange(lastReceivedMessage, 8, 40);
 
 		byte[] messageCode = Helper
 			.networkOrderedBytesFromShort(
-				(short) MessagesLegend.codeForName("MSG_KX_TN_READY")
+			(short) MessagesLegend.codeForName("MSG_KX_TN_READY")
 			);
-		
+
 		byte[] reserved = new byte[4];
 
 		ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
@@ -178,7 +177,7 @@ public class KXSimulator {
 		outputStream.write(destinationIpv6);
 
 		byte[] fullTunnelReadyMessage = prependSizeForMessage(outputStream
-				.toByteArray());
+			.toByteArray());
 		out.write(fullTunnelReadyMessage, 0, fullTunnelReadyMessage.length);
 	}
 
@@ -194,7 +193,7 @@ public class KXSimulator {
 
 		byte[] messageCode = Helper
 			.networkOrderedBytesFromShort(
-				(short) MessagesLegend.codeForName(messageName)
+			(short) MessagesLegend.codeForName(messageName)
 			);
 		byte[] reserved = new byte[2];
 		byte[] request_type = Helper.networkOrderedBytesFromShort((short) 10);
@@ -206,7 +205,7 @@ public class KXSimulator {
 		outputStream.write(key);
 
 		byte[] fullDhtErrorMessage = prependSizeForMessage(outputStream
-				.toByteArray());
+			.toByteArray());
 		out.write(fullDhtErrorMessage, 0, fullDhtErrorMessage.length);
 	}
 }

@@ -20,6 +20,10 @@ import edu.tum.p2p.group20.voip.intraPeerCom.MessagesLegend;
  */
 public class ReceivedMessage {
 	
+	/**
+	 * Fields that are part of the message.
+	 * Override these for each message child class
+	 */
 	public String[] fields() {
 		return new String[] {
 		  "size",
@@ -28,6 +32,10 @@ public class ReceivedMessage {
 		};
 	}
 	
+	/**
+	 * Message name which determines the message code.
+	 * Override this for each message child class
+	 */
 	public String messageName() {
 		return "";
 	}

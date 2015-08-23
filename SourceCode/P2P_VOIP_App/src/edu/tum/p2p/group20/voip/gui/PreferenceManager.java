@@ -2,6 +2,13 @@ package edu.tum.p2p.group20.voip.gui;
 
 import java.util.prefs.Preferences;
 
+/**
+ * This class could help in future to change settings dynamically and saved
+ * into a permanent storage instead of relying on a config file. 
+ * 
+ * @author Sri Vishnu Totakura <srivishnu@totakura.in>, Anshul Vij
+ *
+ */
 public class PreferenceManager {
 	
 	private Preferences pref;
@@ -59,5 +66,4 @@ public class PreferenceManager {
 	public void remove(String key){
 		pref.remove(key);
 	} 
-
 }
