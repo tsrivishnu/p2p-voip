@@ -287,8 +287,7 @@ public class Receiver extends Thread {
     	//Send disconnect message to clientSocket
     	Message disconnectMsg = new Message(messageCrypto);
     	disconnectMsg.put("type", "CALL_DISCONNECT");
-    	disconnectMsg.put("verificationHash", moduleValidator.digest);
-    	disconnectMsg.put("verificationTimestamp", moduleValidator.timestampString);
+    	disconnectMsg.encrypt();
     	try {
 			out.println(disconnectMsg.asJSONStringForExchange());
 			out.flush();

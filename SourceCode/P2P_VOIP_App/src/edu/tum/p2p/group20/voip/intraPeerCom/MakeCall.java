@@ -21,9 +21,9 @@ import edu.tum.p2p.group20.voip.voice.Sender;
 
 // TODO handle KX_TN_DESTROY when the process has to be killled
 public class MakeCall {
-	public static ReceivedMessage lastReceivedMessage;
-	public static IntraPeerCommunicator dhtCommunicator;
-	public static IntraPeerCommunicator kxCommunicator;
+	public  ReceivedMessage lastReceivedMessage;
+	public  IntraPeerCommunicator dhtCommunicator;
+	public  IntraPeerCommunicator kxCommunicator;
 	private Sender sender;
 	private CallInitiatorListener callInitiatorListener;
 	private ConfigParser configParser;
