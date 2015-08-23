@@ -136,8 +136,8 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		panel.add(btnCall, "6, 6");
 		
 		JButton btnDisconnect = new JButton("Disconnect");
-		btnCall.setActionCommand("Disconnect");
-		btnCall.addActionListener(this);
+		btnDisconnect.setActionCommand("Disconnect");
+		btnDisconnect.addActionListener(this);
 		
 		panel.add(btnDisconnect, "6, 8");
 		
@@ -309,14 +309,12 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 
 	@Override
 	public void onException(Exception e) {
-		// TODO Auto-generated method stub
 		lblStatusMsg.setText("Unhandled Exception in GoOnline");
 		lblStatusMsg.invalidate();
 	}
 
 	@Override
 	public void onOnline() {
-		// TODO Auto-generated method stub
 		lblStatusMsg.setText("Online");
 		lblStatusMsg.invalidate();
 		goOnlineModule.setCallReceiverListener(this);
@@ -367,11 +365,16 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 
 	@Override
 	public void onCallConnected(String pseudoId, byte[]sessionKey) {
-		// TODO Auto-generated method stub
+		//save the new session key
+		this.sessionkey= sessionKey;
+		//display status to user
+		lblStatusMsg.setText("Connected to: "+pseudoId);
+		lblStatusMsg.invalidate();
+		//start listening to voice data
 		voicePlayer = new VoicePlayer(sessionkey);
 		voicePlayer.init(configParser.getTunIP(), configParser.getVoipPort());
 		voicePlayer.start();
-		
+		//start transmitting voice data
 		voiceRecorder = new VoiceRecorder(sessionkey);
 		voiceRecorder.init(configParser.getTunIP(), configParser.getTestDestinatonIp(), configParser.getVoipPort());
 		voiceRecorder.start();
@@ -381,7 +384,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 
 	@Override
 	public void onCallDisconnected(String pseudoId) {
-		lblStatusMsg.setText("Disconnect from: "+pseudoId);
+		lblStatusMsg.setText("Disconnected from: "+pseudoId);
 		lblStatusMsg.invalidate();
 		if(voicePlayer!=null){
 			voicePlayer.stopSound();
@@ -442,8 +445,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	 */
 	@Override
 	public void onPseudoIdReady(String hostPseudoIdentity) {
-		// TODO Auto-generated method stub
-		
+
 		txtFieldHostPseudoId.setText(hostPseudoIdentity);
 		txtFieldHostPseudoId.invalidate();
 	}
