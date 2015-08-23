@@ -27,7 +27,7 @@ public class ConfigParser {
 	
 	// These are used only during test!
 	private String testDestinationIP; 
-	private String testReceiverRsaKeyPair;
+	private String testRemoteRsaKeyPair;
 	
 	private HierarchicalINIConfiguration configIni;
 	/**
@@ -57,7 +57,7 @@ public class ConfigParser {
 			configParser.tunIP=configParser.configIni.getSection("KX").getString("TUN_IP",null);
 			
 			configParser.testDestinationIP=configParser.configIni.getSection("VOIP").getString("TEST_DESTINATION_IP",null);
-			configParser.testReceiverRsaKeyPair=configParser.configIni.getSection("VOIP").getString("TEST_RECEIVER_RSA_KEYPAIR",null);
+			configParser.testRemoteRsaKeyPair=configParser.configIni.getSection("VOIP").getString("TEST_REMOTE_RSA_KEYPAIR",null);
 
 			configParser.voipPort = configParser.configIni.getSection("VOIP").getInt("PORT");
 		}
@@ -148,8 +148,8 @@ public class ConfigParser {
 	/**
 	 * @return
 	 */
-	public String getTestReceiverRsaKeyPair() {
-		return testReceiverRsaKeyPair;
+	public String getTestRemoteRsaKeyPair() {
+		return testRemoteRsaKeyPair;
 	}
 
 	/* (non-Javadoc)
@@ -157,13 +157,13 @@ public class ConfigParser {
 	 */
 	@Override
 	public String toString() {
-		return "ConfigParser [hostKey=" + userHostKey + ", dhtPort=" + dhtPort
+		return "ConfigParser [userHostKey=" + userHostKey + ", dhtPort=" + dhtPort
 				+ ", dhtHost=" + dhtHost + ", dhtOverlayHost=" + dhtOverlayHost
 				+ ", kxPort=" + kxPort + ", kxhost=" + kxhost
 				+ ", kxOverlayHost=" + kxOverlayHost + ", tunIP=" + tunIP
 				+ ", hostlistAddress=" + hostlistAddress + ", hostList="
 				+ hostList + ", voipPort=" + voipPort + ", testDestinationIP="
 				+ testDestinationIP + ", testReceiverRsaKeyPair="
-				+ testReceiverRsaKeyPair + ", configIni=" + configIni + "]";
+				+ testRemoteRsaKeyPair + ", configIni=" + configIni + "]";
 	}
 }

@@ -64,7 +64,7 @@ public class TestingSender {
 		ConfigParser parser;
 		try {
 			parser = ConfigParser.getInstance("test/test_app_config.ini");
-			KeyPair remoteKeyPair = RSA.getKeyPairFromFile(parser.getTestReceiverRsaKeyPair());
+			KeyPair remoteKeyPair = RSA.getKeyPairFromFile(parser.getTestRemoteRsaKeyPair());
 	    	RSAPublicKey remotePublicKey = (RSAPublicKey) remoteKeyPair.getPublic();
 	    	MessageDigest md = MessageDigest.getInstance("SHA-256");
 	    	String receiverPseudoId = Base64.encodeBase64String(md.digest(remotePublicKey.getEncoded()));
