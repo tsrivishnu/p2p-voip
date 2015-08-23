@@ -33,8 +33,15 @@ public class KXSimulator {
 
 	public static void main(String[] args) throws Exception {
 
+		if (args.length != 1) {
+            System.err.println("Usage: java -jar KXSimulator.jar <config_file_path>");
+            System.exit(1);
+        }
+		
+		String configFilePath = args[0];
+		
 		try {
-			parser = ConfigParser.getInstance("lib/test_app_config.ini");
+			parser = ConfigParser.getInstance(configFilePath);
 
 			// Make sure for testing, the DHT and KX port are same in the config
 			// file!

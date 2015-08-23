@@ -63,7 +63,7 @@ public class TestingSender {
 		
 		ConfigParser parser;
 		try {
-			parser = ConfigParser.getInstance("test/test_app_config.ini");
+			parser = ConfigParser.getInstance("lib/test_app_config.ini");
 			KeyPair remoteKeyPair = RSA.getKeyPairFromFile(parser.getTestRemoteRsaKeyPair());
 	    	RSAPublicKey remotePublicKey = (RSAPublicKey) remoteKeyPair.getPublic();
 	    	MessageDigest md = MessageDigest.getInstance("SHA-256");

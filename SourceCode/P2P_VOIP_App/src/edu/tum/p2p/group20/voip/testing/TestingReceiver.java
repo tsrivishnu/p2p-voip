@@ -27,7 +27,7 @@ public class TestingReceiver {
 		
 		ConfigParser parser;
 		try {
-			parser = ConfigParser.getInstance("test/test_app_config.ini");
+			parser = ConfigParser.getInstance("lib/test_app_config.ini");
 			ServerSocket ss = new ServerSocket(parser.getVoipPort());
 			
 			Socket clientSocket = ss.accept();
