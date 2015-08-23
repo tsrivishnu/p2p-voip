@@ -16,6 +16,8 @@ import java.util.TimerTask;
 import javax.crypto.BadPaddingException;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.ShortBufferException;
+import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 
 import org.apache.commons.codec.binary.Base64;
 import org.json.simple.parser.ParseException;
@@ -139,7 +141,9 @@ public class Sender {
 			if ("PING_REPLY_BUSY".equals(pingReplyMessage.get("type"))) {
 				// the remote peer is busy
 				// show this info to user and stop the call
+				JOptionPane.showMessageDialog(new JFrame(), "The remote user is busy","User busy",JOptionPane.INFORMATION_MESSAGE);
 				callInitiatorListener.onCallDisconnected("The remote user is busy");
+				
 				return;
 
 			}
