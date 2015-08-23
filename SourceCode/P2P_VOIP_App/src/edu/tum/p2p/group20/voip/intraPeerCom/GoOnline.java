@@ -156,8 +156,15 @@ public class GoOnline implements CallReceiverListener {
 				Get dhtGet = new Get(randomPsuedoId);
 				System.out.println("Sending DHT_GET for randomID");
 				dhtCommunicator.sendMessage(dhtGet);
-				lastReceivedMessage = dhtCommunicator
-					.readIncomingAndHandleError();
+				
+				try {
+					lastReceivedMessage = dhtCommunicator
+						.readIncomingAndHandleError();
+				} catch (IOException e) {					
+					// If you get a socket timeout, that is fine in case of 
+					//	waiting for random pseudoId's GET_REPLY						
+				}
+				
 				// When either message is not received or message is not a valid
 				// reply,
 				// we have a random not existing pseudoId

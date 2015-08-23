@@ -95,37 +95,34 @@ public class IntraPeerCommunicator {
 	 * ReceivedMessage from the received bytes and returns it.
 	 * 
 	 * @return ReceivedMessage
+	 * @throws IOException 
 	 * @throws Exception
 	 */
-	private ReceivedMessage readIncomingMessage() throws Exception {
+	private ReceivedMessage readIncomingMessage() throws IOException {
 
+		byte[] buff = new byte[2];
+		// First read the length
+		in.read(buff, 0, buff.length);
+		short incomingSize = Helper.shortFromNetworkOrderedBytes(buff);
+
+		incomingSize = (short) (incomingSize - 2); // Cause two bytes are
+													// already read.
+		byte[] incomingBytes = new byte[incomingSize];
+		in.read(incomingBytes, 0, incomingSize);
+
+		ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
+		byteStream.write(buff);
+		byteStream.write(incomingBytes);
+
+		ReceivedMessage lastReceivedMessage;
 		try {
-			byte[] buff = new byte[2];
-			// First read the length
-			in.read(buff, 0, buff.length);
-			short incomingSize = Helper.shortFromNetworkOrderedBytes(buff);
-
-			incomingSize = (short) (incomingSize - 2); // Cause two bytes are
-														// already read.
-			byte[] incomingBytes = new byte[incomingSize];
-			in.read(incomingBytes, 0, incomingSize);
-
-			ByteArrayOutputStream byteStream = new ByteArrayOutputStream();
-			byteStream.write(buff);
-			byteStream.write(incomingBytes);
-
-			ReceivedMessage lastReceivedMessage = ReceivedMessageFactory
+			lastReceivedMessage = ReceivedMessageFactory
 				.getReceivedMessageFor(byteStream.toByteArray());
-
 			System.out.println("Received message: "
 				+ lastReceivedMessage.name());
 
 			return lastReceivedMessage;
-
-		} catch (IOException e) {
-			System.out
-				.println("Exception caught while trying to read network message");
-			System.out.println(e.getMessage());
+		} catch (Exception e) {				
 			e.printStackTrace();
 			return null;
 		}
