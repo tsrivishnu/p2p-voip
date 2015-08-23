@@ -13,6 +13,7 @@ import javax.swing.JPanel;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
+import java.util.HashMap;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -63,7 +64,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	private GoOnline goOnlineModule;
 	private MakeCall makeCallModule;
 	private Receiver receiver;
-	
+	private HashMap<String,Receiver> receiverMap;
 	private JLabel lblStatusMsg;
 	private VoicePlayer voicePlayer;
 	private VoiceRecorder voiceRecorder;
@@ -77,6 +78,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		try {
 			configParser = ConfigParser.getInstance(confiFileName);
 			System.out.println(configParser.toString());
+			receiverMap = new HashMap<String, Receiver>();
 		} catch (ConfigurationException e) {
 			//the config File was not found
 			e.printStackTrace();

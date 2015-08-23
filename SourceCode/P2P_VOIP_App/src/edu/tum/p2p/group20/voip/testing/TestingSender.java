@@ -57,13 +57,13 @@ public class TestingSender {
 		
 		ConfigParser parser;
 		try {
-			parser = ConfigParser.getInstance("lib/test_sample_app_config2.ini");
-			KeyPair hostKeyPair = RSA.getKeyPairFromFile("lib/receiver_private.pem");
-	    	RSAPublicKey remotePublicKey = (RSAPublicKey) hostKeyPair.getPublic();
+			parser = ConfigParser.getInstance("test/test_app_config.ini");
+			KeyPair remoteKeyPair = RSA.getKeyPairFromFile(parser.getTestReceiverRsaKeyPair());
+	    	RSAPublicKey remotePublicKey = (RSAPublicKey) remoteKeyPair.getPublic();
 	    	MessageDigest md = MessageDigest.getInstance("SHA-256");
 	    	String receiverPseudoId = Base64.encodeBase64String(md.digest(remotePublicKey.getEncoded()));
 	    	//TOOD: get this IP from TUN_READY destination IP
-			sender.initiateCall(receiverPseudoId, remotePublicKey,"192.168.1.4", parser);
+			sender.initiateCall(receiverPseudoId, remotePublicKey,parser.getTestDestinatonIp(), parser);
 		} catch ( Exception e) {
 
 			e.printStackTrace();

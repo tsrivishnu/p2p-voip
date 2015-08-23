@@ -1,24 +1,12 @@
 package edu.tum.p2p.group20.voip.voice;
 import java.net.*;
-import java.security.InvalidKeyException;
 import java.security.KeyPair;
-import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
-import java.security.SignatureException;
 import java.util.Date;
 import java.util.Timer;
 import java.util.TimerTask;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.*;
-
-import javax.crypto.BadPaddingException;
-import javax.crypto.IllegalBlockSizeException;
-import javax.crypto.ShortBufferException;
-
 import org.apache.commons.codec.binary.Base64;
-import org.json.simple.parser.ParseException;
-
 import edu.tum.p2p.group20.voip.com.Message;
 import edu.tum.p2p.group20.voip.com.MessageCrypto;
 import edu.tum.p2p.group20.voip.com.ModuleValidator;
@@ -26,7 +14,11 @@ import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.crypto.SHA2;
 import edu.tum.p2p.group20.voip.dh.SessionKeyManager;
-
+/**
+ * 
+ * @authors Anshul Vij <anshul.vij@tum.de>, Sri Vishnu Totakura <srivishnu@totakura.in>
+ *
+ */
 // Receiver is basically a Server in the TCP Client-Server paradigm.
 // It listens to receive messages on a socket.
 // To be more precise, it is the callee, who is ready to receive calls.
@@ -41,9 +33,10 @@ public class Receiver extends Thread {
 	private InetAddress bindAddress;
 	private boolean stop;//flag to quit the thread loop
 	private static int status=1;//status of the receiver
-	private final static int IDLE=1;//no incoming call
-	private final static int BUSY=2;//establishing incoming call
-	private final static int WAIT=3;//incoming call is already existing
+	private final static int IDLE=0;//no incoming call
+	private final static int BUSY=1;//establishing incoming call
+	private final static int WAIT=2;//incoming call is already existing
+	private static int connectedCallsCount=0;//use this to reply with BUSY message
 	protected static final long HEARTBEAT_TIMEOUT = 15000;
 	
 	private ConfigParser configParser;
