@@ -31,6 +31,17 @@ import edu.tum.p2p.group20.voip.voice.CallReceiverListener;
 import edu.tum.p2p.group20.voip.voice.Receiver;
 
 // TODO handle KX_TN_DESTROY when the process has to be killed
+/**
+ * Class responsible for taking the user online in the app.
+ * It makes him a callee waiting for calls.
+ * Process goes as follows
+ * 	It find a random pseudo Id for exchange point
+ * 	Builds an incoming tunnel
+ * 	Starts a thread to listen for calls on that thread.
+ * 
+ * @author Sri Vishnu Totakura <srivishnu@totakura.in>, Anshul Vij
+ *
+ */
 public class GoOnline implements CallReceiverListener {
 
 	public static ReceivedMessage lastReceivedMessage;
@@ -68,18 +79,24 @@ public class GoOnline implements CallReceiverListener {
 			try {
 
 				dhtCommunicator = new IntraPeerCommunicator(
-						configParser.getDhtHost(), configParser.getDhtPort());
+					configParser.getDhtHost(),
+					configParser.getDhtPort()
+				);
 			} catch (UnknownHostException e) {
 
-				JOptionPane.showMessageDialog(new JFrame(),
-						"Check DHT host address");
+				JOptionPane.showMessageDialog(
+					new JFrame(),
+					"Check DHT host address"
+				);
 				e.printStackTrace();
 
 				return false;
 			} catch (IOException e) {
 
-				JOptionPane.showMessageDialog(new JFrame(),
-						"Check if DHT module is running as per config ");
+				JOptionPane.showMessageDialog(
+					new JFrame(),
+					"Check if DHT module is running as per config "
+				);
 				e.printStackTrace();
 
 				return false;
@@ -89,7 +106,9 @@ public class GoOnline implements CallReceiverListener {
 			try {
 
 				kxCommunicator = new IntraPeerCommunicator(
-						configParser.getKxhost(), configParser.getKxPort());
+					configParser.getKxhost(),
+					configParser.getKxPort()
+				);
 			} catch (UnknownHostException e) {
 
 				JOptionPane.showMessageDialog(new JFrame(),
@@ -106,8 +125,10 @@ public class GoOnline implements CallReceiverListener {
 				return false;
 			}
 
-			KeyPair hostKeyPair = RSA.getKeyPairFromFile(configParser
-					.getHostKey());
+			KeyPair hostKeyPair = RSA.getKeyPairFromFile(
+				configParser.getHostKey()
+			);
+			
 			PublicKey rsaPublicKey = hostKeyPair.getPublic();
 			SHA2 sha2 = new SHA2();
 			// PseudoID is the hash of the publickey.
@@ -116,7 +137,7 @@ public class GoOnline implements CallReceiverListener {
 			// To user we give the Base64 encoded string of the pseudoId so that
 			// he can copy it as a string and send to whomever he wants
 			String hostPseudoIdentity = Base64
-					.encodeBase64String(pseduoIdBytes);
+										.encodeBase64String(pseduoIdBytes);
 			// Show the pseudoId to the user
 			eventListener.onPseudoIdReady(hostPseudoIdentity);
 
@@ -145,7 +166,8 @@ public class GoOnline implements CallReceiverListener {
 				// we have a random not existing pseudoId
 				// If message is a valid reply, that means the pseudo id exists.
 				if (lastReceivedMessage == null
-						|| !dhtGet.isValidReply(lastReceivedMessage)) {
+					|| !dhtGet.isValidReply(lastReceivedMessage)) {
+					
 					isRandomPseudoIdChosen = true;
 					System.out.println("Found a random Pseudo ID");
 				}
@@ -153,7 +175,7 @@ public class GoOnline implements CallReceiverListener {
 
 			byte[] xchangePointInfoFromTrace = doDhtTraceForRandomExchangePoint(randomPsuedoId);
 			byte[] xChangePointInfoForKx = Helper
-					.trasnformXChangePointInfoFromDhtToKx(xchangePointInfoFromTrace);
+				.trasnformXChangePointInfoFromDhtToKx(xchangePointInfoFromTrace);
 
 			// ================================================================
 			// Build KX Tunnel
@@ -161,8 +183,10 @@ public class GoOnline implements CallReceiverListener {
 			sendKxBuildIncomingTunnel(pseduoIdBytes, xChangePointInfoForKx);
 			lastReceivedMessage = kxCommunicator.readIncomingAndHandleError();
 
-			if (kxCommunicator.isValidMessage(lastReceivedMessage,
-					TnReady.messageName, pseduoIdBytes)) {
+			if (kxCommunicator.isValidMessage(
+					lastReceivedMessage,
+					TnReady.messageName, pseduoIdBytes
+				)) {
 
 				// get this ip from the config file
 				String inTunnelIP = configParser.getTunIP();
@@ -225,6 +249,7 @@ public class GoOnline implements CallReceiverListener {
 				return true;
 			}
 			else {
+				
 				System.out.println("Offline!");
 				if (eventListener != null) {
 					eventListener.onOffline();
@@ -233,6 +258,7 @@ public class GoOnline implements CallReceiverListener {
 
 			}
 		} catch (IOException e) {
+			
 			System.out
 					.println("Exception caught when trying to connect on port "
 							+ configParser);
@@ -243,6 +269,7 @@ public class GoOnline implements CallReceiverListener {
 			}
 			return false;
 		} catch (Exception e) {
+			
 			System.err
 					.println("Exception caught when trying to connect on port "
 							+ configParser);
