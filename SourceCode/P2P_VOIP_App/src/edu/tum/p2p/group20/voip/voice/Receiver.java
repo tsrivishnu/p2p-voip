@@ -82,7 +82,7 @@ public class Receiver extends Thread {
 			// Get host's pseudoId
 			// Hash the public key of hostKeyPair to get hostPseudoIdentity
 			KeyPair hostKeyPair = RSA.getKeyPairFromFile(
-				configParser.getHostKey()
+				configParser.getUserHostKey()
 			);
 			String hostPseudoIdentity = Base64.encodeBase64String(
 				new SHA2().makeSHA2Hash(hostKeyPair.getPublic().getEncoded())

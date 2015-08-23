@@ -126,7 +126,7 @@ public class GoOnline implements CallReceiverListener {
 			}
 
 			KeyPair hostKeyPair = RSA.getKeyPairFromFile(
-				configParser.getHostKey()
+				configParser.getUserHostKey()
 			);
 			
 			PublicKey rsaPublicKey = hostKeyPair.getPublic();

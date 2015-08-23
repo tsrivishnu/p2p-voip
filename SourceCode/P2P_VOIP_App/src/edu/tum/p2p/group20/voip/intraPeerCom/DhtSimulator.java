@@ -156,7 +156,7 @@ public class DhtSimulator {
 		xchangeStream.write(peer2ipv6);
 		byte[] xchangePointInfo = xchangeStream.toByteArray();
 
-		KeyPair hostKeyPair = RSA.getKeyPairFromFile(parser.getHostKey());
+		KeyPair hostKeyPair = RSA.getKeyPairFromFile(parser.getUserHostKey());
 
 		// We use a sample put to get all the signature and proper content
 		// encapsulation

@@ -42,7 +42,7 @@ public class MakeCall {
 					configParser.getKxhost(), configParser.getKxPort());
 
 			KeyPair hostKeyPair = RSA.getKeyPairFromFile(configParser
-					.getHostKey());
+					.getUserHostKey());
 			PublicKey hostPubKey = hostKeyPair.getPublic();
 			
 			SHA2 sha2 = new SHA2();

@@ -9,7 +9,7 @@ public class ConfigParser {
 	
 	private static ConfigParser configParser;
 	
-	private String hostKey;
+	private String userHostKey;
 	
 	private int dhtPort;
 	private String dhtHost;
@@ -44,7 +44,7 @@ public class ConfigParser {
 		configParser.configIni = new HierarchicalINIConfiguration(configFileName);
 		if(configParser.configIni!=null){
 			
-			configParser.hostKey=configParser.configIni.getString("HOSTKEY",null);
+			configParser.userHostKey=configParser.configIni.getSection("VOIP").getString("USER_KEYFILE",null);
 			
 			configParser.dhtPort=configParser.configIni.getSection("DHT").getInt("PORT");
 			configParser.dhtHost=configParser.configIni.getSection("DHT").getString("HOSTNAME");
@@ -70,15 +70,8 @@ public class ConfigParser {
 	/**
 	 * @return the hostKey
 	 */
-	public String getHostKey() {
-		return hostKey;
-	}
-
-	/**
-	 * @param hostKey the hostKey to set
-	 */
-	public void setHostKey(String hostKey) {
-		this.hostKey = hostKey;
+	public String getUserHostKey() {
+		return userHostKey;
 	}
 
 	/**
@@ -89,24 +82,10 @@ public class ConfigParser {
 	}
 
 	/**
-	 * @param dhtPort the dhtPort to set
-	 */
-	public void setDhtPort(int dhtPort) {
-		this.dhtPort = dhtPort;
-	}
-
-	/**
 	 * @return the dhtHost
 	 */
 	public String getDhtHost() {
 		return dhtHost;
-	}
-
-	/**
-	 * @param dhtHost the dhtHost to set
-	 */
-	public void setDhtHost(String dhtHost) {
-		this.dhtHost = dhtHost;
 	}
 
 	/**
@@ -117,24 +96,10 @@ public class ConfigParser {
 	}
 
 	/**
-	 * @param dhtOverlayHost the dhtOverlayHost to set
-	 */
-	public void setDhtOverlayHost(List<Object> dhtOverlayHost) {
-		this.dhtOverlayHost = dhtOverlayHost;
-	}
-
-	/**
 	 * @return the kxPort
 	 */
 	public int getKxPort() {
 		return kxPort;
-	}
-
-	/**
-	 * @param kxPort the kxPort to set
-	 */
-	public void setKxPort(int kxPort) {
-		this.kxPort = kxPort;
 	}
 
 	/**
@@ -145,24 +110,10 @@ public class ConfigParser {
 	}
 
 	/**
-	 * @param kxhost the kxhost to set
-	 */
-	public void setKxhost(String kxhost) {
-		this.kxhost = kxhost;
-	}
-
-	/**
 	 * @return the kxOverlayHost
 	 */
 	public List<Object> getKxOverlayHost() {
 		return kxOverlayHost;
-	}
-
-	/**
-	 * @param kxOverlayHost the kxOverlayHost to set
-	 */
-	public void setKxOverlayHost(List<Object> kxOverlayHost) {
-		this.kxOverlayHost = kxOverlayHost;
 	}
 
 	/**
@@ -173,42 +124,18 @@ public class ConfigParser {
 	}
 
 	/**
-	 * @param hostlistAddress the hostlistAddress to set
-	 */
-	public void setHostlistAddress(String hostlistAddress) {
-		this.hostlistAddress = hostlistAddress;
-	}
-
-	/**
 	 * @return the hostList
 	 */
 	public List<String> getHostList() {
 		return hostList;
 	}
 
-	/**
-	 * @param hostList the hostList to set
-	 */
-	public void setHostList(List<String> hostList) {
-		this.hostList = hostList;
-	}
-
-
-
 	public int getVoipPort() {
 		return voipPort;
 	}
 
-	public void setVoipPort(int port) {
-		this.voipPort = port;
-	}
-
 	public String getTunIP() {
 		return tunIP;
-	}
-
-	public void setTunIP(String tunIP) {
-		this.tunIP = tunIP;
 	}
 	
 	/**
@@ -230,7 +157,7 @@ public class ConfigParser {
 	 */
 	@Override
 	public String toString() {
-		return "ConfigParser [hostKey=" + hostKey + ", dhtPort=" + dhtPort
+		return "ConfigParser [hostKey=" + userHostKey + ", dhtPort=" + dhtPort
 				+ ", dhtHost=" + dhtHost + ", dhtOverlayHost=" + dhtOverlayHost
 				+ ", kxPort=" + kxPort + ", kxhost=" + kxhost
 				+ ", kxOverlayHost=" + kxOverlayHost + ", tunIP=" + tunIP
@@ -239,7 +166,4 @@ public class ConfigParser {
 				+ testDestinationIP + ", testReceiverRsaKeyPair="
 				+ testReceiverRsaKeyPair + ", configIni=" + configIni + "]";
 	}
-
-	
-
 }

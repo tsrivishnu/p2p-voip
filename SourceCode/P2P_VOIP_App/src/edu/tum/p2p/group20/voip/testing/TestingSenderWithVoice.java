@@ -94,7 +94,7 @@ public class TestingSenderWithVoice {
 		});
 
 		try {
-			KeyPair hostKeyPair = RSA.getKeyPairFromFile(parser.getHostKey());
+			KeyPair hostKeyPair = RSA.getKeyPairFromFile(parser.getUserHostKey());
 			RSAPublicKey remotePublicKey = (RSAPublicKey) hostKeyPair
 					.getPublic();
 			MessageDigest md = MessageDigest.getInstance("SHA-256");

@@ -88,7 +88,7 @@ public class Sender {
         	
         	String inputLine;
         	
-        	hostKeyPair = RSA.getKeyPairFromFile(configParser.getHostKey());
+        	hostKeyPair = RSA.getKeyPairFromFile(configParser.getUserHostKey());
         	hostPublicKeyEncoded = Base64.encodeBase64String(hostKeyPair.getPublic().getEncoded());
         	
         	this.otherPartyPublicKey = otherPartyPublicKey;
