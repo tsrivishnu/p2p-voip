@@ -220,17 +220,18 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 
 			case "Call" :
 				String pseudoId = recepientName.getText();
-				if( (!"".equals(pseudoId)) && makeCallModule == null){
-					makeCallModule = new MakeCall();
+				if( !"".equals(pseudoId)) {
+					if( makeCallModule == null){
+						makeCallModule = new MakeCall();
+					}
 					try {
 						makeCallModule.setCallInitiatorListener(this);
 						makeCallModule.makeCall( pseudoId,configParser);
 					} catch (Exception e) {
-						// TODO Show dialog to user about the error
+						showErrorDialog("Could not make call due to "+e.getLocalizedMessage());
 						e.printStackTrace();
 					}
 				}
-			
 				break;
 				
 			case "Disconnect" :
