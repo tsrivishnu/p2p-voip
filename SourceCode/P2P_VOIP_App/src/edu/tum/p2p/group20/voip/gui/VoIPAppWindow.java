@@ -255,14 +255,21 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 					makeCallModule=null;
 				}
 				//disconnect the received connected call
-				if(callerPseudoId!=null &&receiverMap!=null && receiverMap.size()>0){
+				if(callerPseudoId!=null && receiverMap!=null && receiverMap.size()>0){
 					Receiver receiver = receiverMap.get(callerPseudoId);
 					if(receiver!=null){
 						receiver.disconnectCall();
 					}
 					receiverMap.remove(callerPseudoId);
 				}
-								
+				if(voicePlayer!=null){
+					voicePlayer.stopSound();
+					voicePlayer=null;
+				}
+				if(voiceRecorder!=null){
+					voiceRecorder.stopRecording();
+					voiceRecorder=null;
+				}
 				
 			default:
 				break;
