@@ -298,10 +298,6 @@ public class GoOnline implements CallReceiverListener{
 	}
 
 
-
-
-
-
 	@Override
 	public void onCallDisconnected(String psudoId) {
 		// TODO Auto-generated method stub

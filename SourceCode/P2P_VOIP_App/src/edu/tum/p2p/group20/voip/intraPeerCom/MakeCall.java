@@ -14,6 +14,7 @@ import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.crypto.SHA2;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.RequestMessage;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Get;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.GetReply;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.TraceReply;
@@ -104,5 +105,21 @@ public class MakeCall {
 
 	public void setCallInitiatorListener(CallInitiatorListener callInitiatorListener) {
 		this.callInitiatorListener = callInitiatorListener;
+	}
+	
+	public void disconnectCall(){
+		if(sender!=null){
+			sender.disconnectCall();
+		}
+		
+		if(dhtCommunicator!=null){
+			dhtCommunicator=null;
+		}
+		if(kxCommunicator!=null){
+			//TODO: ask kx to destroy outgoing tunnel
+			//kxCommunicator.
+			kxCommunicator=null;
+		}
+		
 	}
 }

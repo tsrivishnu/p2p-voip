@@ -63,7 +63,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	private GoOnline goOnlineModule;
 	private MakeCall makeCallModule;
 	private Receiver receiver;
-	private Sender sender;
+	
 	private JLabel lblStatusMsg;
 	private VoicePlayer voicePlayer;
 	private VoiceRecorder voiceRecorder;
@@ -136,6 +136,9 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		panel.add(btnCall, "6, 6");
 		
 		JButton btnDisconnect = new JButton("Disconnect");
+		btnCall.setActionCommand("Disconnect");
+		btnCall.addActionListener(this);
+		
 		panel.add(btnDisconnect, "6, 8");
 		
 		JLabel lblNewLabel = new JLabel("Your Pseudo ID");
@@ -234,10 +237,22 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 					makeCallModule.setCallInitiatorListener(this);
 					makeCallModule.makeCall( pseudoId,configParser);
 				} catch (Exception e) {
-					// TODO Auto-generated catch block
+					// TODO Show dialog to user about the error
 					e.printStackTrace();
 				}
 				break;
+				
+			case "Disconnect" :
+				
+				if(makeCallModule !=null){
+					makeCallModule.disconnectCall();
+					makeCallModule=null;
+				}
+				
+				if(receiver!=null){
+					receiver.disconnectCall();
+				}
+				
 				
 			default:
 				break;
