@@ -5,5 +5,9 @@ public interface GoOnlineEventListener {
 	public void onOffline();
 	public void onError(String error);
 	public void onException(Exception e);
+	/**
+	 * @param hostPseudoIdentity
+	 */
+	public void onPseudoIdReady(String hostPseudoIdentity);
 
 }

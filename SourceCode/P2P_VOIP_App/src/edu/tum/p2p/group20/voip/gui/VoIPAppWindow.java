@@ -71,6 +71,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	//Parser to read the config file given via cli arg
 	private ConfigParser configParser;
 	private byte[] sessionkey;
+	private JTextField txtFieldHostPseudoId;
 	
 	public VoIPAppWindow(String confiFileName) {
 		try {
@@ -95,7 +96,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 				FormFactory.LABEL_COMPONENT_GAP_COLSPEC,
 				ColumnSpec.decode("81px"),},
 			new RowSpec[] {
-				FormFactory.LINE_GAP_ROWSPEC,
+				FormFactory.RELATED_GAP_ROWSPEC,
 				RowSpec.decode("23px"),
 				FormFactory.RELATED_GAP_ROWSPEC,
 				FormFactory.DEFAULT_ROWSPEC,
@@ -133,6 +134,17 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		btnCall.setActionCommand("Call");
 		btnCall.addActionListener(this);
 		panel.add(btnCall, "6, 6");
+		
+		JButton btnDisconnect = new JButton("Disconnect");
+		panel.add(btnDisconnect, "6, 8");
+		
+		JLabel lblNewLabel = new JLabel("Your Pseudo ID");
+		panel.add(lblNewLabel, "1, 10");
+		
+		txtFieldHostPseudoId = new JTextField();
+		txtFieldHostPseudoId.setEditable(false);
+		panel.add(txtFieldHostPseudoId, "4, 10, fill, default");
+		txtFieldHostPseudoId.setColumns(10);
 		
 		
 		
@@ -407,6 +419,18 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		// TODO Auto-generated method stub
 		lblStatusMsg.setText(pseudoId+" declined your call!");
 		lblStatusMsg.invalidate();
+	}
+
+
+	/* (non-Javadoc)
+	 * @see edu.tum.p2p.group20.voip.intraPeerCom.GoOnlineEventListener#showPseudoID(java.lang.String)
+	 */
+	@Override
+	public void onPseudoIdReady(String hostPseudoIdentity) {
+		// TODO Auto-generated method stub
+		
+		txtFieldHostPseudoId.setText(hostPseudoIdentity);
+		txtFieldHostPseudoId.invalidate();
 	}
 
 
