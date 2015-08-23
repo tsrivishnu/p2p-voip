@@ -97,6 +97,7 @@ public class MakeCall {
 			}
 
 		} catch (IOException e) {
+			callInitiatorListener.onCallFailed("Call failed");
 			System.out.println(e.getMessage());
 			e.printStackTrace();
 		}
