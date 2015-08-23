@@ -101,61 +101,67 @@ public class Message {
 	
 	/**
 	 * Performs signing on the message's data and appends signature to the message root.
-	 * 
-	 * @throws UnsupportedEncodingException 
-	 * @throws SignatureException 
-	 * @throws NoSuchAlgorithmException 
-	 * @throws InvalidKeyException 
+	 *  
 	 */
-	public void sign() throws InvalidKeyException, NoSuchAlgorithmException,
-				SignatureException, UnsupportedEncodingException {
+	public void sign() {
 		
-		signature = messageCrypto.getSignature(toBeSignedJSONObject().toJSONString());	
-		fullMessage.put("signature", signature);
+		try {
+			signature = messageCrypto.getSignature(
+				toBeSignedJSONObject().toJSONString()
+			);
+			
+			fullMessage.put("signature", signature);
+		} catch (SignatureException e) {
+			e.printStackTrace();
+		}	
 	}
 	
 	/**
-	 * Validate the signature and the timestamp over the timestamp passed as argument. Also,
-	 * validates the sender and receiver of the message.
-	 * 
+	 * Validate the signature and the timestamp over the timestamp passed as argument.
+	 * Validates of the message type is as expected
+	 * Also, validates the sender and receiver of the message.
 	 * 
 	 * If the timestamp is before the timestamp passed, it is considered invalid.
 	 * If the sender and receiver are not as expected, it is considered invalid.
 	 * 
 	 * @param timestamp
+	 * @param messageType
 	 * @return true or false
-	 * @throws InvalidKeyException
-	 * @throws SignatureException
-	 * @throws NoSuchAlgorithmException
-	 * @throws UnsupportedEncodingException
-	 * @throws java.text.ParseException 
-	 * @throws BadPaddingException 
-	 * @throws IllegalBlockSizeException 
-	 * @throws ShortBufferException 
 	 */
-	public boolean isValid(Date prevTimestamp) throws InvalidKeyException,
-					SignatureException, NoSuchAlgorithmException, UnsupportedEncodingException,
-					java.text.ParseException, ShortBufferException, IllegalBlockSizeException, BadPaddingException, ParseException {
+	public boolean isValid(Date prevTimestamp, String messageType) {
 		
 		String signature = (String) fullMessage.get("signature");
 		
-		if (!messageCrypto.isValidSignature(signature, toBeSignedJSONObject().toJSONString())){			
-			System.out.println("Signature fail");
+		if (messageType !=null && !messageType.equals(data.get("type"))) {
 			return false;
 		}
 		
-		if (!prevTimestamp.before(timestamp())) {
-			System.out.println("Timestamp fail");
-			// Message is valid only if the prevTimestamp is before this message's timestamp.
+		try {
+			if (!messageCrypto.isValidSignature(signature, toBeSignedJSONObject().toJSONString())){			
+				System.out.println("Signature fail");
+				return false;
+			}
+			
+			if (!prevTimestamp.before(timestamp())) {
+				System.out.println("Timestamp fail");
+				// Message is valid only if the prevTimestamp is before this message's timestamp.
+				return false;
+			}
+			
+			// At this stage, we could decrypt and		
+			// Match if sender and receiver of the message are as expected 
+			if (isEncrypted) {
+				decrypt();
+			}
+			
+		} catch (InvalidKeyException | SignatureException
+			| NoSuchAlgorithmException | UnsupportedEncodingException
+			| ShortBufferException | IllegalBlockSizeException
+			| BadPaddingException | ParseException | java.text.ParseException e) {
+			
+			e.printStackTrace();
 			return false;
 		}
-		
-		// At this stage, we could decrypt and		
-		// Match if sender and receiver of the message are as expected 
-		if (isEncrypted) {
-			decrypt();
-		}		
-		
 		
 		if ( !((data.get("sender").equals(messageCrypto.otherPartyPseudoIdentity))
 				&&
@@ -217,13 +223,8 @@ public class Message {
 	 * as a string to be used to send in the network
 	 * 
 	 * @return Message with a timestamp and signing as a string.
-	 * @throws InvalidKeyException
-	 * @throws NoSuchAlgorithmException
-	 * @throws SignatureException
-	 * @throws UnsupportedEncodingException
 	 */
-	public String asJSONStringForExchange() throws InvalidKeyException,
-					NoSuchAlgorithmException, SignatureException, UnsupportedEncodingException {
+	public String asJSONStringForExchange() {
 		
 		return asJSONStringForExchange(true, true);
 	}
@@ -239,7 +240,7 @@ public class Message {
 	 * @throws SignatureException
 	 * @throws UnsupportedEncodingException
 	 */
-	public String asJSONStringForExchange(boolean addTimestamp, boolean addSignature) throws InvalidKeyException, NoSuchAlgorithmException, SignatureException, UnsupportedEncodingException {
+	public String asJSONStringForExchange(boolean addTimestamp, boolean addSignature){
 		if (addTimestamp) {
 			addTimestamp();
 		}

@@ -32,8 +32,13 @@ public class ModuleValidator {
 	 * 
 	 * @throws NoSuchAlgorithmException
 	 */
-	public ModuleValidator() throws NoSuchAlgorithmException {
-		messageDigest = MessageDigest.getInstance("SHA-256");
+	public ModuleValidator() {
+		try {
+			messageDigest = MessageDigest.getInstance("SHA-256");
+		} catch (NoSuchAlgorithmException e) {
+			
+			e.printStackTrace();
+		}
 		timestamp = new java.util.Date();
 		timestampString = dateFormatter.format(timestamp);
 		messageDigest.update((timestampString + moduleVerificationSalt).getBytes());
