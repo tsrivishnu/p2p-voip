@@ -130,11 +130,7 @@ public class Message {
 	 */
 	public boolean isValid(Date prevTimestamp, String messageType) {
 		
-		String signature = (String) fullMessage.get("signature");
-		
-		if (messageType !=null && !messageType.equals(data.get("type"))) {
-			return false;
-		}
+		String signature = (String) fullMessage.get("signature");		
 		
 		try {
 			if (!messageCrypto.isValidSignature(signature, toBeSignedJSONObject().toJSONString())){			
@@ -152,6 +148,10 @@ public class Message {
 			// Match if sender and receiver of the message are as expected 
 			if (isEncrypted) {
 				decrypt();
+			}
+			
+			if (messageType !=null && !messageType.equals(data.get("type"))) {
+				return false;
 			}
 			
 		} catch (InvalidKeyException | SignatureException
