@@ -14,6 +14,7 @@ import edu.tum.p2p.group20.voip.crypto.SHA2;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Get;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.BuildTNOutgoing;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.KxTunnelDestroy;
 import edu.tum.p2p.group20.voip.voice.CallInitiatorListener;
 import edu.tum.p2p.group20.voip.voice.Sender;
 
@@ -25,6 +26,7 @@ public class MakeCall {
 	private Sender sender;
 	private CallInitiatorListener callInitiatorListener;
 	private ConfigParser configParser;
+	private byte[] hostPseudoId;
 
 	public void makeCall(String calleeId, ConfigParser configParser)
 			throws Exception {
@@ -44,7 +46,7 @@ public class MakeCall {
 			PublicKey hostPubKey = hostKeyPair.getPublic();
 			
 			SHA2 sha2 = new SHA2();
-			byte[] hostPseudoId = sha2.makeSHA2Hash(hostPubKey.getEncoded());
+			hostPseudoId = sha2.makeSHA2Hash(hostPubKey.getEncoded());
 			// CalleeId is the string entered by the user
 			byte[] calledPseudoIdByte = Base64.decodeBase64(calleeId); 
 
@@ -131,8 +133,14 @@ public class MakeCall {
 		}
 		
 		if (kxCommunicator != null) {
-			// TODO: ask kx to destroy outgoing tunnel
-			// kxCommunicator.
+			
+			KxTunnelDestroy tnDestroy = new KxTunnelDestroy(hostPseudoId);
+			try {
+				kxCommunicator.sendMessage(tnDestroy);
+			} catch (IOException e) {
+				System.out.println("Makecall: Problem with sending Tunnel Destroy");
+				e.printStackTrace();
+			}
 			kxCommunicator = null;
 		}
 
