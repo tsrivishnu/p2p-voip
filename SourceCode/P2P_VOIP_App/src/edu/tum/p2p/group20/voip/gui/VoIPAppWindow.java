@@ -225,6 +225,8 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 						makeCallModule = new MakeCall();
 					}
 					try {
+						lblCallStatus.setText("Connecting...");
+						lblCallStatus.invalidate();
 						makeCallModule.setErrorListener(this);
 						makeCallModule.setCallInitiatorListener(this);
 						//set fake call as false
@@ -232,6 +234,8 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 					} catch (Exception e) {
 						showErrorDialog("Could not make call due to "+e.getLocalizedMessage());
 						e.printStackTrace();
+						lblCallStatus.setText("Unable to connect!");
+						lblCallStatus.invalidate();
 					}
 				}
 				break;
