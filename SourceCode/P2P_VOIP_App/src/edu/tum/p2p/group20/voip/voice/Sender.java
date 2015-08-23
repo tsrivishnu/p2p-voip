@@ -75,6 +75,9 @@ public class Sender {
 	private boolean stop;
 
 	private Thread readMessageThread;
+
+	private Timer heartBeatTimer;
+	private TimerTask heartBeatSender;
     public void initiateCall(final String otherPartyPseudoIdentity,RSAPublicKey otherPartyPublicKey, String destinationIP,ConfigParser parser) throws IllegalStateException, Exception {
         configParser = parser;
         try {
@@ -177,9 +180,9 @@ public class Sender {
         	
         	if (!callAcceptMessage.isValid(lastTimestamp, null)) {
         		//Invalid message
-        		
-        		throw new Exception("Message validation failed");
+        		callInitiatorListener.onCallFailed(otherPartyPseudoIdentity);
         	}
+        	
         	callAcceptMessage.decrypt();
         	lastTimestamp = callAcceptMessage.timestamp();
         	System.out.println(callAcceptMessage.get("type"));
@@ -219,6 +222,7 @@ public class Sender {
 			                		System.out.println("Received CALL_DISCONNECT");
 			                		stop=true;
 			                		callInitiatorListener.onCallDisconnected(otherPartyPseudoIdentity);
+			                		shutdown();
 			                		return;
 			                	}
 							} catch (IOException | ParseException | 
@@ -229,6 +233,7 @@ public class Sender {
 								e.printStackTrace();
 								stop=true;
 		                		callInitiatorListener.onCallDisconnected(otherPartyPseudoIdentity);
+		                		shutdown();
 		                		return;
 							}
 		                	
@@ -237,8 +242,8 @@ public class Sender {
 				});
             	readMessageThread.start();
             	lastHeartBeat =  new Date();
-            	Timer heartBeatTimer = new Timer();
-            	TimerTask heartBeatSender = new TimerTask() {
+            	heartBeatTimer = new Timer();
+            	heartBeatSender = new TimerTask() {
 					
 					@Override
 					public void run() {
@@ -249,8 +254,9 @@ public class Sender {
 							this.cancel();//stop heartbeat timer task
 							System.out.println("HEARTBEAT TIMEOUT");
 							stop=true;
-							readMessageThread=null;//cance the read msg thread
+							readMessageThread=null;//cancel the read msg thread
 	                		callInitiatorListener.onCallDisconnected(otherPartyPseudoIdentity);
+	                		shutdown();
 							return;
 						}
 						Message heartbeat = new Message(messageCrypto);
@@ -269,6 +275,7 @@ public class Sender {
             	callInitiatorListener.onCallDeclined(otherPartyPseudoIdentity);
         	} else{
         		System.out.println("Received Unknown Message type");
+        		shutdown();
         	}
         
         	
@@ -276,6 +283,7 @@ public class Sender {
         } catch (IOException e) {
             System.out.println(e.getMessage());
             e.printStackTrace();
+            shutdown();
         }
     }
 
@@ -293,7 +301,21 @@ public class Sender {
     	disconnectMsg.put("type", "CALL_DISCONNECT");
     	disconnectMsg.encrypt();
     	out.println(disconnectMsg.asJSONStringForExchange());
+    	shutdown();
+	}
 	
+	/**
+	 * freeing up the resources
+	 */
+	private void shutdown(){
+		if(heartBeatSender!=null){
+			heartBeatSender.cancel();
+			heartBeatSender=null;
+		}
+		if(heartBeatTimer!=null){
+			heartBeatTimer.cancel();
+			heartBeatTimer=null;
+		}
 		if(socket!=null){
 			try {
 				socket.close();

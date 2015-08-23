@@ -53,6 +53,8 @@ public class Receiver extends Thread {
 	private MessageCrypto messageCrypto;
 	private ModuleValidator moduleValidator;
 	private PrintWriter out;
+	private Timer heartBeatTimer;
+	private TimerTask heartBeatSender;
 
 	/**
 	 * @param clientSocket2
@@ -239,7 +241,8 @@ public class Receiver extends Thread {
 						
 						// When connection is broken, Disconnect call
 						if (inputLine == null) {
-							handleCallDisconnection("Connection broken");								
+							handleCallDisconnection("Connection broken");
+							shutdown();
 							return;
 						}
 						
@@ -252,7 +255,8 @@ public class Receiver extends Thread {
 						
 						if (!newMessage.isValid(lastTimestamp, null)) {
 							
-							handleCallDisconnection("Invalid message received from client!");								
+							handleCallDisconnection("Invalid message received from client!");	
+							shutdown();
 							return;
 						} else {
 							// When the message is valid
@@ -298,6 +302,7 @@ public class Receiver extends Thread {
 				.println("Exception caught when trying to listen on port "
 					+ portNumber + " or listening for a connection");
 			System.out.println(e.getMessage());
+			
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -386,7 +391,8 @@ public class Receiver extends Thread {
 	private void handleCallDisconnection(String disconnectionMessage) {
 		stop = true;
 		callReceiverListener
-			.onCallDisconnected(disconnectionMessage);		
+			.onCallDisconnected(disconnectionMessage);	
+		shutdown();
 	}
 
 	/**
@@ -396,8 +402,8 @@ public class Receiver extends Thread {
 		
 		// create a timertask to check heartbeat timestamps
 		lastHeartBeat = new Date();
-		Timer heartBeatTimer = new Timer();
-		TimerTask heartBeatSender = new TimerTask() {
+		heartBeatTimer = new Timer();
+		heartBeatSender = new TimerTask() {
 
 			@Override
 			public void run() {
@@ -411,6 +417,7 @@ public class Receiver extends Thread {
 					stop = true;
 					callReceiverListener
 						.onCallDisconnected(otherPartyPseudoIdentity);
+					shutdown();
 					return;
 				}
 
@@ -429,15 +436,31 @@ public class Receiver extends Thread {
 		disconnectMsg.encrypt();
 		out.println(disconnectMsg.asJSONStringForExchange());
 		out.flush();
+
+		stop = true;
+		shutdown();
+	}
+	
+	/**
+	 * freeing up the resources
+	 */
+	private void shutdown(){
+		if(heartBeatSender!=null){
+			heartBeatSender.cancel();
+			heartBeatSender=null;
+		}
+		if(heartBeatTimer!=null){
+			heartBeatTimer.cancel();
+			heartBeatTimer=null;
+		}
 		if (clientSocket != null) {
 			try {
 				clientSocket.close();
-				clientSocket = null;
+				
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
+			clientSocket = null;
 		}
-		stop = true;
-
 	}
 }
