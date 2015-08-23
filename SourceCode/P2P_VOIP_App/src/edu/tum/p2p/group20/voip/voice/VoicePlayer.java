@@ -28,6 +28,8 @@ public class VoicePlayer extends Thread {
 	//TUN interface IP
 	private String tunIP;
 	
+	private CallReceiverListener callReceiverListener;
+	
 	public void init(String tunIP, int port){
 		this.tunIP=tunIP;
 		
@@ -76,6 +78,7 @@ public class VoicePlayer extends Thread {
 	//Flag to stop this thread
 	private boolean stop;
 	private byte[] sessionkey;
+	private String destinationIP;
 //	private ConfigParser configParser;
 	
 	/**
@@ -164,6 +167,12 @@ public class VoicePlayer extends Thread {
 		try {
 			System.out.println("Trying to receive a packet");
 			sock.receive(datagram);
+			//only do this one time 
+			if(callReceiverListener!=null  && destinationIP==null){
+				//extract the source IP and use it for voice transmitter on call Receiver side
+				destinationIP=datagram.getAddress().getHostAddress();
+				callReceiverListener.onDestinationIPReady(destinationIP);
+			}
 			System.out.println("Received packet");
 			return datagram.getData(); // soundpacket ;
 		} catch (Exception e) {
@@ -219,6 +228,18 @@ public class VoicePlayer extends Thread {
 		// true,false
 		return new AudioFormat(AudioFormat.Encoding.PCM_SIGNED, sampleRate, sampleSizeInBits, 
                 channels, (sampleSizeInBits/8)*channels, sampleRate, bigEndian);
+	}
+
+
+
+	public CallReceiverListener getCallReceiverListener() {
+		return callReceiverListener;
+	}
+
+
+
+	public void setCallReceiverListener(CallReceiverListener callReceiverListener) {
+		this.callReceiverListener = callReceiverListener;
 	}
 
 }

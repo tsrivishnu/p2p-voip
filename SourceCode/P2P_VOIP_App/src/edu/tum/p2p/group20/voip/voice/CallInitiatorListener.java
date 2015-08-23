@@ -4,7 +4,7 @@ public interface CallInitiatorListener {
 	
 	public void onCallInitiated(String pseudoId);
 	
-	public void onCallAccepted(String pseudoId, byte[] sessionKey);
+	public void onCallAccepted(String pseudoId, byte[] sessionKey, String destinationIP);
 	
 	public void onCallDisconnected(String pseudoId);
 

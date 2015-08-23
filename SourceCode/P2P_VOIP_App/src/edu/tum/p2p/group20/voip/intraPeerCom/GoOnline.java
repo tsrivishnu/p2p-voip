@@ -357,11 +357,20 @@ public class GoOnline implements CallReceiverListener {
 	}
 
 	@Override
-	public void onCallDisconnected(String psudoId) {
+	public void onCallDisconnected(String pseudoId) {
 
-		callReceiverListener.onCallDisconnected(psudoId);
+		callReceiverListener.onCallDisconnected(pseudoId);
 	}
 
+	/* (non-Javadoc)
+	 * @see edu.tum.p2p.group20.voip.voice.CallReceiverListener#onDestinationIPReady(java.lang.String)
+	 */
+	@Override
+	public void onDestinationIPReady(String destinationIP) {
+		callReceiverListener.onDestinationIPReady(destinationIP);
+		
+	}
+	
 	public CallReceiverListener getCallReceiverListener() {
 
 		return callReceiverListener;
@@ -377,4 +386,6 @@ public class GoOnline implements CallReceiverListener {
 
 		this.callReceiverListener = callReceiverListener;
 	}
+
+
 }

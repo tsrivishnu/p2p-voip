@@ -5,6 +5,8 @@ package edu.tum.p2p.group20.voip.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.WindowAdapter;
+import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
@@ -24,6 +26,7 @@ import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.intraPeerCom.GoOnline;
 import edu.tum.p2p.group20.voip.intraPeerCom.GoOnlineEventListener;
 import edu.tum.p2p.group20.voip.intraPeerCom.MakeCall;
+import edu.tum.p2p.group20.voip.testing.TestingReceiverWithVoice;
 import edu.tum.p2p.group20.voip.voice.CallInitiatorListener;
 import edu.tum.p2p.group20.voip.voice.CallReceiverListener;
 import edu.tum.p2p.group20.voip.voice.Receiver;
@@ -70,6 +73,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	private ConfigParser configParser;
 	private byte[] sessionkey;
 	private JTextField txtFieldHostPseudoId;
+	private String destinationIP;
 	
 	public VoIPAppWindow(String confiFileName) {
 		try {
@@ -338,7 +342,9 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		//for all other cases call declined
 		return false;
 	}
-
+	/**
+	 * Callback for callee when call is connected
+	 */
 	@Override
 	public void onCallConnected(String pseudoId, byte[]sessionKey) {
 	
@@ -350,13 +356,14 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		
 		// start listening to voice data
 		voicePlayer = new VoicePlayer(sessionkey);
+		voicePlayer.setCallReceiverListener(this);
 		voicePlayer.init(configParser.getTunIP(), configParser.getVoipPort());
 		voicePlayer.start();
-		
-		// start transmitting voice data
-		voiceRecorder = new VoiceRecorder(sessionkey);
-		voiceRecorder.init(configParser.getTunIP(), configParser.getTestDestinatonIp(), configParser.getVoipPort());
-		voiceRecorder.start();
+//		
+//		// start transmitting voice data
+//		voiceRecorder = new VoiceRecorder(sessionkey);
+//		voiceRecorder.init(configParser.getTunIP(), configParser.getTestDestinatonIp(), configParser.getVoipPort());
+//		voiceRecorder.start();
 	}
 
 
@@ -382,9 +389,11 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		lblStatusMsg.setText("Connecting to: "+pseudoId);
 		lblStatusMsg.invalidate();	
 	}
-
+	/**
+	 * callback for caller when remote peer accepts the call
+	 */
 	@Override
-	public void onCallAccepted(String pseudoId, byte[] sessionKey) {
+	public void onCallAccepted(String pseudoId, byte[] sessionKey,String destinationIP) {
 		lblStatusMsg.setText("Connected to: "+pseudoId);
 		lblStatusMsg.invalidate();
 		this.sessionkey=sessionKey;
@@ -394,7 +403,7 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		voicePlayer.start();
 		
 		voiceRecorder = new VoiceRecorder(sessionkey);
-		voiceRecorder.init(configParser.getTunIP(), configParser.getTestDestinatonIp(), configParser.getVoipPort());
+		voiceRecorder.init(configParser.getTunIP(), destinationIP, configParser.getVoipPort());
 		voiceRecorder.start();
 	}
 	/**
@@ -425,6 +434,20 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 
 		txtFieldHostPseudoId.setText(hostPseudoIdentity);
 		txtFieldHostPseudoId.invalidate();
+	}
+
+
+	/* (non-Javadoc)
+	 * @see edu.tum.p2p.group20.voip.voice.CallReceiverListener#onDestinationIPReady(java.lang.String)
+	 */
+	@Override
+	public void onDestinationIPReady(String destinationIP) {
+		//Callee received first UDP packet from Caller
+		//now start transmitting using the source IP
+		this.destinationIP = destinationIP;
+		voiceRecorder = new VoiceRecorder(sessionkey);
+		voiceRecorder.init(configParser.getTunIP(), destinationIP, configParser.getVoipPort());
+		voiceRecorder.start();
 	}
 
 

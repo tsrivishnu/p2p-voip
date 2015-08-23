@@ -185,7 +185,7 @@ public class Sender {
         	System.out.println(callAcceptMessage.get("type"));
         	if("CALL_ACCEPT".equals(callAcceptMessage.get("type"))){
         		//call was accepted by remote party
-            	callInitiatorListener.onCallAccepted(otherPartyPseudoIdentity,sessionKey);
+            	callInitiatorListener.onCallAccepted(otherPartyPseudoIdentity,sessionKey,destinationIP);
             	//TODO: create a loop in new thread for continuously receiving other control messages
             	//TODO: create other methods to send messages 
             	

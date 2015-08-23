@@ -20,6 +20,7 @@ import java.security.interfaces.RSAPublicKey;
 
 
 
+
 import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.voice.CallInitiatorListener;
@@ -80,10 +81,8 @@ public class TestingSenderWithVoice {
 				System.out.println("onCallDeclined");
 			}
 			
-			
 			@Override
-			public void onCallAccepted(String pseudoId, byte[] sessionKey) {
-				System.out.println("onCallAccepted");
+			public void onCallAccepted(String pseudoId,byte[] sessionKey,String destinationIP) {
 
 				System.out.println("sessionKey="+Base64.encodeBase64String(sessionKey));
 				voicePlayer = new VoicePlayer(sessionKey);
@@ -91,7 +90,7 @@ public class TestingSenderWithVoice {
 				voicePlayer.start();
 				
 				voiceRecorder = new VoiceRecorder(sessionKey);
-				voiceRecorder.init(parser.getTunIP(), parser.getTestDestinatonIp(), 7000);
+				voiceRecorder.init(parser.getTunIP(), destinationIP, 7000);
 				voiceRecorder.start();
 	
 			}

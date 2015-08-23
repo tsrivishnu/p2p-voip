@@ -155,7 +155,7 @@ public class Receiver extends Thread {
 	            	receivedMessage.decrypt();
 	            	lastTimestamp = receivedMessage.timestamp();
 	            	System.out.println(receivedMessage.get("type"));
-	            	
+//	            	clientSocket.getRemoteSocketAddress();
 	            	 // Send CALL_INIT_ACK.
 	            	Message callInitAckMessage = new Message(messageCrypto);
 	            	callInitAckMessage.put("type", "CALL_INIT_ACK");

@@ -8,4 +8,5 @@ public interface CallReceiverListener {
 	
 	public void onCallDisconnected(String psudoId);
 
+	public void onDestinationIPReady(String destinationIP);
 }

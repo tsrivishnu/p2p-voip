@@ -29,6 +29,7 @@ import java.security.interfaces.RSAPublicKey;
 
 
 
+
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -86,6 +87,12 @@ public class TestingReceiver {
 				public void onCallConnected(String pseudoId, byte[] sessionKey) {
 					System.out.println("onCallConnected");
 					System.out.println("sessionKey = "+Base64.encodeBase64String(sessionKey));
+				}
+
+				@Override
+				public void onDestinationIPReady(String destinationIP) {
+					// TODO Auto-generated method stub
+					
 				}
 			};
 			Receiver receiver = new Receiver(clientSocket,parser,listener);

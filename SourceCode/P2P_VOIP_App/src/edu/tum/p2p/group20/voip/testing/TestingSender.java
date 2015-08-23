@@ -49,9 +49,10 @@ public class TestingSender {
 			
 			
 			@Override
-			public void onCallAccepted(String pseudoId,byte[] sessionKey) {
+			public void onCallAccepted(String pseudoId,byte[] sessionKey,String destinationIP) {
 				System.out.println("onCallAccepted");
 				System.out.println("sessionKey="+Base64.encodeBase64String(sessionKey));
+				System.out.println("destinationIP="+destinationIP);
 			}
 		});
 		
