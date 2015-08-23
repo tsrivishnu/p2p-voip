@@ -185,7 +185,7 @@ public class GoOnline implements CallReceiverListener {
 
 			if (kxCommunicator.isValidMessage(
 					lastReceivedMessage,
-					TnReady.messageName, pseduoIdBytes
+					"MSG_KX_TN_READY", pseduoIdBytes
 				)) {
 
 				// get this ip from the config file
@@ -318,7 +318,7 @@ public class GoOnline implements CallReceiverListener {
 		System.out.println(lastReceivedMessage.name());
 
 		if (!dhtCommunicator.isValidMessage(lastReceivedMessage,
-				TraceReply.messageName, pseudoIdToTrace)) {
+				"MSG_DHT_TRACE_REPLY", pseudoIdToTrace)) {
 			throw new Exception("DHT trace reply error");
 		}
 
