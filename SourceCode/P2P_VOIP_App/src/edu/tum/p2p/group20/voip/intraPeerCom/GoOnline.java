@@ -200,6 +200,9 @@ public class GoOnline implements CallReceiverListener {
 						InetAddress.getByName(inTunnelIP)
 					);
 					
+					
+					// Create a call receiver thread which runs in background to
+					// 	accept calls.
 					new Thread(new Runnable() {
 
 						@Override
