@@ -34,6 +34,8 @@ import edu.tum.p2p.group20.voip.dh.SessionKeyManager;
 // To be more precise, it is the caller, who is to call a receiver.
 
 /**
+ * Class for taking the user into CallSender state i.e., caller!
+ * 
  * Typically the class which will be a thread for call control messages in case
  * of a caller - The person who is making the call
  * 

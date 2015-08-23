@@ -20,8 +20,8 @@ import edu.tum.p2p.group20.voip.crypto.SHA2;
 import edu.tum.p2p.group20.voip.dh.SessionKeyManager;
 
 /**
- * Class for taking the user into CallReceiver state
- * it listens on the TUN_IP and VoipPort for call PINGs
+ * Class for taking the user into CallReceiver state.
+ * It listens on the TUN_IP and VoipPort for call PINGs
  * and request.
  * 
  * 
