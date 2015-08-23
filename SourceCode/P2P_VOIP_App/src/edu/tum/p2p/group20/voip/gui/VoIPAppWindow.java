@@ -5,14 +5,11 @@ package edu.tum.p2p.group20.voip.gui;
 
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
-import java.awt.event.WindowAdapter;
-import java.awt.event.WindowEvent;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
 import java.awt.BorderLayout;
-import java.awt.EventQueue;
 
 import javax.swing.JButton;
 import javax.swing.JLabel;
@@ -29,11 +26,9 @@ import edu.tum.p2p.group20.voip.intraPeerCom.MakeCall;
 import edu.tum.p2p.group20.voip.voice.CallInitiatorListener;
 import edu.tum.p2p.group20.voip.voice.CallReceiverListener;
 import edu.tum.p2p.group20.voip.voice.Receiver;
-import edu.tum.p2p.group20.voip.voice.Sender;
 import edu.tum.p2p.group20.voip.voice.VoicePlayer;
 import edu.tum.p2p.group20.voip.voice.VoiceRecorder;
 
-import javax.swing.JDialog;
 import javax.swing.JOptionPane;
 import javax.swing.JTextField;
 import javax.swing.JMenuBar;
@@ -181,9 +176,6 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		mnSettings.add(mntmSettings);
 		setBounds(0, 0, 640, 480);
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		
-		
-		
 	}
 
 
@@ -195,15 +187,9 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 				if(goOnlineModule==null){
 					goOnlineModule = new GoOnline();
 					goOnlineModule.setEventListener(this);
-					//Todo: get this port number from settings
+					//TODO: get this port number from settings
 					try {
 						boolean result = goOnlineModule.goOnline(configParser);
-//						if(result){
-//							lblStatusMsg.setText("You are Online now!");
-//						} else {
-//							lblStatusMsg.setText("Offline!");
-//						}
-//						lblStatusMsg.invalidate();
 					} catch (Exception e) {
 						System.err.println(e.getMessage());
 						e.printStackTrace();
@@ -430,8 +416,4 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 		txtFieldHostPseudoId.setText(hostPseudoIdentity);
 		txtFieldHostPseudoId.invalidate();
 	}
-
-
-	
-	
 }
