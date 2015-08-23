@@ -32,7 +32,7 @@ public class Receiver extends Thread {
 	private int portNumber;
 	private InetAddress bindAddress;
 	private boolean stop;//flag to quit the thread loop
-	private static int status=1;//status of the receiver
+	private static int status=0;//status of the receiver
 	private final static int IDLE=0;//no incoming call
 	private final static int BUSY=1;//establishing incoming call
 	private final static int WAIT=2;//incoming call is already existing
