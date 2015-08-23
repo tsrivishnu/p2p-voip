@@ -16,13 +16,9 @@ import javax.sound.sampled.LineUnavailableException;
 import javax.sound.sampled.SourceDataLine;
 
 import edu.tum.p2p.group20.voip.com.MessageCrypto;
-import edu.tum.p2p.group20.voip.config.ConfigParser;
-import edu.tum.p2p.group20.voip.crypto.SHA2;
-
 
 public class VoicePlayer extends Thread {
 
-	
 	//Port configured for voice data
 	private int port;
 	//TUN interface IP
@@ -36,8 +32,6 @@ public class VoicePlayer extends Thread {
 		this.port=port;
 		
 	}
-	
-	
 
 	/**
 	 * @return the destinationPort
@@ -126,8 +120,6 @@ public class VoicePlayer extends Thread {
 	 *            the command line arguments
 	 */
 	public static void main(String[] args) {
-		SHA2 sha2 = new SHA2();
-		
 		MessageDigest md = null;
 		
 		try {

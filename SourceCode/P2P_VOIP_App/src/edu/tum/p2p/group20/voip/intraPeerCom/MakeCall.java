@@ -13,9 +13,7 @@ import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.crypto.SHA2;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Get;
-import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.GetReply;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.BuildTNOutgoing;
-import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.TnReady;
 import edu.tum.p2p.group20.voip.voice.CallInitiatorListener;
 import edu.tum.p2p.group20.voip.voice.Sender;
 

@@ -10,7 +10,6 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SignatureException;
-import java.util.HashMap;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -24,9 +23,7 @@ import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Get;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Put;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Trace;
-import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.TraceReply;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.BuildTNIncoming;
-import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.TnReady;
 import edu.tum.p2p.group20.voip.voice.CallReceiverListener;
 import edu.tum.p2p.group20.voip.voice.Receiver;
 

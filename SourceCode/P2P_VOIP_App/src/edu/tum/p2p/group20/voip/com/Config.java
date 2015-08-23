@@ -1,7 +1,5 @@
 package edu.tum.p2p.group20.voip.com;
 
-import java.text.SimpleDateFormat;
-
 /**
  * @author Sri Vishnu Totakura <srivishnu@totakura.in>
  *

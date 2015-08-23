@@ -38,7 +38,7 @@ public class Receiver extends Thread {
 	// Listener for call notifications
 	private CallReceiverListener callReceiverListener;
 	private Socket clientSocket;// socket if some-remote party tries to make a
-	private int portNumber;
+
 	private boolean stop;// flag to quit the thread loop
 	private static int status = 0;// status of the receiver
 	private final static int IDLE = 0;// no incoming call
@@ -132,9 +132,8 @@ public class Receiver extends Thread {
 			System.out.println("PING from: " + otherPartyPseudoIdentity);
 
 			messageCrypto.otherPartyPseudoIdentity = otherPartyPseudoIdentity;
-			messageCrypto.otherPartyPublicKey = RSA.getPublicKeyFromString(
-				(String) receivedPingMessage.get("senderPublicKey")
-			);
+			messageCrypto.otherPartyPublicKey = RSA.getPublicKeyFromString((String) receivedPingMessage.get("senderPublicKey")
+);
 			
 			lastTimestamp = receivedPingMessage.timestamp();			
 

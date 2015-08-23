@@ -3,10 +3,6 @@ package edu.tum.p2p.group20.voip.crypto;
 
 
 import java.io.BufferedReader;
-import java.io.DataInputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -20,10 +16,8 @@ import java.security.PublicKey;
 import java.security.Security;
 import java.security.Signature;
 import java.security.SignatureException;
-import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
 import java.security.spec.InvalidKeySpecException;
-import java.security.spec.PKCS8EncodedKeySpec;
 import java.security.spec.X509EncodedKeySpec;
 
 import javax.crypto.Cipher;
@@ -62,18 +56,8 @@ public class RSA {
 	
 	public static RSAPublicKey getPublicKey(String filename) throws IOException, GeneralSecurityException {
 	    String publicKeyPEM = getKey(filename);
-	    return getPublicKeyFromString(publicKeyPEM);
-		
-//		File f = new File(filename);
-//	    FileInputStream fis = new FileInputStream(f);
-//	    DataInputStream dis = new DataInputStream(fis);
-//	    byte[] keyBytes = new byte[(int)f.length()];
-//	    dis.readFully(keyBytes);
-//	    dis.close();
-//
-//	    X509EncodedKeySpec spec = new X509EncodedKeySpec(keyBytes);
-//	    KeyFactory kf = KeyFactory.getInstance("RSA");
-//	    return (RSAPublicKey) kf.generatePublic(spec);
+	    
+	    return getPublicKeyFromString(publicKeyPEM);		
 	}
 	
 	public static RSAPublicKey getPublicKeyFromString(String key) throws IOException, GeneralSecurityException {

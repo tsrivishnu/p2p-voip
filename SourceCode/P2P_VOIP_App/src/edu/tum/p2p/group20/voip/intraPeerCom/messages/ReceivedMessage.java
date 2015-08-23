@@ -1,6 +1,5 @@
 package edu.tum.p2p.group20.voip.intraPeerCom.messages;
 
-import java.io.IOException;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;

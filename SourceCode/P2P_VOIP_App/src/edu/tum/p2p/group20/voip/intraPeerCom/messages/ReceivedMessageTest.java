@@ -4,11 +4,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.net.InetAddress;
 import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.util.Arrays;
 
 import edu.tum.p2p.group20.voip.intraPeerCom.Helper;
-import edu.tum.p2p.group20.voip.intraPeerCom.MessagesLegend;
 
 
 
@@ -17,7 +15,6 @@ public class ReceivedMessageTest {
 
 	public static void main(String[] args) throws Exception {
 		
-		byte[] size;
 		String hostPseudoIdentity = "9caf4058012a33048ca50550e8e32285c86c8f3013091ff7ae8c5ea2519c860c";
         
     	MessageDigest messageDigest = MessageDigest.getInstance("SHA-256");
