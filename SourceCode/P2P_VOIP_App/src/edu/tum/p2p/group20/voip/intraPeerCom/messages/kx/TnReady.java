@@ -5,10 +5,9 @@ import java.util.Arrays;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 
 public class TnReady extends ReceivedMessage {
-	static {
-		messageName = "MSG_KX_TN_READY";
-		
-		fields = new String[] {
+	
+	public String[] fields() {
+		return new String[] {
 	      "size",
 	      "messageCode",
 	      "pseudoId",
@@ -16,6 +15,10 @@ public class TnReady extends ReceivedMessage {
 	      "ipv4",
 	      "ipv6"
 		};
+	}
+	
+	public String messageName() {
+		return "MSG_KX_TN_READY";
 	}
 	
 	public TnReady(byte[] fullMessageBytes) {

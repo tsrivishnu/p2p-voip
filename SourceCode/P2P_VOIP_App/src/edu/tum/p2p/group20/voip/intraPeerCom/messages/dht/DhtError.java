@@ -4,17 +4,20 @@ import java.util.Arrays;
 
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 
-public class DhtError extends ReceivedMessage {
-	static {
-		messageName = "MSG_DHT_ERROR";
-		
-		fields = new String[] {
+public class DhtError extends ReceivedMessage {	
+	
+	public String[] fields() {
+		return new String[] {
 	      "size",
 	      "messageCode",
 	      "request_type",
 	      "reserved",
 	      "psuedoId"
 		};
+	}
+	
+	public String messageName() {
+		return "MSG_DHT_ERROR";
 	}
 	
 	public DhtError(byte[] fullMessageBytes) {

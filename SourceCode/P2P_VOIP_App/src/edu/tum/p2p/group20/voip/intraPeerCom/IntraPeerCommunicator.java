@@ -56,7 +56,7 @@ public class IntraPeerCommunicator {
 	public void sendMessage(RequestMessage requestMessage) throws IOException {
 
 		byte[] messageBytes = requestMessage.fullMessageAsBytes();
-		System.out.println("Sending message: " + requestMessage.messageName);
+		System.out.println("Sending message: " + requestMessage.messageName());
 		out.write(messageBytes, 0, messageBytes.length);
 	}
 

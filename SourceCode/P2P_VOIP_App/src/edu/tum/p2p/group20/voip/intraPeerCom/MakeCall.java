@@ -58,7 +58,7 @@ public class MakeCall {
 			lastReceivedMessage = dhtCommunicator.readIncomingAndHandleError();
 
 			if (!dhtCommunicator.isValidMessage(lastReceivedMessage,
-					GetReply.messageName, calledPseudoIdByte)) {
+					"MSG_DHT_GET_REPLY", calledPseudoIdByte)) {
 				throw new Exception("GET reply error");
 			}
 			// Parse DHT_GET_REPLY for data like publicKey and exchange point
@@ -76,7 +76,7 @@ public class MakeCall {
 			lastReceivedMessage = kxCommunicator.readIncomingAndHandleError();
 
 			if (kxCommunicator.isValidMessage(lastReceivedMessage,
-					TnReady.messageName, hostPseudoId)) {
+					"MSG_KX_TN_READY", hostPseudoId)) {
 				// check for null pointer
 				InetAddress destinationIpv4 = InetAddress
 						.getByAddress(lastReceivedMessage.get("ipv4"));

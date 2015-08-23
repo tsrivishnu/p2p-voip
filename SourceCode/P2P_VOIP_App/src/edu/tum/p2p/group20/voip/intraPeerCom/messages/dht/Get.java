@@ -4,14 +4,17 @@ import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.RequestMessage;
 
 public class Get extends RequestMessage {	
-	static {
-		messageName = "MSG_DHT_GET";
-		
-		fields = new String[] {
+	
+	public String[] fields() {
+		return new String[] {
 	      "size",
 	      "messageCode",
 	      "pseudoId"
 		};
+	}
+	
+	public String messageName() {
+		return "MSG_DHT_GET";
 	}
 	
 	public Get(byte[] pseudoIdToSearch) {

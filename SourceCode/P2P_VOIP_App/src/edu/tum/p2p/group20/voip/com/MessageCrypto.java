@@ -147,7 +147,6 @@ public class MessageCrypto {
 	 * @throws SignatureException
 	 */
 	public String getSignature(String toBeSignedString) throws SignatureException {
-		System.out.println(Arrays.toString(hostKeyPair.getPublic().getEncoded()));
 		
 		try {
 			return RSA.sign(hostKeyPair.getPrivate(), toBeSignedString);

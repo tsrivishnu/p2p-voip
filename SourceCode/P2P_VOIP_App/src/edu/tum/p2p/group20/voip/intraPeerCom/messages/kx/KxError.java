@@ -5,16 +5,19 @@ import java.util.Arrays;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 
 public class KxError extends ReceivedMessage {
-	static {
-		messageName = "MSG_KX_ERROR";
-		
-		fields = new String[] {
+	
+	public String[] fields() {
+		return new String[] {
 	      "size",
 	      "messageCode",
 	      "request_type",
 	      "reserved",
 	      "psuedoId"
 		};
+	}
+	
+	public String messageName() {
+		return "MSG_KX_ERROR";
 	}
 	
 	public KxError(byte[] fullMessageBytes) {

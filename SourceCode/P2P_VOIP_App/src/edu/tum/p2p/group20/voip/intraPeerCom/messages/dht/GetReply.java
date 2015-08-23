@@ -2,14 +2,14 @@ package edu.tum.p2p.group20.voip.intraPeerCom.messages.dht;
 
 import java.io.ByteArrayOutputStream;
 import java.util.Arrays;
+
 import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 
 public class GetReply extends ReceivedMessage {
-	static {
-		messageName = "MSG_DHT_GET_REPLY";
-		
-		fields = new String[] {
+	
+	public String[] fields() {
+		return new String[] {
 	      "size",
 	      "messageCode",
 	      "pseudoId",
@@ -18,6 +18,10 @@ public class GetReply extends ReceivedMessage {
 	      "xchangePointInfoForKx",
 	      "signature"
 		};
+	}
+	
+	public String messageName() {
+		return "MSG_DHT_GET_REPLY";
 	}
 	
 	public GetReply(byte[] fullMessageBytes) {

@@ -136,11 +136,12 @@ public class Receiver extends Thread {
 				(String) receivedPingMessage.get("senderPublicKey")
 			);
 			
-			lastTimestamp = receivedPingMessage.timestamp();
+			lastTimestamp = receivedPingMessage.timestamp();			
 
 			if (status == IDLE) {
 				// If there are no active calls
 				
+				Thread.sleep(10);
 				// Send PING_REPLY with module verification					
 				moduleValidator = new ModuleValidator();
 				Message pingReply = new Message(messageCrypto);
@@ -298,12 +299,15 @@ public class Receiver extends Thread {
 				return;
 			}
 		} catch (IOException e) {
-			System.out
-				.println("Exception caught when trying to listen on port "
-					+ portNumber + " or listening for a connection");
-			System.out.println(e.getMessage());
 			
+			if (stop) {			
+				callReceiverListener.onCallDisconnected("Call disconnected");	
+			} else {
+				handleCallDisconnection("Something went wrong!");
+				e.printStackTrace();
+			}
 		} catch (Exception e) {
+			handleCallDisconnection("Something went wrong!");
 			e.printStackTrace();
 		}
 	}

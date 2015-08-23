@@ -13,10 +13,8 @@ import edu.tum.p2p.group20.voip.intraPeerCom.messages.RequestMessage;
 
 public class Put extends RequestMessage {
 	
-	static {
-		messageName = "MSG_DHT_PUT";
-		
-		fields = new String[] {
+	public String[] fields() {
+		return new String[] {
 	      "size",
 	      "messageCode",
 	      "pseudoId",
@@ -28,6 +26,10 @@ public class Put extends RequestMessage {
 	      "xchangePointInfoForKx",
 	      "signature"
 		};
+	}
+	
+	public String messageName() {
+		return "MSG_DHT_PUT";
 	}
 	
 	public Put (byte[] pseudoId, short ttl, int replication, KeyPair rsaKeyPair, byte[] xchangePointInfo) throws IOException, InvalidKeyException, SignatureException, NoSuchAlgorithmException {

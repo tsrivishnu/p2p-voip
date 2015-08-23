@@ -18,20 +18,25 @@ import edu.tum.p2p.group20.voip.intraPeerCom.MessagesLegend;
  *
  */
 public class RequestMessage {
+	
 	/**
 	 * Fields that are part of the message.
 	 * Override these for each message child class
 	 */
-	public static String fields[] = {
-      "size",
-      "messageCode"
-	};
+	public String[] fields() {
+		return new String[] {
+	      "size",
+	      "messageCode"
+		};
+	}
 	
 	/**
 	 * Message name which determines the message code.
 	 * Override this for each message child class
 	 */
-	public static String messageName = ""; 
+	public String messageName() {
+		return "";
+	}
 	
 	public Map<String, byte[]> byteValues = new HashMap<String, byte[]>();
 	
@@ -46,7 +51,7 @@ public class RequestMessage {
 		byteValues.put(
 			"messageCode",
 			Helper.networkOrderedBytesFromShort(
-				(short) MessagesLegend.codeForName(messageName)
+				(short) MessagesLegend.codeForName(messageName())
 			)
 		);
 	}
@@ -63,8 +68,8 @@ public class RequestMessage {
 		
 		calculateSizeAndAssign(); // Ensure size is calculated.
 		
-		for(int i=0; i < fields.length; i++) {
-			outputStream.write(byteValues.get(fields[i]));
+		for(int i=0; i < fields().length; i++) {
+			outputStream.write(byteValues.get(fields()[i]));
 		}
 		
 		return outputStream.toByteArray();
@@ -92,8 +97,8 @@ public class RequestMessage {
 	private short totalBytesAsShort() {
 		short totalBytes = 0;
 		
-		for(int i=0; i < fields.length; i++) {
-			int fieldLength = byteValues.get(fields[i]).length;
+		for(int i=0; i < fields().length; i++) {
+			int fieldLength = byteValues.get(fields()[i]).length;
 			totalBytes = (short) (totalBytes + fieldLength);			
 		}
 		

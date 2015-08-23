@@ -5,15 +5,18 @@ import java.util.Arrays;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.ReceivedMessage;
 
 public class TraceReply extends ReceivedMessage {
-	static {
-		messageName = "MSG_DHT_TRACE_REPLY";
-		
-		fields = new String[] {
-	      "size",
+
+	public String[] fields() {
+		return new String[] {
+		  "size",
 	      "messageCode",
 	      "pseudoId",
 	      "xchangePointInfo"
 		};
+	}
+	
+	public String messageName() {
+		return "MSG_DHT_TRACE_REPLY";
 	}
 	
 	public TraceReply(byte[] fullMessageBytes) {

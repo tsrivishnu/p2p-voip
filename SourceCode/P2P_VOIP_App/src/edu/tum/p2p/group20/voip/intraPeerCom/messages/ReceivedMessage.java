@@ -20,13 +20,19 @@ import edu.tum.p2p.group20.voip.intraPeerCom.MessagesLegend;
  *
  */
 public class ReceivedMessage {
-	public static String fields[] = {
-      "size",
-      "messageCode",
-      "pseudoId"
-	};
 	
-	public static String messageName = ""; 
+	public String[] fields() {
+		return new String[] {
+		  "size",
+	      "messageCode",
+	      "pseudoId"
+		};
+	}
+	
+	public String messageName() {
+		return "";
+	}
+	
 	
 	public Map<String, byte[]> byteValues = new HashMap<String, byte[]>();
 	

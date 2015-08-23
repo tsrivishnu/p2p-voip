@@ -3,17 +3,20 @@ package edu.tum.p2p.group20.voip.intraPeerCom.messages.kx;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.RequestMessage;
 
 public class BuildTNIncoming extends RequestMessage {
-	static {
-		messageName = "MSG_KX_TN_BUILD_IN";
-		
-		fields = new String[] {
-	      "size",
-	      "messageCode",
-	      "totalHops",
-	      "reserved",
-	      "pseudoId",
-	      "xchangePointInfo"
+	
+	public String[] fields() {
+		return new String[] {
+		  "size",
+		  "messageCode",
+		  "totalHops",
+		  "reserved",
+		  "pseudoId",
+		  "xchangePointInfo"
 		};
+	}
+	
+	public String messageName() {
+		return "MSG_KX_TN_BUILD_IN";
 	}
 	
 	public BuildTNIncoming(int totalHops, byte[] pseudoId, byte[] xchangePointInfo) {
