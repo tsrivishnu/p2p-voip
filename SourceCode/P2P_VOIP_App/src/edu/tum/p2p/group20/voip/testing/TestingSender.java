@@ -54,6 +54,11 @@ public class TestingSender {
 				System.out.println("sessionKey="+Base64.encodeBase64String(sessionKey));
 				System.out.println("destinationIP="+destinationIP);
 			}
+
+			@Override
+			public void onCallFailed(String calleeId) {
+				System.out.println("onCallFailed");
+			}
 		});
 		
 		ConfigParser parser;

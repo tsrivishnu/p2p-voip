@@ -462,6 +462,17 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	}
 
 
+	/* (non-Javadoc)
+	 * @see edu.tum.p2p.group20.voip.voice.CallInitiatorListener#onCallFailed(java.lang.String)
+	 */
+	@Override
+	public void onCallFailed(String calleeId) {
+		lblStatusMsg.setText("Unable to call "+ calleeId);
+		lblStatusMsg.invalidate();
+		
+	}
+
+
 	
 	
 }

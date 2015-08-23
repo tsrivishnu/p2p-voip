@@ -21,6 +21,7 @@ import java.security.interfaces.RSAPublicKey;
 
 
 
+
 import edu.tum.p2p.group20.voip.config.ConfigParser;
 import edu.tum.p2p.group20.voip.crypto.RSA;
 import edu.tum.p2p.group20.voip.voice.CallInitiatorListener;
@@ -93,6 +94,11 @@ public class TestingSenderWithVoice {
 				voiceRecorder.init(parser.getTunIP(), destinationIP, 7000);
 				voiceRecorder.start();
 	
+			}
+			
+			@Override
+			public void onCallFailed(String calleeId) {
+				System.out.println("onCallFailed");
 			}
 		});
 		

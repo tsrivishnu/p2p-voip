@@ -21,9 +21,9 @@ import edu.tum.p2p.group20.voip.voice.Sender;
 
 // TODO handle KX_TN_DESTROY when the process has to be killled
 public class MakeCall {
-	public  ReceivedMessage lastReceivedMessage;
-	public  IntraPeerCommunicator dhtCommunicator;
-	public  IntraPeerCommunicator kxCommunicator;
+	private  ReceivedMessage lastReceivedMessage;
+	private  IntraPeerCommunicator dhtCommunicator;
+	private  IntraPeerCommunicator kxCommunicator;
 	private Sender sender;
 	private CallInitiatorListener callInitiatorListener;
 	private ConfigParser configParser;
@@ -34,6 +34,8 @@ public class MakeCall {
 		this.configParser = configParser;
 
 		try {
+			//showing status update to user
+			callInitiatorListener.onCallInitiated(calleeId);
 			dhtCommunicator = new IntraPeerCommunicator(
 					configParser.getDhtHost(), configParser.getDhtPort());
 			kxCommunicator = new IntraPeerCommunicator(

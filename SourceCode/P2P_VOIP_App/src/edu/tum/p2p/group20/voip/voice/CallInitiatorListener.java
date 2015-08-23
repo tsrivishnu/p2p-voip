@@ -10,6 +10,11 @@ public interface CallInitiatorListener {
 
 	public void onCallDeclined(String pseudoId);
 
+	/**
+	 * @param calleeId
+	 */
+	public void onCallFailed(String calleeId);
+
 	
 
 }
