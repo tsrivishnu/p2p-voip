@@ -119,7 +119,6 @@ public class Receiver extends Thread {
 			).isValid();
 			
 			if (!isValidModule) {
-				// TODO: add log4j here
 				// quiting this thread
 				clientSocket.close();
 				return;
@@ -165,7 +164,6 @@ public class Receiver extends Thread {
 					messageCrypto
 				);
 				if (!receivedDhMessage.isValid(lastTimestamp, "DH_INIT")) {
-					// TODO: add log4j here
 					// quiting this thread
 					clientSocket.close();
 					return;
@@ -201,7 +199,6 @@ public class Receiver extends Thread {
 					messageCrypto
 				);				
 				if (!receivedMessage.isValid(lastTimestamp, "CALL_INIT")) {
-					// TODO: add log4j here
 					// quiting this thread
 					clientSocket.close();
 					return;

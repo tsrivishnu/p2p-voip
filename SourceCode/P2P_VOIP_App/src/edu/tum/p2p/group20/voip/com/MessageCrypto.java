@@ -18,8 +18,6 @@ import javax.crypto.spec.SecretKeySpec;
 
 import edu.tum.p2p.group20.voip.crypto.RSA;
 
-// TODO Rename the class? It takes pseudo-identities and does nothing with em.
-
 /**
  * MessageCryto: Handles encryption, decryption, signing and signature verification of given strings 
  * from messages.

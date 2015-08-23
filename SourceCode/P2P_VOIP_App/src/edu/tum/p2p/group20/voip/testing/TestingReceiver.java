@@ -61,7 +61,6 @@ public class TestingReceiver {
 
 				@Override
 				public void onDestinationIPReady(String destinationIP) {
-					// TODO Auto-generated method stub
 					
 				}
 			};

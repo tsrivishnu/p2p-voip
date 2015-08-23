@@ -18,7 +18,6 @@ import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.KxTunnelDestroy;
 import edu.tum.p2p.group20.voip.voice.CallInitiatorListener;
 import edu.tum.p2p.group20.voip.voice.Sender;
 
-// TODO handle KX_TN_DESTROY when the process has to be killled
 public class MakeCall {
 	private  ReceivedMessage lastReceivedMessage;
 	private  IntraPeerCommunicator dhtCommunicator;

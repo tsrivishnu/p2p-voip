@@ -29,7 +29,7 @@ public class GetReply extends ReceivedMessage {
 		byteValues.put("messageCode", Arrays.copyOfRange(fullMessageBytes, 2, 4));
 		byteValues.put("pseudoId", Arrays.copyOfRange(fullMessageBytes, 4, 36));
 
-		// TODO Find out if public key is always gonna be 550 bytes
+		// public key is 550 bytes including all the required values.
 		byteValues.put("publicKey", Arrays.copyOfRange(fullMessageBytes, 36, 586));
 		byteValues.put("pseudoIdToBeSigned", Arrays.copyOfRange(fullMessageBytes, 586, 618)); // 32 bytes
 		byteValues.put("xchangePointInfoForKx", Arrays.copyOfRange(fullMessageBytes, 618, 674)); // size 56

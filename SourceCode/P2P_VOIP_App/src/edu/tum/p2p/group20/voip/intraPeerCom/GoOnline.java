@@ -28,7 +28,6 @@ import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.KxTunnelDestroy;
 import edu.tum.p2p.group20.voip.voice.CallReceiverListener;
 import edu.tum.p2p.group20.voip.voice.Receiver;
 
-// TODO handle KX_TN_DESTROY when the process has to be killed
 /**
  * Class responsible for taking the user online in the app. It makes him a
  * callee waiting for calls. Process goes as follows It find a random pseudo Id
@@ -41,9 +40,9 @@ import edu.tum.p2p.group20.voip.voice.Receiver;
 public class GoOnline implements CallReceiverListener {
 
 	public static ReceivedMessage lastReceivedMessage;
-	// TODO: move the method calls to DHT and KX wrapper
 	public static IntraPeerCommunicator dhtCommunicator;
 	public static IntraPeerCommunicator kxCommunicator;
+	
 	private GoOnlineEventListener eventListener;
 	private CallReceiverListener callReceiverListener;
 	private Receiver receiverThread;
@@ -436,7 +435,6 @@ public class GoOnline implements CallReceiverListener {
 			try {
 				serverSocket.close();
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
 			serverSocket=null;
