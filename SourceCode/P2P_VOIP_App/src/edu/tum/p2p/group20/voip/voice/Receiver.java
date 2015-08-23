@@ -1,12 +1,18 @@
 package edu.tum.p2p.group20.voip.voice;
 import java.net.*;
+import java.security.InvalidKeyException;
 import java.security.KeyPair;
+import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
+import java.security.SignatureException;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.io.*;
+
 import org.apache.commons.codec.binary.Base64;
+
 import edu.tum.p2p.group20.voip.com.Message;
 import edu.tum.p2p.group20.voip.com.MessageCrypto;
 import edu.tum.p2p.group20.voip.com.ModuleValidator;
@@ -37,11 +43,13 @@ public class Receiver extends Thread {
 	private final static int BUSY=1;//establishing incoming call
 	private final static int WAIT=2;//incoming call is already existing
 	private static int connectedCallsCount=0;//use this to reply with BUSY message
-	protected static final long HEARTBEAT_TIMEOUT = 15000;
-	
+	protected static final long HEARTBEAT_TIMEOUT = 15000; //15sec timeout
 	private ConfigParser configParser;
 	private Date lastHeartBeat;
 	private String otherPartyPseudoIdentity;
+	private MessageCrypto messageCrypto;
+	private ModuleValidator moduleValidator;
+	private PrintWriter out;
 	
 	/**
 	 * @param clientSocket2
@@ -60,7 +68,7 @@ public class Receiver extends Thread {
          
         try {
   
-            PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);                   
+            out = new PrintWriter(clientSocket.getOutputStream(), true);                   
             BufferedReader in = new BufferedReader(new InputStreamReader(clientSocket.getInputStream()));
          	
             String inputLine;
@@ -76,7 +84,7 @@ public class Receiver extends Thread {
         		sha2.makeSHA2Hash(hostPublicKey.getEncoded())
         	); 
         	
-        	MessageCrypto messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
+        	messageCrypto = new MessageCrypto(hostKeyPair, otherPartyPublicKey, hostPseudoIdentity, otherPartyPseudoIdentity);
         	
         	Date lastTimestamp;
         	
@@ -84,7 +92,7 @@ public class Receiver extends Thread {
 
             	// Receive a module verification PING
             	Message receivedPingMessage = new Message(inputLine, false, messageCrypto);            	
-            	ModuleValidator moduleValidator =  new ModuleValidator(
+            	moduleValidator =  new ModuleValidator(
 					(String) receivedPingMessage.get("verificationTimestamp"),
 					(String) receivedPingMessage.get("verificationHash")
 				);
@@ -174,9 +182,9 @@ public class Receiver extends Thread {
 	                	callAcceptMessage.put("type", "CALL_ACCEPT");
 	                	callAcceptMessage.encrypt();
 	                	out.println(callAcceptMessage.asJSONStringForExchange());
-	                	//send call connected callback
-	                	
-	                	callReceiverListener.onCallConnected(otherPartyPseudoIdentity,sessionKey);
+	                	//send call connected callback with this thread's instance
+	                	//thread instance will be used to disconnect call by user input
+	                	callReceiverListener.onIncomingCallConnected(otherPartyPseudoIdentity,this,sessionKey);
 	                	
 	                	// create a timertask to check heartbeat timestamps
 	                	lastHeartBeat =  new Date();
@@ -276,7 +284,19 @@ public class Receiver extends Thread {
     }
     
     public void disconnectCall(){
-    	//TODO: Send disconnect message to clientSocket
+    	//Send disconnect message to clientSocket
+    	Message disconnectMsg = new Message(messageCrypto);
+    	disconnectMsg.put("type", "CALL_DISCONNECT");
+    	disconnectMsg.put("verificationHash", moduleValidator.digest);
+    	disconnectMsg.put("verificationTimestamp", moduleValidator.timestampString);
+    	try {
+			out.println(disconnectMsg.asJSONStringForExchange());
+			out.flush();
+		} catch (InvalidKeyException | NoSuchAlgorithmException
+				| SignatureException | UnsupportedEncodingException e1) {
+			//couldn't send the CALL_DISCONNECT msg to the caller
+			e1.printStackTrace();
+		}
     	if(clientSocket!=null){
     		try {
 				clientSocket.close();
@@ -285,6 +305,7 @@ public class Receiver extends Thread {
 				e.printStackTrace();
 			}
     	}
+    	stop=true;
     	
     }
     

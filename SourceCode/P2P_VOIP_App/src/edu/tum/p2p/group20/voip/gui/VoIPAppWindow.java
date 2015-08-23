@@ -74,6 +74,9 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	private byte[] sessionkey;
 	private JTextField txtFieldHostPseudoId;
 	private String destinationIP;
+	private String callerPseudoId;
+	
+
 	
 	public VoIPAppWindow(String confiFileName) {
 		try {
@@ -251,8 +254,15 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 					makeCallModule.disconnectCall();
 					makeCallModule=null;
 				}
-				
-				
+				//disconnect the received connected call
+				if(callerPseudoId!=null &&receiverMap!=null && receiverMap.size()>0){
+					Receiver receiver = receiverMap.get(callerPseudoId);
+					if(receiver!=null){
+						receiver.disconnectCall();
+					}
+					receiverMap.remove(callerPseudoId);
+				}
+								
 				
 			default:
 				break;
@@ -346,8 +356,9 @@ public class VoIPAppWindow extends JFrame implements ActionListener,
 	 * Callback for callee when call is connected
 	 */
 	@Override
-	public void onCallConnected(String pseudoId, byte[]sessionKey) {
-	
+	public void onIncomingCallConnected(String pseudoId, Receiver receiver, byte[]sessionKey) {
+		this.callerPseudoId = pseudoId;
+		receiverMap.put(pseudoId,receiver);
 		//save the new session key
 		this.sessionkey = sessionKey;
 		//display status to user

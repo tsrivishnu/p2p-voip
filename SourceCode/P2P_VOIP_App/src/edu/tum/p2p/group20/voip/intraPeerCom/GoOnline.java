@@ -10,6 +10,7 @@ import java.security.KeyPair;
 import java.security.NoSuchAlgorithmException;
 import java.security.PublicKey;
 import java.security.SignatureException;
+import java.util.HashMap;
 
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
@@ -38,11 +39,11 @@ public class GoOnline implements CallReceiverListener {
 	public static IntraPeerCommunicator kxCommunicator;
 	private GoOnlineEventListener eventListener;
 	private CallReceiverListener callReceiverListener;
-	private Thread receiverThread;
+	private Receiver receiverThread;
 	private ConfigParser configParser;
 	private ServerSocket serverSocket;
 	private boolean stop;
-
+	
 	public static void main(String[] args) throws Exception {
 
 		GoOnline goOnline = new GoOnline();
@@ -351,9 +352,9 @@ public class GoOnline implements CallReceiverListener {
 	}
 
 	@Override
-	public void onCallConnected(String pseudoId, byte[] sessionKey) {
+	public void onIncomingCallConnected(String pseudoId,Receiver receiver, byte[] sessionKey) {
 
-		callReceiverListener.onCallConnected(pseudoId, sessionKey);
+		callReceiverListener.onIncomingCallConnected(pseudoId, receiver,sessionKey);
 	}
 
 	@Override
@@ -386,6 +387,7 @@ public class GoOnline implements CallReceiverListener {
 
 		this.callReceiverListener = callReceiverListener;
 	}
+
 
 
 }

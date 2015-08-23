@@ -62,7 +62,10 @@ public class TestingReceiverWithVoice {
 				}
 
 				@Override
-				public void onCallConnected(String pseudoId, byte[] sessionKey) {
+				public void onIncomingCallConnected(String pseudoId,
+													Receiver receiver, 
+													byte[] sessionKey) {
+					
 					System.out.println("onCallConnected");
 					System.out.println("sessionKey="
 							+ Base64.encodeBase64String(sessionKey));
