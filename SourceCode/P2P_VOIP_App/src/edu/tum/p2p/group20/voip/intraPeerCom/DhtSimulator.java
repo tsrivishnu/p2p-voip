@@ -21,6 +21,12 @@ import edu.tum.p2p.group20.voip.intraPeerCom.Helper;
 import edu.tum.p2p.group20.voip.intraPeerCom.MessagesLegend;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Put;
 
+/**
+ * Simulates the DHT module. Used for testing
+ * 
+ * @author Sri Vishnu Totakura <srivishnu@totakura.in>
+ *
+ */
 public class DhtSimulator {
 
 	private static ServerSocket serverSocket;
