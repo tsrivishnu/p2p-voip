@@ -134,7 +134,7 @@ public class Sender {
 
 			System.out.println("Sender: Recevied: " + pingReplyMessage.get("type"));
 
-			if ("PING_BUSY".equals(pingReplyMessage.get("type"))) {
+			if ("PING_REPLY_BUSY".equals(pingReplyMessage.get("type"))) {
 				// the remote peer is busy
 				// show this info to user and stop the call
 				callInitiatorListener.onCallDisconnected("The remote user is busy");
