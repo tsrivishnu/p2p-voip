@@ -24,6 +24,7 @@ import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Get;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Put;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.dht.Trace;
 import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.BuildTNIncoming;
+import edu.tum.p2p.group20.voip.intraPeerCom.messages.kx.KxTunnelDestroy;
 import edu.tum.p2p.group20.voip.voice.CallReceiverListener;
 import edu.tum.p2p.group20.voip.voice.Receiver;
 
@@ -49,6 +50,7 @@ public class GoOnline implements CallReceiverListener {
 	private ConfigParser configParser;
 	private ServerSocket serverSocket;
 	private boolean stop;
+	private byte[] pseduoIdBytes;
 
 	public static void main(String[] args) throws Exception {
 
@@ -127,7 +129,7 @@ public class GoOnline implements CallReceiverListener {
 			PublicKey rsaPublicKey = hostKeyPair.getPublic();
 			SHA2 sha2 = new SHA2();
 			// PseudoID is the hash of the publickey.
-			byte[] pseduoIdBytes = sha2.makeSHA2Hash(rsaPublicKey.getEncoded());
+			pseduoIdBytes = sha2.makeSHA2Hash(rsaPublicKey.getEncoded());
 
 			// To user we give the Base64 encoded string of the pseudoId so that
 			// he can copy it as a string and send to whomever he wants
@@ -214,9 +216,10 @@ public class GoOnline implements CallReceiverListener {
 									receiver.start();
 
 								} catch (IOException e) {
-									// TODO: show error to user if tunnel was
-									// broken
-									e.printStackTrace();
+									if (!stop) {
+										eventListener.onException(e);
+										e.printStackTrace();
+									}
 								}
 
 							}
@@ -224,19 +227,16 @@ public class GoOnline implements CallReceiverListener {
 						}
 					}).start();
 				} catch (IOException e) {
-					// TODO: show error to user and use log4j here
-					e.printStackTrace();
+					if (!stop) {
+						eventListener.onException(e);
+						e.printStackTrace();
+					}
 				}
-				// TODO: loop serverSocket.accept() to handle more connection
-				// TODO: create a thread to handle a single client socket
 
 				sendDhtPutMessage(
 					pseduoIdBytes,
 					hostKeyPair,
 					xChangePointInfoForKx);
-				// lastReceivedMessage =
-				// dhtCommunicator.readIncomingAndHandleError();
-				// This is just to see if you would get any error
 
 				System.out.println("You are now online!");
 				if (eventListener != null) {
@@ -434,8 +434,16 @@ public class GoOnline implements CallReceiverListener {
 			}
 			serverSocket=null;
 			
-			//TODO:send kx destroy tunnel
-			//TODO: and then dht put  nothing to clear our info from dht
+			KxTunnelDestroy tnDestroy = new KxTunnelDestroy(pseduoIdBytes);
+			
+			try {
+				kxCommunicator.sendMessage(tnDestroy);
+			} catch (IOException e) {
+				System.out.println("Makecall: Problem with sending Tunnel Destroy");
+				e.printStackTrace();
+			}
+			
+			eventListener.onOffline();
 		}
 	}
 }
